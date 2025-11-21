@@ -94,18 +94,9 @@
 
       <!-- Email Verification with OTP -->
       <div id="verifyEmailForm" style="display:none;" class="verification-container">
-        <div class="card-header">
-          <div class="logo-container">
-            <div class="logo">
-              <i class="fas fa-envelope text-primary" style="font-size: 2rem;"></i>
-            </div>
-            <div>
-              <h1 class="card-title">Email Verification</h1>
-              <p class="card-subtitle">Job Application Portal</p>
-            </div>
-          </div>
-        </div>
-
+     
+         <h4 class="text-center mb-3" style="padding: auto; color: blue;">Enter Verification Code</h4>
+         
         <div class="card-body">
           <div class="steps-container">
             <div class="step done">
@@ -118,11 +109,9 @@
             </div>
             <div class="step">
               <div class="step-circle">3</div>
-              <div class="step-label">Apply</div>
+              <div class="step-label">Portal</div>
             </div>
           </div>
-
-          <h4 class="text-center mb-3" style="color: var(--primary-color);">Enter Verification Code</h4>
           <p class="text-muted text-center mb-4">We've sent a 6-digit code to <span id="verifyEmailText" class="fw-bold">user@example.com</span></p>
 
           <form id="otpForm">
@@ -135,7 +124,7 @@
                 <input type="text" class="otp-input" maxlength="1" data-index="4" autocomplete="off">
                 <input type="text" class="otp-input" maxlength="1" data-index="5" autocomplete="off">
               </div>
-              <div class="otp-length-note">6-digit verification code</div>
+              <!-- <div class="otp-length-note">6-digit verification code</div> -->
               <input type="hidden" id="otpCode" name="otp">
             </div>
 
@@ -146,14 +135,15 @@
           </form>
 
           <div class="resend-container">
-            <p class="mb-2">Didn't receive the code?</p>
-            <a id="resendLink" class="resend-link disabled">Resend code <span id="countdown" class="countdown">(60s)</span></a>
+            <p class="mb-2">Didn't receive the code?> <a id="resendLink" class="resend-link disabled">Resend code <span id="countdown" class="countdown">(60s)</span></a>
+          </p>
+            
           </div>
 
-          <div class="security-notice">
+          <!-- <div class="security-notice">
             <h6><i class="fas fa-shield-alt me-2"></i>Security Notice</h6>
             <p>This verification code is valid for 10 minutes. Do not share this code with anyone.</p>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
