@@ -625,6 +625,7 @@ main {
 
 .notes-board ul li {
   margin-bottom: 0.5rem;
+}
 
 /* Notification List Styling */
 .notification-list .card {
@@ -636,6 +637,71 @@ main {
 
 .notification-list .badge {
   font-size: 0.75rem;
+}
+
+/* Additional styles from home.html */
+.header {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo-container {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 15px;
+  border-radius: 0 0 10px 10px;
+}
+
+.date-display {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.nav-link {
+  color: var(--secondary-color);
+  font-weight: 500;
+  padding: 10px 15px;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--primary-color);
+  background-color: rgba(13, 110, 253, 0.1);
+  border-radius: 5px;
+}
+
+.user-info {
+  color: var(--secondary-color);
+}
+
+.alert-notice {
+  border-left: 4px solid var(--primary-color);
+  background-color: white;
+  border-radius: 0 5px 5px 0;
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.step-number {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 30px;
+  margin-right: 10px;
+}
+
+.footer {
+  background-color: #343a40;
+  color: white;
+  padding: 20px 0;
+  margin-top: 30px;
 }
 
 /* Responsive Design - Mobile */
@@ -694,6 +760,10 @@ main {
 
   .notification-list .card {
     margin-bottom: 0.5rem;
+  }
+
+  .navbar-nav {
+    text-align: center;
   }
 }
 
