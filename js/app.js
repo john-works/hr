@@ -276,9 +276,7 @@
 
     showToast('Email verified! You are now logged in.', 'success');
 
-    showApp();
-    initAppAfterLogin();
-    clearOTPInputs();
+    window.location.href = 'home.html';
   });
 
   // Resend code functionality
