@@ -13,7 +13,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" id="mainNavbar" style="display:none;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" id="mainNavbar">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"></a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarCollapse"
@@ -23,23 +23,22 @@
             <div class="collapse navbar-collapse" id="mainNavbarCollapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link " href="home.html">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Advert</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Shortlist</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">My Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="index.html">My Application</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Notification</a></li>
+                    <!-- <li class="nav-item"><a class="nav-link" href="#">Advert</a></li> -->
+                    <!-- <li class="nav-item"><a class="nav-link" href="#">Shortlist</a></li> -->
+                    <!-- <li class="nav-item"><a class="nav-link" href="#">My Profile</a></li> -->
+                    <!-- <li class="nav-item"><a class="nav-link" href="index.html">My Application</a></li> -->
+                    <!-- <li class="nav-item"><a class="nav-link" href="#">Notification</a></li> -->
                     <!-- <li class="nav-item"><a class="nav-link" href="#">Update</a></li> -->
                 </ul>
 
                 <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-link text-white" title="Settings"><i class="fa fa-cog"></i></button>
+                    <!-- <button class="btn btn-link text-white" title="Settings"><i class="fa fa-cog"></i></button>
                     <button class="btn btn-link text-white position-relative" title="Notifications">
                         <i class="fa fa-bell"></i>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
-                    </button>
+                    </button> -->
                     <div class="dropdown">
-                        <button class="btn btn-secondary rounded-circle text-uppercase" type="button" id="userDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">J</button>
+                        <span id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu" style="cursor: pointer; color: white;">Hello</span>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" id="userDropdownMenu">
                             <li><h6 class="dropdown-header" id="navbarUserName">John Doe</h6><span class="dropdown-item-text text-muted">Applicant</span></li>
                             <li><hr class="dropdown-divider"></li>
@@ -86,14 +85,18 @@
                         </div>
                         <div class="col-6 mb-3">
                             <div class="card p-3 h-100">
-                                <i class="fas fa-user-edit card-icon"></i>
-                                <h6>Update Profile</h6>
+                               
+                                    <i class="fas fa-user-edit card-icon"></i>
+                                    <h6>Update Profile</h6>
+                            
                             </div>
                         </div>
                         <div class="col-6 mb-3">
                             <div class="card p-3 h-100">
-                                <i class="fas fa-file-alt card-icon"></i>
-                                <h6>My Applications</h6>
+                                <a href="index.html">
+                                    <i class="fas fa-file-alt card-icon"></i>
+                                    <h6>My Applications</h6>
+                                </a>
                             </div>
                         </div>
                         <div class="col-6 mb-3">
@@ -120,7 +123,7 @@
         
             <hr class="my-4">
             <div class="text-center">
-                <p class="mb-0">&copy; 2025 Public Service Commission. All rights reserved.</p>
+                <p class="mb-0">&copy; 2025 Public Procurement and Disposal of Public Assets Authority. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -147,11 +150,22 @@
             // Show navbar and populate user info if logged in
             const mainNavbar = document.getElementById('mainNavbar');
             const navbarUserName = document.getElementById('navbarUserName');
-            const userDropdownBtn = document.getElementById('userDropdown');
+            const userDropdown = document.getElementById('userDropdown');
+            const btnLogout = document.getElementById('btnLogout');
 
             if (mainNavbar) mainNavbar.style.display = 'flex';
-            if (navbarUserName) navbarUserName.textContent = user.name || user.email;
-            if (userDropdownBtn) userDropdownBtn.textContent = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+            if (navbarUserName) navbarUserName.textContent = user.email || user.name;
+            if (userDropdown) userDropdown.textContent = 'Hello ' + (user.email || user.name);
+
+            // Logout functionality
+            if (btnLogout) {
+                btnLogout.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to logout?')) {
+                        localStorage.removeItem('userSession');
+                        window.location.href = 'index.html';
+                    }
+                });
+            }
         }
     </script>
 </body>

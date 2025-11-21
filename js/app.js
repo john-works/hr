@@ -7,7 +7,7 @@
   const authArea = document.getElementById('authArea');
   const appArea = document.getElementById('appArea');
   const mainNavbar = document.getElementById('mainNavbar');
-  const userDropdownBtn = document.getElementById('userDropdown');
+  const userDropdown = document.getElementById('userDropdown');
   const navbarUserName = document.getElementById('navbarUserName');
   const btnLogout = document.getElementById('btnLogout');
 
@@ -838,7 +838,7 @@
 
     // Show user in navbar dropdown
     navbarUserName.textContent = session.name || session.email;
-    userDropdownBtn.textContent = session.name ? session.name.charAt(0).toUpperCase() : 'U';
+    userDropdown.textContent = 'Hello ' + session.email;
 
     // Show default step
     showStep(currentStep);
@@ -958,6 +958,6 @@
       showLoginForm();
     }
   }
-  init();
+  document.addEventListener('DOMContentLoaded', init);
 
 })();
