@@ -1,0 +1,965 @@
+(() => {
+  /* ========== Configuration ========== */
+  // Set your API base URL here - change this to point to your backend
+  const apiUrl = 'http://localhost:8050/api/v1';
+
+  /* ----- Elements ----- */
+  const authArea = document.getElementById('authArea');
+  const appArea = document.getElementById('appArea');
+  const mainNavbar = document.getElementById('mainNavbar');
+  const userDropdownBtn = document.getElementById('userDropdown');
+  const navbarUserName = document.getElementById('navbarUserName');
+  const btnLogout = document.getElementById('btnLogout');
+
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const verifyEmailForm = document.getElementById('verifyEmailForm');
+
+  const showLoginBtn = document.getElementById('showLogin');
+  const showRegisterBtn = document.getElementById('showRegister');
+
+  // Current step in app
+  let currentStep = 'selectJob';
+
+  // Bootstrap modal for CRUD
+  const crudModalEl = document.getElementById('crudModal');
+  const crudModal = new bootstrap.Modal(crudModalEl);
+  const crudForm = document.getElementById('crudForm');
+  const crudModalLabel = document.getElementById('crudModalLabel');
+  const crudModalBody = document.getElementById('crudModalBody');
+  const crudItemIdInput = document.getElementById('crudItemId');
+  const crudSaveBtn = document.getElementById('crudSaveBtn');
+
+  // Sidebar nav
+  const sidebarNav = document.getElementById('sidebarNav');
+  const mainPanel = document.getElementById('mainPanel');
+
+  /* ----- Session Management ---- */
+  function getSession() {
+    const sessionStr = localStorage.getItem('userSession');
+    if (!sessionStr) return null;
+    try {
+      return JSON.parse(sessionStr);
+    } catch {
+      return null;
+    }
+  }
+
+  function setSession(sessionObj) {
+    localStorage.setItem('userSession', JSON.stringify(sessionObj));
+  }
+
+  function clearSession() {
+    localStorage.removeItem('userSession');
+  }
+
+  /* ----- Toast Notification Utility ----- */
+  function showToast(message, type = 'info', duration = 4000) {
+    const toastContainer = document.getElementById('toastContainer');
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toastHTML = `
+      <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header ${type}">
+          <strong class="me-auto">
+            ${type === 'success' ? '<i class="fas fa-check-circle me-2"></i>' : ''}
+            ${type === 'error' ? '<i class="fas fa-exclamation-circle me-2"></i>' : ''}
+            ${type === 'warning' ? '<i class="fas fa-exclamation-triangle me-2"></i>' : ''}
+            ${type === 'info' ? '<i class="fas fa-info-circle me-2"></i>' : ''}
+            ${type.charAt(0).toUpperCase() + type.slice(1)}
+          </strong>
+          <button type="button" class="btn-close toast-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    const toastEl = document.getElementById(toastId);
+    const bsToast = new bootstrap.Toast(toastEl, {
+      autohide: true,
+      delay: duration
+    });
+    
+    bsToast.show();
+    
+    // Remove element from DOM after it's hidden
+    toastEl.addEventListener('hidden.bs.toast', () => {
+      toastEl.remove();
+    });
+  }
+
+  /* ----- Authentication UI Toggle ----- */
+  function showLoginForm() {
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    verifyEmailForm.style.display = 'none';
+  }
+  function showRegisterForm() {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    verifyEmailForm.style.display = 'none';
+  }
+  function showVerifyEmailForm(email) {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'none';
+    verifyEmailForm.style.display = 'block';
+    document.getElementById('verifyEmailText').textContent = email;
+  }
+
+  /* ----- Display logic based on session ----- */
+  function showApp() {
+    authArea.style.display = 'none';
+    appArea.style.display = 'block';
+    mainNavbar.style.display = 'flex';
+    document.body.classList.remove('auth-view');
+  }
+
+  function showAuth() {
+    authArea.style.display = 'block';
+    appArea.style.display = 'none';
+    mainNavbar.style.display = 'none';
+    document.body.classList.add('auth-view');
+  }
+
+  /* ----- Event Listeners for Auth Toggle ----- */
+  showRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showRegisterForm();
+  });
+  showLoginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showLoginForm();
+  });
+
+  /* ---- Register -> show verify email form ---- */
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const emailInput = document.getElementById('loginEmail');
+
+    if (!emailInput.value) {
+      showToast('Please enter your email address.', 'warning');
+      return;
+    }
+
+    // Simulate sending verification email
+    // Save "pendingUser" temporarily to localStorage
+    localStorage.setItem('pendingUser', JSON.stringify({
+      email: emailInput.value,
+      verified: false,
+    }));
+
+    showVerifyEmailForm(emailInput.value);
+
+    registerForm.reset();
+  });
+
+  /* ---- Verify email form submit ---- */
+  const otpForm = document.getElementById('otpForm');
+  const otpInputs = document.querySelectorAll('.otp-input');
+  const otpCode = document.getElementById('otpCode');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const btnText = document.getElementById('btnText');
+  const btnSpinner = document.getElementById('btnSpinner');
+  const resendLink = document.getElementById('resendLink');
+  const countdownEl = document.getElementById('countdown');
+  let countdown = 60;
+  let countdownInterval;
+
+  // OTP input handling
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+      const value = e.target.value;
+      
+      // Only allow numbers
+      if (!/^\d*$/.test(value)) {
+        e.target.value = '';
+        return;
+      }
+      
+      // Move to next input if value is entered
+      if (value && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+      
+      // Update OTP code and check if all fields are filled
+      updateOTPCode();
+      checkOTPComplete();
+      
+      // Add filled class for visual feedback
+      if (value) {
+        e.target.classList.add('filled');
+      } else {
+        e.target.classList.remove('filled');
+      }
+    });
+    
+    // Handle backspace
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+    
+    // Handle paste
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasteData = e.clipboardData.getData('text').trim();
+      
+      if (/^\d{6}$/.test(pasteData)) {
+        // Fill all inputs with the pasted code
+        for (let i = 0; i < otpInputs.length; i++) {
+          if (i < pasteData.length) {
+            otpInputs[i].value = pasteData[i];
+            otpInputs[i].classList.add('filled');
+          }
+        }
+        
+        // Focus on the last input
+        if (pasteData.length === 6) {
+          otpInputs[5].focus();
+        }
+        
+        updateOTPCode();
+        checkOTPComplete();
+      }
+    });
+  });
+
+  // Update the hidden OTP code field
+  function updateOTPCode() {
+    let code = '';
+    otpInputs.forEach(input => {
+      code += input.value;
+    });
+    otpCode.value = code;
+  }
+
+  // Check if all OTP fields are filled
+  function checkOTPComplete() {
+    const isComplete = Array.from(otpInputs).every(input => input.value !== '');
+    verifyBtn.disabled = !isComplete;
+  }
+
+  // Form submission
+  otpForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const code = otpCode.value;
+    
+    if (!code || code.length !== 6) {
+      showToast('Please enter a valid 6-digit code.', 'warning');
+      return;
+    }
+
+    // In a real app, verify code with backend.
+    // Here, simulate always success.
+
+    const pendingUserStr = localStorage.getItem('pendingUser');
+    if (!pendingUserStr) {
+      showToast('No pending verification found.', 'error');
+      showRegisterForm();
+      return;
+    }
+    const pendingUser = JSON.parse(pendingUserStr);
+    pendingUser.verified = true;
+
+    // Save session
+    setSession({
+      email: pendingUser.email,
+      name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
+      role: 'Applicant',
+    });
+    localStorage.removeItem('pendingUser');
+
+    showToast('Email verified! You are now logged in.', 'success');
+
+    showApp();
+    initAppAfterLogin();
+    clearOTPInputs();
+  });
+
+  // Resend code functionality
+  resendLink.addEventListener('click', async () => {
+    if (resendLink.classList.contains('disabled')) return;
+    
+    // Restart countdown
+    countdown = 60;
+    startCountdown();
+    
+    // Clear previous OTP inputs
+    clearOTPInputs();
+  });
+
+  // Countdown timer for resend
+  function startCountdown() {
+    clearInterval(countdownInterval);
+    resendLink.classList.add('disabled');
+    
+    countdownInterval = setInterval(() => {
+      countdown--;
+      countdownEl.textContent = `(${countdown}s)`;
+      
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        resendLink.classList.remove('disabled');
+        countdown = 60;
+        countdownEl.textContent = `(${countdown}s)`;
+      }
+    }, 1000);
+  }
+
+  // Clear OTP inputs
+  function clearOTPInputs() {
+    otpInputs.forEach(input => {
+      input.value = '';
+      input.classList.remove('filled');
+    });
+    otpCode.value = '';
+    verifyBtn.disabled = true;
+    otpInputs[0].focus();
+  }
+
+  // Start countdown when verification form is shown
+  const originalShowVerifyEmailForm = showVerifyEmailForm;
+  showVerifyEmailForm = function(email) {
+    originalShowVerifyEmailForm(email);
+    countdown = 60;
+    countdownEl.textContent = `(${countdown}s)`;
+    startCountdown();
+    otpInputs[0].focus();
+  };
+
+  /* ---- Login form submit (Email verification only) ---- */
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const emailInput = document.getElementById('loginEmail');
+
+    if (!emailInput.value) {
+      showToast('Please enter your email address.', 'warning');
+      return;
+    }
+
+    const email = emailInput.value.toLowerCase().trim();
+
+    // Save pending user and show verification form
+    localStorage.setItem('pendingUser', JSON.stringify({
+      email: email,
+      verified: false,
+    }));
+
+    showVerifyEmailForm(email);
+    loginForm.reset();
+  });
+
+  btnLogout.addEventListener('click', () => {
+    if (confirm('Are you sure you want to logout?')) {
+      clearSession();
+      location.reload();
+    }
+  });
+
+  /* =============== Application Logic =============== */
+  // API endpoints - dynamically built with the apiUrl
+  const API = {
+    personalDetails: `${apiUrl}/personalDetails`,
+    educationTraining: `${apiUrl}/education`,
+    professionalMembership: `${apiUrl}/membership`,
+    employmentHistory: `${apiUrl}/employment`,
+    documents: `${apiUrl}/documents`,
+    referee: `${apiUrl}/referee`,
+    dependants: `${apiUrl}/dependants`,
+    selectJob: `${apiUrl}/jobs`,
+  };
+
+  let dataCache = {};
+
+  /* ----- Sidebar Navigation ----- */
+  function showStep(step) {
+    currentStep = step;
+    sidebarNav.querySelectorAll('a.nav-link').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('data-step') === step);
+    });
+    mainPanel.querySelectorAll('section[data-step-content]').forEach(sec => {
+      sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
+    });
+    loadStepData(step);
+  }
+
+  sidebarNav.addEventListener('click', e => {
+    const a = e.target.closest('a.nav-link');
+    if (!a) return;
+    e.preventDefault();
+    showStep(a.getAttribute('data-step'));
+  });
+
+  /* ----- Generic Table Renderer ----- */
+  function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
+    tbodyEl.innerHTML = '';
+    if (!items.length) {
+      const colSpan = columns.length + 1;
+      tbodyEl.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No records found.</td></tr>`;
+      return;
+    }
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      columns.forEach(col => {
+        let val = item[col.key];
+        if (val === undefined || val === null) val = '';
+        tr.insertAdjacentHTML('beforeend', `<td>${val}</td>`);
+      });
+
+      const tdActions = document.createElement('td');
+      const btnEdit = document.createElement('button');
+      btnEdit.className = 'btn btn-sm btn-primary me-2';
+      btnEdit.type = 'button';
+      btnEdit.innerHTML = '<i class="fa fa-edit"></i>';
+      btnEdit.addEventListener('click', () => editCb(item));
+      const btnDelete = document.createElement('button');
+      btnDelete.className = 'btn btn-sm btn-danger';
+      btnDelete.type = 'button';
+      btnDelete.innerHTML = '<i class="fa fa-trash"></i>';
+      btnDelete.addEventListener('click', () => deleteCb(item.id));
+      tdActions.appendChild(btnEdit);
+      tdActions.appendChild(btnDelete);
+      tr.appendChild(tdActions);
+
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  /* ----- Axios CRUD functions ----- */
+  async function fetchItems(apiUrl, key) {
+    try {
+      const response = await axios.get(apiUrl);
+      dataCache[key] = response.data || [];
+      return dataCache[key];
+    } catch (e) {
+      showToast(`Error fetching ${key}`, 'error');
+      return [];
+    }
+  }
+
+  async function createItem(apiUrl, item, key) {
+    try {
+      const response = await axios.post(apiUrl, item);
+      dataCache[key] = dataCache[key] || [];
+      dataCache[key].push(response.data);
+      return response.data;
+    } catch (e) {
+      showToast(`Error creating item`, 'error');
+      throw e;
+    }
+  }
+
+  async function updateItem(apiUrl, id, item, key) {
+    try {
+      const response = await axios.put(`${apiUrl}/${id}`, item);
+      const index = dataCache[key].findIndex(i => i.id === id);
+      if (index > -1) dataCache[key][index] = response.data;
+      return response.data;
+    } catch (e) {
+      showToast(`Error updating item`, 'error');
+      throw e;
+    }
+  }
+
+  async function deleteItem(apiUrl, id, key) {
+    try {
+      await axios.delete(`${apiUrl}/${id}`);
+      dataCache[key] = dataCache[key].filter(i => i.id !== id);
+      return true;
+    } catch (e) {
+      showToast(`Error deleting item`, 'error');
+      return false;
+    }
+  }
+
+  /* -------- Show Step Data Loaders & Modals -------- */
+
+  // Personal Details
+  const formPersonalDetails = document.getElementById('formPersonalDetails');
+  async function loadPersonalDetails() {
+    try {
+      // Fetch personal details or create default from session
+      const response = await axios.get(API.personalDetails);
+      const session = getSession();
+      let pd = response.data || {};
+      // If no saved data, prefill email/name from session
+      if (!pd.email && session) {
+        pd.email = session.email;
+      }
+      formPersonalDetails.firstName.value = pd.firstName || '';
+      formPersonalDetails.lastName.value = pd.lastName || '';
+      formPersonalDetails.email.value = pd.email || '';
+    } catch {
+      // show fallback
+      formPersonalDetails.firstName.value = '';
+      formPersonalDetails.lastName.value = '';
+      formPersonalDetails.email.value = '';
+    }
+  }
+  formPersonalDetails.addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = {
+      firstName: formPersonalDetails.firstName.value.trim(),
+      lastName: formPersonalDetails.lastName.value.trim(),
+      email: formPersonalDetails.email.value.trim(),
+    };
+    try {
+      await axios.post(API.personalDetails, data);
+      showToast('Personal details saved.', 'success');
+    } catch {
+      showToast('Failed to save personal details.', 'error');
+    }
+  });
+
+  // Education and Training
+  const educationTableBody = document.querySelector('#educationTable tbody');
+  document.getElementById('btnAddEducation').addEventListener('click', () => openEducationModal());
+  function openEducationModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Education' : 'Add Education';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="educationInstitution" class="form-label">Institution</label>
+        <input type="text" class="form-control" id="educationInstitution" name="institution" required value="${editItem ? editItem.institution : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="educationDegree" class="form-label">Degree</label>
+        <input type="text" class="form-control" id="educationDegree" name="degree" required value="${editItem ? editItem.degree : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="educationYear" class="form-label">Year</label>
+        <input type="number" class="form-control" id="educationYear" name="year" required min="1900" max="2100" value="${editItem ? editItem.year : ''}">
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadEducation() {
+    const items = await fetchItems(API.educationTraining, 'educationTraining');
+    renderTableRows(items, educationTableBody, [
+      { key: 'institution' },
+      { key: 'degree' },
+      { key: 'year' }
+    ], openEducationModal, async id => {
+      if (confirm('Delete this education record?')) {
+        const success = await deleteItem(API.educationTraining, id, 'educationTraining');
+        if (success) loadEducation();
+      }
+    });
+  }
+
+  // Professional Membership
+  const membershipTableBody = document.querySelector('#membershipTable tbody');
+  document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
+  function openMembershipModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Membership' : 'Add Membership';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="membershipOrganization" class="form-label">Organization</label>
+        <input type="text" class="form-control" id="membershipOrganization" name="organization" required value="${editItem ? editItem.organization : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="membershipType" class="form-label">Membership Type</label>
+        <input type="text" class="form-control" id="membershipType" name="type" required value="${editItem ? editItem.type : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="membershipNumber" class="form-label">Membership Number</label>
+        <input type="text" class="form-control" id="membershipNumber" name="number" required value="${editItem ? editItem.number : ''}">
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadMembership() {
+    const items = await fetchItems(API.professionalMembership, 'professionalMembership');
+    renderTableRows(items, membershipTableBody, [
+      { key: 'organization' },
+      { key: 'type' },
+      { key: 'number' }
+    ], openMembershipModal, async id => {
+      if (confirm('Delete this membership record?')) {
+        const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
+        if (success) loadMembership();
+      }
+    });
+  }
+
+  // Employment History
+  const employmentTableBody = document.querySelector('#employmentTable tbody');
+  document.getElementById('btnAddEmployment').addEventListener('click', () => openEmploymentModal());
+  function openEmploymentModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Employment' : 'Add Employment';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="employmentEmployer" class="form-label">Employer</label>
+        <input type="text" class="form-control" id="employmentEmployer" name="employer" required value="${editItem ? editItem.employer : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="employmentPosition" class="form-label">Position</label>
+        <input type="text" class="form-control" id="employmentPosition" name="position" required value="${editItem ? editItem.position : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="employmentDuration" class="form-label">Duration</label>
+        <input type="text" class="form-control" id="employmentDuration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadEmployment() {
+    const items = await fetchItems(API.employmentHistory, 'employmentHistory');
+    renderTableRows(items, employmentTableBody, [
+      { key: 'employer' },
+      { key: 'position' },
+      { key: 'duration' }
+    ], openEmploymentModal, async id => {
+      if (confirm('Delete this employment record?')) {
+        const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
+        if (success) loadEmployment();
+      }
+    });
+  }
+
+  // Documents
+  const documentsTableBody = document.querySelector('#documentsTable tbody');
+  document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentsModal());
+  function openDocumentsModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Document' : 'Upload Document';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="documentName" class="form-label">Document Name</label>
+        <input type="text" class="form-control" id="documentName" name="name" required value="${editItem ? editItem.name : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="documentType" class="form-label">Type</label>
+        <input type="text" class="form-control" id="documentType" name="type" required value="${editItem ? editItem.type : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="documentFile" class="form-label">File</label>
+        <input type="file" class="form-control" id="documentFile" name="file" ${editItem ? '' : 'required'}>
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadDocuments() {
+    const items = await fetchItems(API.documents, 'documents');
+    renderTableRows(items, documentsTableBody, [
+      { key: 'name' },
+      { key: 'type' },
+      { key: 'uploadedOn' }
+    ], openDocumentsModal, async id => {
+      if (confirm('Delete this document?')) {
+        const success = await deleteItem(API.documents, id, 'documents');
+        if (success) loadDocuments();
+      }
+    });
+  }
+
+  // Referee
+  const refereeTableBody = document.querySelector('#refereeTable tbody');
+  document.getElementById('btnAddReferee').addEventListener('click', () => openRefereeModal());
+  function openRefereeModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Referee' : 'Add Referee';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="refereeName" class="form-label">Name</label>
+        <input type="text" class="form-control" id="refereeName" name="name" required value="${editItem ? editItem.name : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="refereeRelationship" class="form-label">Relationship</label>
+        <input type="text" class="form-control" id="refereeRelationship" name="relationship" required value="${editItem ? editItem.relationship : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="refereeContact" class="form-label">Contact</label>
+        <input type="text" class="form-control" id="refereeContact" name="contact" required value="${editItem ? editItem.contact : ''}">
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadReferee() {
+    const items = await fetchItems(API.referee, 'referee');
+    renderTableRows(items, refereeTableBody, [
+      { key: 'name' },
+      { key: 'relationship' },
+      { key: 'contact' }
+    ], openRefereeModal, async id => {
+      if (confirm('Delete this referee?')) {
+        const success = await deleteItem(API.referee, id, 'referee');
+        if (success) loadReferee();
+      }
+    });
+  }
+
+  // Dependants
+  const dependantsTableBody = document.querySelector('#dependantsTable tbody');
+  document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
+  function openDependantModal(editItem = null) {
+    crudModalLabel.textContent = editItem ? 'Edit Dependant' : 'Add Dependant';
+    crudItemIdInput.value = editItem ? editItem.id : '';
+    crudModalBody.innerHTML = `
+      <div class="mb-3">
+        <label for="dependantName" class="form-label">Name</label>
+        <input type="text" class="form-control" id="dependantName" name="name" required value="${editItem ? editItem.name : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="dependantRelationship" class="form-label">Relationship</label>
+        <input type="text" class="form-control" id="dependantRelationship" name="relationship" required value="${editItem ? editItem.relationship : ''}">
+      </div>
+      <div class="mb-3">
+        <label for="dependantAge" class="form-label">Age</label>
+        <input type="number" class="form-control" id="dependantAge" name="age" required min="0" max="120" value="${editItem ? editItem.age : ''}">
+      </div>
+    `;
+    crudModal.show();
+  }
+  async function loadDependants() {
+    const items = await fetchItems(API.dependants, 'dependants');
+    renderTableRows(items, dependantsTableBody, [
+      { key: 'name' },
+      { key: 'relationship' },
+      { key: 'age' }
+    ], openDependantModal, async id => {
+      if (confirm('Delete this dependant?')) {
+        const success = await deleteItem(API.dependants, id, 'dependants');
+        if (success) loadDependants();
+      }
+    });
+  }
+
+  // Preview Application
+  const previewSection = document.querySelector('section[data-step-content="previewApplication"]');
+  async function loadPreview() {
+    let html = '<h5>Summary</h5>';
+    for (const key in dataCache) {
+      if (!dataCache[key] || dataCache[key].length === 0) continue;
+      html += `<h6>${key.replace(/([A-Z])/g, ' $1').trim()}</h6><ul>`;
+      dataCache[key].forEach(item => {
+        html += '<li>' + Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(', ') + '</li>';
+      });
+      html += '</ul>';
+    }
+    previewSection.innerHTML = `<h4>Preview Application</h4>${html}<button class="btn btn-primary" id="btnSubmitApplication">Submit Application</button>`;
+
+    document.getElementById('btnSubmitApplication').addEventListener('click', () => {
+      showToast('Application submitted successfully!', 'success');
+    });
+  }
+
+  // Select Job
+  const jobTableBody = document.querySelector('#jobTable tbody');
+  async function loadJobs() {
+    try {
+      const response = await axios.get(API.selectJob);
+      const jobs = response.data || [];
+      if (!jobs.length) {
+        jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
+        return;
+      }
+      renderTableRows(jobs, jobTableBody, [
+        { key: 'title' },
+        { key: 'department' },
+        { key: 'deadline' }
+      ], job => {
+        showToast(`You selected the job: ${job.title}`, 'info');
+      }, id => {
+        showToast('Remove not applicable for jobs.', 'warning');
+      });
+    } catch {
+      jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
+    }
+  }
+
+  /* -------- Modal Submit Handler -------- */
+  crudForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!crudForm.checkValidity()) {
+      crudForm.classList.add('was-validated');
+      return;
+    }
+    const data = {};
+    crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
+      if (input.type === 'file') {
+        data[input.name] = input.files.length > 0 ? input.files[0].name : '';
+      } else {
+        data[input.name] = input.value.trim();
+      }
+    });
+
+    const id = crudItemIdInput.value || null;
+    let key = '';
+    switch (currentStep) {
+      case 'educationTraining': apiUrl = API.educationTraining; key = 'educationTraining'; break;
+      case 'professionalMembership': apiUrl = API.professionalMembership; key = 'professionalMembership'; break;
+      case 'employmentHistory': apiUrl = API.employmentHistory; key = 'employmentHistory'; break;
+      case 'documents': apiUrl = API.documents; key = 'documents'; if (!id) data.uploadedOn = new Date().toLocaleDateString(); break;
+      case 'referee': apiUrl = API.referee; key = 'referee'; break;
+      case 'dependants': apiUrl = API.dependants; key = 'dependants'; break;
+      default:
+        showToast('Unsupported step form.', 'error');
+        crudModal.hide();
+        return;
+    }
+    try {
+      if (id) {
+        await updateItem(apiUrl, id, data, key);
+        showToast('Record updated.', 'success');
+      } else {
+        await createItem(apiUrl, data, key);
+        showToast('Record created.', 'success');
+      }
+      crudModal.hide();
+      await loadStepData(currentStep);
+    } catch {}
+  });
+
+  /* -------- Load Data for step -------- */
+  async function loadStepData(step) {
+    switch (step) {
+      case 'personalDetails': await loadPersonalDetails(); break;
+      case 'educationTraining': await loadEducation(); break;
+      case 'professionalMembership': await loadMembership(); break;
+      case 'employmentHistory': await loadEmployment(); break;
+      case 'documents': await loadDocuments(); break;
+      case 'referee': await loadReferee(); break;
+      case 'dependants': await loadDependants(); break;
+      case 'previewApplication': await loadPreview(); break;
+      case 'selectJob': await loadJobs(); break;
+    }
+  }
+
+  /* -------- Initialize App After Login -------- */
+  function initAppAfterLogin() {
+    const session = getSession();
+    if (!session) return;
+
+    // Show user in navbar dropdown
+    navbarUserName.textContent = session.name || session.email;
+    userDropdownBtn.textContent = session.name ? session.name.charAt(0).toUpperCase() : 'U';
+
+    // Show default step
+    showStep(currentStep);
+  }
+  /* -------- Validation Error Handling -------- */
+  function showValidationErrors(form, errors) {
+    clearValidationErrors(form);
+    for (const [field, messages] of Object.entries(errors)) {
+      const input = form.querySelector(`[name="${field}"]`);
+      if (input) {
+        input.classList.add('is-invalid');
+        const feedback = input.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+          feedback.textContent = messages.join(' ');
+        }
+      }
+    }
+  }
+  function clearValidationErrors(form) {
+    form.querySelectorAll('.is-invalid').forEach(input => {
+      input.classList.remove('is-invalid');
+    });
+    form.querySelectorAll('.invalid-feedback').forEach(div => {
+      div.textContent = '';
+    });
+  }
+  /* ========== Mock API ========== */
+  (function mockAPI() {
+    const mockDB = {
+      personalDetails: {},
+      educationTraining: [],
+      professionalMembership: [],
+      employmentHistory: [],
+      documents: [],
+      referee: [],
+      dependants: [],
+      jobs: [
+        { id: 'j1', title: 'Software Developer', department: 'IT', deadline: '31 Dec 2024' },
+        { id: 'j2', title: 'Project Manager', department: 'Operations', deadline: '15 Nov 2024' }
+      ]
+    };
+
+    axios.interceptors.request.use(config => {
+      const { method, url, data } = config;
+      let baseUrl = url.split('?')[0];
+      return new Promise(resolve => {
+        setTimeout(() => {
+          if (method === 'get') {
+            switch(baseUrl) {
+              case API.personalDetails: resolve({ data: mockDB.personalDetails }); break;
+              case API.educationTraining: resolve({ data: mockDB.educationTraining }); break;
+              case API.professionalMembership: resolve({ data: mockDB.professionalMembership }); break;
+              case API.employmentHistory: resolve({ data: mockDB.employmentHistory }); break;
+              case API.documents: resolve({ data: mockDB.documents }); break;
+              case API.referee: resolve({ data: mockDB.referee }); break;
+              case API.dependants: resolve({ data: mockDB.dependants }); break;
+              case API.selectJob: resolve({ data: mockDB.jobs }); break;
+              default: resolve({ data: [] }); break;
+            }
+          }
+          else if (method === 'post') {
+            const item = JSON.parse(data);
+            if (baseUrl === API.personalDetails) {
+              Object.assign(mockDB.personalDetails, item);
+              resolve({ data: {...mockDB.personalDetails} });
+            } else {
+              item.id = 'id' + Math.random().toString(36).slice(2, 7);
+              for (const key in mockDB) {
+                if (API[key] === baseUrl && Array.isArray(mockDB[key])) {
+                  mockDB[key].push(item);
+                  resolve({ data: item });
+                  return;
+                }
+              }
+              resolve({ data: item });
+            }
+          }
+          else if (method === 'put') {
+            const id = baseUrl.split('/').pop();
+            const upd = JSON.parse(data);
+            for (const key in mockDB) {
+              if (API[key] && baseUrl.startsWith(API[key]) && Array.isArray(mockDB[key])) {
+                const idx = mockDB[key].findIndex(i => i.id === id);
+                if (idx >= 0) {
+                  mockDB[key][idx] = {...mockDB[key][idx], ...upd};
+                  resolve({ data: mockDB[key][idx] });
+                  return;
+                }
+              }
+            }
+            resolve({ data: upd });
+          }
+          else if (method === 'delete') {
+            const id = baseUrl.split('/').pop();
+            for (const key in mockDB) {
+              if (API[key] && baseUrl.startsWith(API[key]) && Array.isArray(mockDB[key])) {
+                mockDB[key] = mockDB[key].filter(i => i.id !== id);
+                resolve({ data: {} });
+                return;
+              }
+            }
+            resolve({ data: {} });
+          }
+        }, 300);
+      });
+    });
+  })();
+
+  /* -------- Init -------- */
+  function init() {
+    const user = getSession();
+    if (user) {
+      showApp();
+      initAppAfterLogin();
+    } else {
+      showAuth();
+      showLoginForm();
+    }
+  }
+  init();
+
+})();
