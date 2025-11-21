@@ -154,8 +154,8 @@
             const btnLogout = document.getElementById('btnLogout');
 
             if (mainNavbar) mainNavbar.style.display = 'flex';
-            if (navbarUserName) navbarUserName.textContent = user.email || user.name;
-            if (userDropdown) userDropdown.textContent = 'Hello ' + (user.email || user.name);
+            if (navbarUserName) navbarUserName.textContent = user.name || user.email;
+            if (userDropdown) userDropdown.textContent = 'Hello ' + user.email;
 
             // Logout functionality
             if (btnLogout) {
