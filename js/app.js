@@ -1,7 +1,7 @@
 (() => {
   /* ========== Configuration ========== */
   // Set your API base URL here - change this to point to your backend
-  const apiUrl = 'http://localhost:8050/api/v1';
+  const apiUrl = 'https://api-server.ppda.go.ug:1000/api';
 
   /* ----- Elements ----- */
   const authArea = document.getElementById('authArea');
@@ -136,7 +136,7 @@
   });
 
   /* ---- Register -> show verify email form ---- */
-  loginForm.addEventListener('submit', e => {
+  loginForm.addEventListener('submit', async e => {
     e.preventDefault();
     const emailInput = document.getElementById('loginEmail');
 
@@ -145,16 +145,24 @@
       return;
     }
 
-    // Simulate sending verification email
-    // Save "pendingUser" temporarily to localStorage
-    localStorage.setItem('pendingUser', JSON.stringify({
-      email: emailInput.value,
-      verified: false,
-    }));
+    const email = emailInput.value.toLowerCase().trim();
 
-    showVerifyEmailForm(emailInput.value);
+    try {
+      // Send OTP via API
+      await axios.post(API.sendOtp, { email });
+      showToast('OTP sent to your email.', 'success');
 
-    registerForm.reset();
+      // Save "pendingUser" temporarily to localStorage
+      localStorage.setItem('pendingUser', JSON.stringify({
+        email: email,
+        verified: false,
+      }));
+
+      showVerifyEmailForm(email);
+      loginForm.reset();
+    } catch (error) {
+      showToast('Failed to send OTP. Please try again.', 'error');
+    }
   });
 
   /* ---- Verify email form submit ---- */
@@ -245,17 +253,14 @@
   }
 
   // Form submission
-  otpForm.addEventListener('submit', e => {
+  otpForm.addEventListener('submit', async e => {
     e.preventDefault();
     const code = otpCode.value;
-    
+
     if (!code || code.length !== 6) {
       showToast('Please enter a valid 6-digit code.', 'warning');
       return;
     }
-
-    // In a real app, verify code with backend.
-    // Here, simulate always success.
 
     const pendingUserStr = localStorage.getItem('pendingUser');
     if (!pendingUserStr) {
@@ -264,31 +269,51 @@
       return;
     }
     const pendingUser = JSON.parse(pendingUserStr);
-    pendingUser.verified = true;
 
-    // Save session
-    setSession({
-      email: pendingUser.email,
-      name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
-      role: 'Applicant',
-    });
-    localStorage.removeItem('pendingUser');
+    try {
+      // Verify OTP via API
+      await axios.post(API.validateCode, { code, email: pendingUser.email });
 
-    showToast('Email verified! You are now logged in.', 'success');
+      // Save session
+      setSession({
+        email: pendingUser.email,
+        name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
+        role: 'Applicant',
+      });
+      localStorage.removeItem('pendingUser');
 
-    window.location.href = 'home.html';
+      showToast('Email verified! You are now logged in.', 'success');
+      window.location.href = 'home.html';
+    } catch (error) {
+      showToast('Invalid OTP code. Please try again.', 'error');
+    }
   });
 
   // Resend code functionality
   resendLink.addEventListener('click', async () => {
     if (resendLink.classList.contains('disabled')) return;
-    
-    // Restart countdown
-    countdown = 60;
-    startCountdown();
-    
-    // Clear previous OTP inputs
-    clearOTPInputs();
+
+    const pendingUserStr = localStorage.getItem('pendingUser');
+    if (!pendingUserStr) {
+      showToast('No pending verification found.', 'error');
+      return;
+    }
+    const pendingUser = JSON.parse(pendingUserStr);
+
+    try {
+      // Resend OTP via API
+      await axios.post(API.sendOtp, { email: pendingUser.email });
+      showToast('OTP resent to your email.', 'success');
+
+      // Restart countdown
+      countdown = 30;
+      startCountdown();
+
+      // Clear previous OTP inputs
+      clearOTPInputs();
+    } catch (error) {
+      showToast('Failed to resend OTP. Please try again.', 'error');
+    }
   });
 
   // Countdown timer for resend
@@ -303,7 +328,7 @@
       if (countdown <= 0) {
         clearInterval(countdownInterval);
         resendLink.classList.remove('disabled');
-        countdown = 60;
+        countdown = 30;
         countdownEl.textContent = `(${countdown}s)`;
       }
     }, 1000);
@@ -362,17 +387,38 @@
   /* =============== Application Logic =============== */
   // API endpoints - dynamically built with the apiUrl
   const API = {
-    personalDetails: `${apiUrl}/personalDetails`,
-    educationTraining: `${apiUrl}/education`,
-    professionalMembership: `${apiUrl}/membership`,
-    employmentHistory: `${apiUrl}/employment`,
-    documents: `${apiUrl}/documents`,
-    referee: `${apiUrl}/referee`,
-    dependants: `${apiUrl}/dependants`,
-    selectJob: `${apiUrl}/jobs`,
+    sendOtp: `${apiUrl}/verify_email`,
+    personalDetails: `${apiUrl}/post_application`,
+    educationTraining: `${apiUrl}/post_application_section`,
+    professionalMembership: `${apiUrl}/post_application_section`,
+    employmentHistory: `${apiUrl}/post_application_section`,
+    documents: `${apiUrl}/post_application_section`,
+    referee: `${apiUrl}/post_application_section`,
+    dependants: `${apiUrl}/post_application_section`,
+    selectJob: `${apiUrl}/get_active_vacancies`,
+    checkServerStatus: `${apiUrl}/check-server-status`,
+    getActiveVacancies: `${apiUrl}/get_active_vacancies`,
+    postApplication: `${apiUrl}/post_application`,
+    postApplicationSection: `${apiUrl}/post_application_section`,
+    getApplication: (id) => `${apiUrl}/get_application/${id}`,
+    retrieveApplication: `${apiUrl}/retrieve_application`,
+    validateCode: `${apiUrl}/validate_code`,
   };
 
   let dataCache = {};
+
+  function getSection(key) {
+    const map = {
+      educationTraining: 'education',
+      professionalMembership: 'memberships',
+      employmentHistory: 'employment',
+      documents: 'documents',
+      referee: 'references',
+      dependants: 'dependants',
+      personalDetails: 'personal',
+    };
+    return map[key] || '';
+  }
 
   /* ----- Sidebar Navigation ----- */
   function showStep(step) {
@@ -865,87 +911,7 @@
       div.textContent = '';
     });
   }
-  /* ========== Mock API ========== */
-  (function mockAPI() {
-    const mockDB = {
-      personalDetails: {},
-      educationTraining: [],
-      professionalMembership: [],
-      employmentHistory: [],
-      documents: [],
-      referee: [],
-      dependants: [],
-      jobs: [
-        { id: 'j1', title: 'Software Developer', department: 'IT', deadline: '31 Dec 2024' },
-        { id: 'j2', title: 'Project Manager', department: 'Operations', deadline: '15 Nov 2024' }
-      ]
-    };
 
-    axios.interceptors.request.use(config => {
-      const { method, url, data } = config;
-      let baseUrl = url.split('?')[0];
-      return new Promise(resolve => {
-        setTimeout(() => {
-          if (method === 'get') {
-            switch(baseUrl) {
-              case API.personalDetails: resolve({ data: mockDB.personalDetails }); break;
-              case API.educationTraining: resolve({ data: mockDB.educationTraining }); break;
-              case API.professionalMembership: resolve({ data: mockDB.professionalMembership }); break;
-              case API.employmentHistory: resolve({ data: mockDB.employmentHistory }); break;
-              case API.documents: resolve({ data: mockDB.documents }); break;
-              case API.referee: resolve({ data: mockDB.referee }); break;
-              case API.dependants: resolve({ data: mockDB.dependants }); break;
-              case API.selectJob: resolve({ data: mockDB.jobs }); break;
-              default: resolve({ data: [] }); break;
-            }
-          }
-          else if (method === 'post') {
-            const item = JSON.parse(data);
-            if (baseUrl === API.personalDetails) {
-              Object.assign(mockDB.personalDetails, item);
-              resolve({ data: {...mockDB.personalDetails} });
-            } else {
-              item.id = 'id' + Math.random().toString(36).slice(2, 7);
-              for (const key in mockDB) {
-                if (API[key] === baseUrl && Array.isArray(mockDB[key])) {
-                  mockDB[key].push(item);
-                  resolve({ data: item });
-                  return;
-                }
-              }
-              resolve({ data: item });
-            }
-          }
-          else if (method === 'put') {
-            const id = baseUrl.split('/').pop();
-            const upd = JSON.parse(data);
-            for (const key in mockDB) {
-              if (API[key] && baseUrl.startsWith(API[key]) && Array.isArray(mockDB[key])) {
-                const idx = mockDB[key].findIndex(i => i.id === id);
-                if (idx >= 0) {
-                  mockDB[key][idx] = {...mockDB[key][idx], ...upd};
-                  resolve({ data: mockDB[key][idx] });
-                  return;
-                }
-              }
-            }
-            resolve({ data: upd });
-          }
-          else if (method === 'delete') {
-            const id = baseUrl.split('/').pop();
-            for (const key in mockDB) {
-              if (API[key] && baseUrl.startsWith(API[key]) && Array.isArray(mockDB[key])) {
-                mockDB[key] = mockDB[key].filter(i => i.id !== id);
-                resolve({ data: {} });
-                return;
-              }
-            }
-            resolve({ data: {} });
-          }
-        }, 300);
-      });
-    });
-  })();
 
   /* -------- Init -------- */
   function init() {
