@@ -800,8 +800,8 @@
   async function loadJobs() {
     try {
       const response = await axios.get(API.selectJob);
-      const jobs = response.data || [];
-      console.log(jobs.data);
+      const jobs = response.data.data || [];
+      // console.log(jobs);
       if (!jobs.length) {
         jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
         return;
@@ -811,7 +811,7 @@
         { key: 'location' },
         { key: 'deadline' }
       ], job => {
-        showToast(`You selected the job: ${job.title}`, 'info');
+        showToast(`You selected the job: ${job.name}`, 'info');
       }, id => {
         showToast('Remove not applicable for jobs.', 'warning');
       });
