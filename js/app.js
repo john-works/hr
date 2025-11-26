@@ -1,7 +1,7 @@
 (() => {
   /* ========== Configuration ========== */
   // Set your API base URL here - change this to point to your backend
-  const apiUrl = 'https://api-server.ppda.go.ug:1000/api';
+  const apiUrl = 'https://api-server.ppda.go.ug/api';
 
   /* ----- Elements ----- */
   const authArea = document.getElementById('authArea');
