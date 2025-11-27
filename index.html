@@ -69,7 +69,8 @@
 
          <div class="security-notice">
               <h6 class="text-center"><i class="fas fa-hand-paper me-2"></i>Welcome! </h6>
-              <p>Please enter your E-mail to proceed...</p>
+              <p>Please enter your E-mail to proceed... <strong>
+                 Check your email for the OTP Code</strong></p>
           </div>
           <br>
         <div class="mb-3">
@@ -85,7 +86,7 @@
 
       <!-- Register Form -->
       <form id="registerForm" style="display:none;">
-        <h3 class="auth-form-title">Register</h3>
+        <h3 class="auth-form-title">Create Account</h3>
 
         <div class="mb-3">
           <label for="fname" class="form-label">First Name</label>
@@ -94,7 +95,7 @@
 
         <div class="mb-3">
           <label for="lname" class="form-label">Last Name</label>
-          <input type="text" class="form-control" id="lname" name="lname" autocomplete="email" />
+          <input type="text" class="form-control" id="lname" name="lname" autocomplete="lname" />
         </div>
 
 
@@ -113,19 +114,15 @@
           </div>
         </div>
 
-
-
-
-
-
-
-
-
-        <button type="submit" class="btn btn-primary w-100 mb-2">Register & Send Verification Code</button>
+        <button type="submit" class="btn btn-primary w-100 mb-2">Register</button>
         <div class="auth-form-divider">
           Already have an account? <span class="auth-toggle" id="showLogin">Enter Email</span>
         </div>
 
+        <!-- <div class="security-notice">
+              <h6 class="text-center"><i class="fas fa-shield-alt me-2"></i>Welcome! </h6>
+              <p>Please enter your E-mail to proceed...</p>
+          </div> -->
         
       </form>
 

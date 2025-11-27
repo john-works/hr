@@ -174,7 +174,7 @@
   const btnSpinner = document.getElementById('btnSpinner');
   const resendLink = document.getElementById('resendLink');
   const countdownEl = document.getElementById('countdown');
-  let countdown = 60;
+  let countdown = 30;
   let countdownInterval;
 
   // OTP input handling
@@ -349,7 +349,7 @@
   const originalShowVerifyEmailForm = showVerifyEmailForm;
   showVerifyEmailForm = function(email) {
     originalShowVerifyEmailForm(email);
-    countdown = 60;
+    countdown = 30;
     countdownEl.textContent = `(${countdown}s)`;
     startCountdown();
     otpInputs[0].focus();
