@@ -589,20 +589,53 @@
   const educationTableBody = document.querySelector('#educationTable tbody');
   document.getElementById('btnAddEducation').addEventListener('click', () => openEducationModal());
   function openEducationModal(editItem = null) {
-    crudModalLabel.textContent = editItem ? 'Edit Education' : 'Add Education';
+    crudModalLabel.innerHTML = `<i class="fas fa-graduation-cap me-2"></i>${editItem ? 'Edit Education' : 'Add Education'}`;
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="mb-3">
-        <label for="educationInstitution" class="form-label">Institution</label>
-        <input type="text" class="form-control" id="educationInstitution" name="institution" required value="${editItem ? editItem.institution : ''}">
+     
+     
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="from_year" class="form-label fw-bold">From Year</label>
+          <select class="form-control form-control" id="from_year" name="from_year" required>
+            <option value="">Select Year</option>
+            ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i).map(year => `<option value="${year}" ${editItem && editItem.from_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="to_year" class="form-label fw-bold">To Year</label>
+          <select class="form-control form-control" id="to_year" name="to_year">
+            <option value="">Select Year</option>
+            ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i).map(year => `<option value="${year}" ${editItem && editItem.to_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+          </select>
+        </div>
       </div>
-      <div class="mb-3">
-        <label for="educationDegree" class="form-label">Degree</label>
-        <input type="text" class="form-control" id="educationDegree" name="degree" required value="${editItem ? editItem.degree : ''}">
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="qualification" class="form-label fw-bold">Qualification</label>
+          <select type="text" class="form-control form-control" id="qualification" name="qualification" placeholder="e.g. University of Example" required value="${editItem ? editItem.qualification : ''}">
+            <option value="">Select Qualification</option>
+            <option value="PhD">PhD</option>
+            <option value="Masters">Masters</option>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Diploma" >Diploma</option>
+            <option value="Certificate">Certificate</option>
+
+          </select>
+          </div>
+        <div class="col-md-6 mb-3">
+          <label for="course" class="form-label fw-bold">Program/Course</label>
+          <input type="text" class="form-control form-control" id="course" name="course" placeholder="e.g. Bachelor of Science" required value="${editItem ? editItem.course : ''}">
+        </div>
       </div>
-      <div class="mb-3">
-        <label for="educationYear" class="form-label">Year</label>
-        <input type="number" class="form-control" id="educationYear" name="year" required min="1900" max="2100" value="${editItem ? editItem.year : ''}">
+
+
+
+
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Ensure all information is accurate as it will be verified during the application process.
       </div>
     `;
     crudModal.show();
@@ -625,20 +658,30 @@
   const membershipTableBody = document.querySelector('#membershipTable tbody');
   document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
   function openMembershipModal(editItem = null) {
-    crudModalLabel.textContent = editItem ? 'Edit Membership' : 'Add Membership';
+    crudModalLabel.innerHTML = `<i class="fas fa-users me-2"></i>${editItem ? 'Edit Membership' : 'Add Membership'}`;
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="mb-3">
-        <label for="membershipOrganization" class="form-label">Organization</label>
-        <input type="text" class="form-control" id="membershipOrganization" name="organization" required value="${editItem ? editItem.organization : ''}">
+      <div class="text-center mb-4">
+        <i class="fas fa-handshake fa-3x text-success mb-3"></i>
+        <p class="text-muted">Add your professional memberships and affiliations</p>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="membershipOrganization" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Organization</label>
+          <input type="text" class="form-control form-control-lg" id="membershipOrganization" name="organization" placeholder="e.g. IEEE, ACM" required value="${editItem ? editItem.organization : ''}">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="membershipType" class="form-label fw-bold"><i class="fas fa-id-badge me-1"></i>Membership Type</label>
+          <input type="text" class="form-control form-control-lg" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
+        </div>
       </div>
       <div class="mb-3">
-        <label for="membershipType" class="form-label">Membership Type</label>
-        <input type="text" class="form-control" id="membershipType" name="type" required value="${editItem ? editItem.type : ''}">
+        <label for="membershipNumber" class="form-label fw-bold"><i class="fas fa-hashtag me-1"></i>Membership Number</label>
+        <input type="text" class="form-control form-control-lg" id="membershipNumber" name="number" placeholder="e.g. 123456789" required value="${editItem ? editItem.number : ''}">
       </div>
-      <div class="mb-3">
-        <label for="membershipNumber" class="form-label">Membership Number</label>
-        <input type="text" class="form-control" id="membershipNumber" name="number" required value="${editItem ? editItem.number : ''}">
+      <div class="alert alert-success">
+        <i class="fas fa-lightbulb me-2"></i>
+        Professional memberships demonstrate your commitment to your field and can strengthen your application.
       </div>
     `;
     crudModal.show();
@@ -661,20 +704,30 @@
   const employmentTableBody = document.querySelector('#employmentTable tbody');
   document.getElementById('btnAddEmployment').addEventListener('click', () => openEmploymentModal());
   function openEmploymentModal(editItem = null) {
-    crudModalLabel.textContent = editItem ? 'Edit Employment' : 'Add Employment';
+    crudModalLabel.innerHTML = `<i class="fas fa-briefcase me-2"></i>${editItem ? 'Edit Employment' : 'Add Employment'}`;
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="mb-3">
-        <label for="employmentEmployer" class="form-label">Employer</label>
-        <input type="text" class="form-control" id="employmentEmployer" name="employer" required value="${editItem ? editItem.employer : ''}">
+      <div class="text-center mb-4">
+        <i class="fas fa-building fa-3x text-warning mb-3"></i>
+        <p class="text-muted">Share your work experience and career progression</p>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="employmentEmployer" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Employer</label>
+          <input type="text" class="form-control form-control-lg" id="employmentEmployer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="employmentPosition" class="form-label fw-bold"><i class="fas fa-user-tie me-1"></i>Position</label>
+          <input type="text" class="form-control form-control-lg" id="employmentPosition" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
+        </div>
       </div>
       <div class="mb-3">
-        <label for="employmentPosition" class="form-label">Position</label>
-        <input type="text" class="form-control" id="employmentPosition" name="position" required value="${editItem ? editItem.position : ''}">
+        <label for="employmentDuration" class="form-label fw-bold"><i class="fas fa-calendar-alt me-1"></i>Duration</label>
+        <input type="text" class="form-control form-control-lg" id="employmentDuration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
       </div>
-      <div class="mb-3">
-        <label for="employmentDuration" class="form-label">Duration</label>
-        <input type="text" class="form-control" id="employmentDuration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Provide accurate employment details as they may be verified through background checks.
       </div>
     `;
     crudModal.show();
@@ -697,20 +750,30 @@
   const documentsTableBody = document.querySelector('#documentsTable tbody');
   document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentsModal());
   function openDocumentsModal(editItem = null) {
-    crudModalLabel.textContent = editItem ? 'Edit Document' : 'Upload Document';
+    crudModalLabel.innerHTML = `<i class="fas fa-file-upload me-2"></i>${editItem ? 'Edit Document' : 'Upload Document'}`;
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="mb-3">
-        <label for="documentName" class="form-label">Document Name</label>
-        <input type="text" class="form-control" id="documentName" name="name" required value="${editItem ? editItem.name : ''}">
+      <div class="text-center mb-4">
+        <i class="fas fa-folder-open fa-3x text-info mb-3"></i>
+        <p class="text-muted">Upload your supporting documents securely</p>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="documentName" class="form-label fw-bold"><i class="fas fa-tag me-1"></i>Document Name</label>
+          <input type="text" class="form-control form-control-lg" id="documentName" name="name" placeholder="e.g. CV, Certificate" required value="${editItem ? editItem.name : ''}">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="documentType" class="form-label fw-bold"><i class="fas fa-file-alt me-1"></i>Type</label>
+          <input type="text" class="form-control form-control-lg" id="documentType" name="type" placeholder="e.g. PDF, Image" required value="${editItem ? editItem.type : ''}">
+        </div>
       </div>
       <div class="mb-3">
-        <label for="documentType" class="form-label">Type</label>
-        <input type="text" class="form-control" id="documentType" name="type" required value="${editItem ? editItem.type : ''}">
+        <label for="documentFile" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
+        <input type="file" class="form-control form-control-lg" id="documentFile" name="file" ${editItem ? '' : 'required'}>
       </div>
-      <div class="mb-3">
-        <label for="documentFile" class="form-label">File</label>
-        <input type="file" class="form-control" id="documentFile" name="file" ${editItem ? '' : 'required'}>
+      <div class="alert alert-info">
+        <i class="fas fa-shield-alt me-2"></i>
+        All uploaded documents are encrypted and stored securely. Only authorized personnel will have access.
       </div>
     `;
     crudModal.show();
