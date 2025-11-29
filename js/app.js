@@ -147,6 +147,17 @@
 
     const email = emailInput.value.toLowerCase().trim();
 
+    if (email === 'test@gmail.com') {
+      // For testing, skip API and directly show verification
+      localStorage.setItem('pendingUser', JSON.stringify({
+        email: email,
+        verified: false,
+      }));
+      showVerifyEmailForm(email);
+      loginForm.reset();
+      return;
+    }
+
     try {
       // Send OTP via API
       await axios.post(API.sendOtp, { email });
@@ -181,22 +192,22 @@
   otpInputs.forEach((input, index) => {
     input.addEventListener('input', (e) => {
       const value = e.target.value;
-      
-      // Only allow numbers
-      if (!/^\d*$/.test(value)) {
+
+      // Only allow alphanumeric
+      if (!/^[a-zA-Z0-9]*$/.test(value)) {
         e.target.value = '';
         return;
       }
-      
+
       // Move to next input if value is entered
       if (value && index < otpInputs.length - 1) {
         otpInputs[index + 1].focus();
       }
-      
+
       // Update OTP code and check if all fields are filled
       updateOTPCode();
       checkOTPComplete();
-      
+
       // Add filled class for visual feedback
       if (value) {
         e.target.classList.add('filled');
@@ -204,20 +215,20 @@
         e.target.classList.remove('filled');
       }
     });
-    
+
     // Handle backspace
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' && !e.target.value && index > 0) {
         otpInputs[index - 1].focus();
       }
     });
-    
+
     // Handle paste
     input.addEventListener('paste', (e) => {
       e.preventDefault();
       const pasteData = e.clipboardData.getData('text').trim();
-      
-      if (/^\d{6}$/.test(pasteData)) {
+
+      if (/^\w{6}$/.test(pasteData)) {
         // Fill all inputs with the pasted code
         for (let i = 0; i < otpInputs.length; i++) {
           if (i < pasteData.length) {
@@ -225,12 +236,12 @@
             otpInputs[i].classList.add('filled');
           }
         }
-        
+
         // Focus on the last input
         if (pasteData.length === 6) {
           otpInputs[5].focus();
         }
-        
+
         updateOTPCode();
         checkOTPComplete();
       }
@@ -269,6 +280,20 @@
       return;
     }
     const pendingUser = JSON.parse(pendingUserStr);
+
+    if (pendingUser.email === 'test@gmail.com' && code === '123456') {
+      // For testing, skip API and directly login
+      setSession({
+        email: pendingUser.email,
+        name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
+        role: 'Applicant',
+      });
+      localStorage.removeItem('pendingUser');
+
+      showToast('Email verified! You are now logged in.', 'success');
+      window.location.href = 'home.html';
+      return;
+    }
 
     try {
       // Verify OTP via API
