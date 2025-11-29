@@ -753,30 +753,52 @@
     crudModalLabel.innerHTML = `<i class="fas fa-file-upload me-2"></i>${editItem ? 'Edit Document' : 'Upload Document'}`;
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="text-center mb-4">
-        <i class="fas fa-folder-open fa-3x text-info mb-3"></i>
-        <p class="text-muted">Upload your supporting documents securely</p>
-      </div>
+
       <div class="row">
         <div class="col-md-6 mb-3">
-          <label for="documentName" class="form-label fw-bold"><i class="fas fa-tag me-1"></i>Document Name</label>
-          <input type="text" class="form-control form-control-lg" id="documentName" name="name" placeholder="e.g. CV, Certificate" required value="${editItem ? editItem.name : ''}">
-        </div>
+          <label for="qualification" class="form-label fw-bold">Qualification</label>
+          <select type="text" class="form-control form-control" id="qualification" name="qualification" placeholder="e.g. University of Example" required value="${editItem ? editItem.qualification : ''}">
+            <option value="">Select Qualification</option>
+            <option value="PhD">PhD</option>
+            <option value="Masters">Masters</option>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Diploma" >Diploma</option>
+            <option value="Certificate">Certificate</option>
+            <option value="NationId">Nation Id</option>
+            <option value="Cover Page">Cover Page</option>
+
+
+          </select>
+          </div>
         <div class="col-md-6 mb-3">
-          <label for="documentType" class="form-label fw-bold"><i class="fas fa-file-alt me-1"></i>Type</label>
-          <input type="text" class="form-control form-control-lg" id="documentType" name="type" placeholder="e.g. PDF, Image" required value="${editItem ? editItem.type : ''}">
+          <label for="title" class="form-label fw-bold">Document Title</label>
+          <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
         </div>
       </div>
+
+
+
       <div class="mb-3">
-        <label for="documentFile" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
-        <input type="file" class="form-control form-control-lg" id="documentFile" name="file" ${editItem ? '' : 'required'}>
+        <label for="file" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
+        <input type="file" class="form-control form-control" id="file" name="file" accept="application/pdf" ${editItem ? '' : 'required'}>
       </div>
+
       <div class="alert alert-info">
         <i class="fas fa-shield-alt me-2"></i>
         All uploaded documents are encrypted and stored securely. Only authorized personnel will have access.
       </div>
     `;
     crudModal.show();
+
+    // Add file validation
+    const documentFileInput = document.getElementById('documentFile');
+    documentFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file && file.type !== 'application/pdf') {
+        showToast('Please select a PDF file only.', 'error');
+        e.target.value = ''; // Clear the input
+      }
+    });
   }
   async function loadDocuments() {
     const items = await fetchItems(API.documents, 'documents');
