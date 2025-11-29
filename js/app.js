@@ -821,6 +821,33 @@
     crudModalLabel.textContent = editItem ? 'Edit Referee' : 'Add Referee';
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
+
+    <div class="row">
+      
+        <div class="col-md-6 mb-3">
+          <label for="full_name" class="form-label fw-bold">Full Name</label>
+          <input type="text" class="form-control form-control" id="full_name" name="full_name"  required value="${editItem ? editItem.full_name : ''}">
+        </div>
+
+
+        <div class="col-md-6 mb-3">
+          <label for="relationship" class="form-label fw-bold">Relationship</label>
+          <input type="text" class="form-control form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}"/>
+            
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
       <div class="mb-3">
         <label for="refereeName" class="form-label">Name</label>
         <input type="text" class="form-control" id="refereeName" name="name" required value="${editItem ? editItem.name : ''}">
@@ -857,18 +884,45 @@
     crudModalLabel.textContent = editItem ? 'Edit Dependant' : 'Add Dependant';
     crudItemIdInput.value = editItem ? editItem.id : '';
     crudModalBody.innerHTML = `
-      <div class="mb-3">
-        <label for="dependantName" class="form-label">Name</label>
-        <input type="text" class="form-control" id="dependantName" name="name" required value="${editItem ? editItem.name : ''}">
-      </div>
-      <div class="mb-3">
-        <label for="dependantRelationship" class="form-label">Relationship</label>
-        <input type="text" class="form-control" id="dependantRelationship" name="relationship" required value="${editItem ? editItem.relationship : ''}">
-      </div>
-      <div class="mb-3">
-        <label for="dependantAge" class="form-label">Age</label>
-        <input type="number" class="form-control" id="dependantAge" name="age" required min="0" max="120" value="${editItem ? editItem.age : ''}">
-      </div>
+
+
+    <div class="row">
+      
+        <div class="col-md-6 mb-3">
+          <label for="title" class="form-label fw-bold">Document Title</label>
+          <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
+        </div>
+
+
+        <div class="col-md-6 mb-3">
+          <label for="relationship" class="form-label fw-bold">Relationship</label>
+          <select type="text" class="form-control form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}">
+            <option value="">Select Relationship</option>
+            <option value="Spouse">Spouse</option>
+            <option value="Child">Child</option>
+            <option value="Parent" >Parent</option>
+            <option value="Friend">Friend</option>
+
+          </select>
+        </div>
+    </div>
+
+
+    
+
+    
+    <div class="row">
+      
+        <div class="col-md-6 mb-3">
+          <label for="age" class="form-label fw-bold">Age</label>
+          <input type="number" class="form-control form-control" id="age" name="age"  required value="${editItem ? editItem.age : ''}">
+        </div>
+
+
+        
+    </div>
+
+     
     `;
     crudModal.show();
   }
