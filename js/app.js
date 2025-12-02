@@ -1093,7 +1093,12 @@
       initAppAfterLogin();
     } else {
       showAuth();
-      showLoginForm();
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('register') === 'true') {
+        showRegisterForm();
+      } else {
+        showLoginForm();
+      }
     }
   }
   document.addEventListener('DOMContentLoaded', init);
