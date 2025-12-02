@@ -388,19 +388,19 @@
   // API endpoints - dynamically built with the apiUrl
   const API = {
     sendOtp: `${apiUrl}/verify_email`,
-    personalDetails: `${apiUrl}/post_application`,
-    educationTraining: `${apiUrl}/post_application_section`,
-    professionalMembership: `${apiUrl}/post_application_section`,
-    employmentHistory: `${apiUrl}/post_application_section`,
-    documents: `${apiUrl}/post_application_section`,
-    referee: `${apiUrl}/post_application_section`,
-    dependants: `${apiUrl}/post_application_section`,
-    selectJob: `${apiUrl}/get_active_vacancies`,
+    personalDetails: `${apiUrl}/application`,
+    educationTraining: `${apiUrl}/application_section`,
+    professionalMembership: `${apiUrl}/application_section`,
+    employmentHistory: `${apiUrl}/application_section`,
+    documents: `${apiUrl}/application_section`,
+    referee: `${apiUrl}/application_section`,
+    dependants: `${apiUrl}/application_section`,
+    selectJob: `${apiUrl}/active_vacancies`,
     checkServerStatus: `${apiUrl}/check-server-status`,
-    getActiveVacancies: `${apiUrl}/get_active_vacancies`,
-    postApplication: `${apiUrl}/post_application`,
-    postApplicationSection: `${apiUrl}/post_application_section`,
-    getApplication: (id) => `${apiUrl}/get_application/${id}`,
+    getActiveVacancies: `${apiUrl}/active_vacancies`,
+    postApplication: `${apiUrl}/application`,
+    postApplicationSection: `${apiUrl}/application_section`,
+    getApplication: (id) => `${apiUrl}/application/${id}`,
     retrieveApplication: `${apiUrl}/retrieve_application`,
     validateCode: `${apiUrl}/validate_code`,
   };
@@ -945,14 +945,26 @@
         jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
         return;
       }
-      renderTableRows(jobs, jobTableBody, [
-        { key: 'name' },
-        { key: 'location' },
-        { key: 'deadline' }
-      ], job => {
-        showToast(`You selected the job: ${job.name}`, 'info');
-      }, id => {
-        showToast('Remove not applicable for jobs.', 'warning');
+      jobTableBody.innerHTML = '';
+      jobs.forEach(job => {
+        const tr = document.createElement('tr');
+        tr.insertAdjacentHTML('beforeend', `<td>${job.name || ''}</td>`);
+        tr.insertAdjacentHTML('beforeend', `<td>${job.location || ''}</td>`);
+        tr.insertAdjacentHTML('beforeend', `<td>${job.deadline || ''}</td>`);
+
+        const tdActions = document.createElement('td');
+        const btnView = document.createElement('button');
+        btnView.className = 'btn btn-sm btn-info';
+        btnView.type = 'button';
+        btnView.innerHTML = '<i class="fa fa-eye"></i> View';
+        btnView.addEventListener('click', () => {
+          showToast(`Viewing job: ${job.name}`, 'info');
+          // Add view logic here, e.g., open modal with job details
+        });
+        tdActions.appendChild(btnView);
+        tr.appendChild(tdActions);
+
+        jobTableBody.appendChild(tr);
       });
     } catch {
       jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;

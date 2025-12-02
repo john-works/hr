@@ -1,6 +1,6 @@
 :root {
-  --primary-color: #000435;
-  --secondary-color: #001155;
+  --primary-color: #1624c9;
+  --secondary-color: #1624c9;
   --accent-color: #ff6b35;
   --light-color: #f8fafc;
   --dark-color: #343a40;
@@ -801,4 +801,48 @@ main {
 .navbar-nav .nav-link {
   color: white !important;
   font-weight: 600;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('../download.jpeg') no-repeat center center;
+  background-size: cover;
+  opacity: 0.1;
+  z-index: 0;
+}
+
+.hero-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Action Cards */
+.action-card {
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.action-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.action-card .card-body i {
+  transition: var(--transition);
+}
+
+.action-card:hover .card-body i {
+  transform: scale(1.1);
 }
