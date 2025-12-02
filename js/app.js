@@ -1,7 +1,7 @@
 (() => {
   /* ========== Configuration ========== */
   // Set your API base URL here - change this to point to your backend
-  const apiUrl = 'http://192.168.32.151:8041/api';
+  const apiUrl = 'http://192.168.32.151:8041/api/v1';
 
   /* ----- Elements ----- */
   const authArea = document.getElementById('authArea');
@@ -136,6 +136,47 @@
   showLoginBtn.addEventListener('click', (e) => {
     e.preventDefault();
     showLoginForm();
+  });
+
+  /* ---- Register form submit -> register user and send OTP ---- */
+  registerForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fnameInput = document.getElementById('first_name');
+    const lnameInput = document.getElementById('last_name');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('password_confirmation');
+
+    if (!fnameInput.value || !lnameInput.value || !emailInput.value || !passwordInput.value || !confirmPasswordInput.value) {
+      showToast('Please fill in all required fields.', 'warning');
+      return;
+    }
+
+    const data = {
+      first_name: fnameInput.value.trim(),
+      last_name: lnameInput.value.trim(),
+      email: emailInput.value.toLowerCase().trim(),
+      password: passwordInput.value,
+      password_confirmation: confirmPasswordInput.value,
+
+    };
+
+    try {
+      // Register user via API
+      await axios.post(API.registerForm, data);
+      showToast('Registration successful! OTP sent to your email.', 'success');
+
+      // Save "pendingUser" temporarily to localStorage
+      localStorage.setItem('pendingUser', JSON.stringify({
+        email: data.email,
+        verified: false,
+      }));
+
+      showVerifyEmailForm(data.email);
+      registerForm.reset();
+    } catch (error) {
+      showToast('Registration failed. Please try again.', 'error');
+    }
   });
 
   /* ---- Login form submit -> send OTP and show verify email form ---- */
@@ -377,6 +418,7 @@
   // API endpoints - dynamically built with the apiUrl
   const API = {
     sendOtp: `${apiUrl}/verify_email`,
+    registerForm: `${apiUrl}/register`,
     personalDetails: `${apiUrl}/application`,
     educationTraining: `${apiUrl}/application_section`,
     professionalMembership: `${apiUrl}/application_section`,
