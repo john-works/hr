@@ -20,6 +20,9 @@
 
   // Current step in app
   let currentStep = 'selectJob';
+  // Check if in browse mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const isBrowseMode = urlParams.get('mode') === 'browse';
 
   // Bootstrap modal for CRUD
   const crudModalEl = document.getElementById('crudModal');
@@ -436,7 +439,12 @@
     const a = e.target.closest('a.nav-link');
     if (!a) return;
     e.preventDefault();
-    showStep(a.getAttribute('data-step'));
+    const step = a.getAttribute('data-step');
+    if (isBrowseMode && step !== 'selectJob') {
+      showToast('You can only browse jobs in this mode. Please click View to Continue', 'warning');
+      return;
+    }
+    showStep(step);
   });
 
   /* ----- Generic Table Renderer ----- */
@@ -954,7 +962,7 @@
 
         const tdActions = document.createElement('td');
         const btnView = document.createElement('button');
-        btnView.className = 'btn btn-sm btn-info';
+        btnView.className = 'btn btn-sm btn-info me-2';
         btnView.type = 'button';
         btnView.innerHTML = '<i class="fa fa-eye"></i> View';
         btnView.addEventListener('click', () => {
@@ -962,6 +970,18 @@
           // Add view logic here, e.g., open modal with job details
         });
         tdActions.appendChild(btnView);
+
+        if (!isBrowseMode) {
+          const btnApply = document.createElement('button');
+          btnApply.className = 'btn btn-sm btn-success';
+          btnApply.type = 'button';
+          btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
+          btnApply.addEventListener('click', () => {
+            showToast(`Applying for job: ${job.name}`, 'success');
+            // Add apply logic here
+          });
+          tdActions.appendChild(btnApply);
+        }
         tr.appendChild(tdActions);
 
         jobTableBody.appendChild(tr);

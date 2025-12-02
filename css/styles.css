@@ -846,3 +846,10 @@ main {
 .action-card:hover .card-body i {
   transform: scale(1.1);
 }
+
+/* Quick Actions Container Hover */
+.row.justify-content-center:hover {
+  transform: translateY(-3px);
+  background-color: rgba(173, 216, 230, 0.1);
+  transition: var(--transition);
+}
