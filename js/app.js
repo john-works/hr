@@ -1,7 +1,7 @@
 (() => {
   /* ========== Configuration ========== */
   // Set your API base URL here - change this to point to your backend
-  const apiUrl = 'https://api-server.ppda.go.ug/api';
+  const apiUrl = 'http://192.168.32.151:8041/api';
 
   /* ----- Elements ----- */
   const authArea = document.getElementById('authArea');
@@ -147,17 +147,6 @@
 
     const email = emailInput.value.toLowerCase().trim();
 
-    if (email === 'test@gmail.com') {
-      // For testing, skip API and directly show verification
-      localStorage.setItem('pendingUser', JSON.stringify({
-        email: email,
-        verified: false,
-      }));
-      showVerifyEmailForm(email);
-      loginForm.reset();
-      return;
-    }
-
     try {
       // Send OTP via API
       await axios.post(API.sendOtp, { email });
@@ -280,20 +269,6 @@
       return;
     }
     const pendingUser = JSON.parse(pendingUserStr);
-
-    if (pendingUser.email === 'test@gmail.com' && code === '123456') {
-      // For testing, skip API and directly login
-      setSession({
-        email: pendingUser.email,
-        name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
-        role: 'Applicant',
-      });
-      localStorage.removeItem('pendingUser');
-
-      showToast('Email verified! You are now logged in.', 'success');
-      window.location.href = 'home.html';
-      return;
-    }
 
     try {
       // Verify OTP via API
