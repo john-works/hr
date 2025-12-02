@@ -145,10 +145,40 @@
     const lnameInput = document.getElementById('last_name');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const ninInput = document.getElementById('nin');
+    const genderInput = document.getElementById('gender');
+    const maritalInput = document.getElementById('marital_status');
+    const phoneInput = document.getElementById('phone_number');
+    const middleInput = document.getElementById('middle_name');
+    const dobInput = document.getElementById('dob');
     const confirmPasswordInput = document.getElementById('password_confirmation');
 
-    if (!fnameInput.value || !lnameInput.value || !emailInput.value || !passwordInput.value || !confirmPasswordInput.value) {
-      showToast('Please fill in all required fields.', 'warning');
+    // Check each required field individually and show specific error
+    const fields = [
+      { input: fnameInput, name: 'first_name' },
+      { input: lnameInput, name: 'last_name' },
+      { input: emailInput, name: 'email' },
+      { input: passwordInput, name: 'password' },
+      { input: confirmPasswordInput, name: 'password_confirmation' },
+      { input: ninInput, name: 'nin' },
+      { input: dobInput, name: 'dob' },
+      { input: genderInput, name: 'gender' },
+      { input: maritalInput, name: 'marital_status' },
+      { input: phoneInput, name: 'phone_number' }
+
+    ];
+
+    for (const field of fields) {
+      if (!field.input.value.trim()) {
+        showToast(`Please fill in the ${field.name} field.`, 'warning');
+        field.input.focus();
+        return;
+      }
+    }
+
+    if (passwordInput.value !== confirmPasswordInput.value) {
+      showToast('Passwords do not match.', 'warning');
+      confirmPasswordInput.focus();
       return;
     }
 
@@ -158,6 +188,14 @@
       email: emailInput.value.toLowerCase().trim(),
       password: passwordInput.value,
       password_confirmation: confirmPasswordInput.value,
+      nin: ninInput.value.trim(),
+      dob: dobInput.value,
+      gender: genderInput.value,
+      marital_status: maritalInput.value,
+      phone_number: phoneInput.value.trim(),
+      middle_name: middleInput.value.trim(),
+
+
 
     };
 
@@ -358,7 +396,7 @@
       showToast('OTP resent to your email.', 'success');
 
       // Restart countdown
-      countdown = 30;
+      countdown = 60;
       startCountdown();
 
       // Clear previous OTP inputs
@@ -380,7 +418,7 @@
       if (countdown <= 0) {
         clearInterval(countdownInterval);
         resendLink.classList.remove('disabled');
-        countdown = 30;
+        countdown = 60;
         countdownEl.textContent = `(${countdown}s)`;
       }
     }, 1000);
@@ -401,7 +439,7 @@
   const originalShowVerifyEmailForm = showVerifyEmailForm;
   showVerifyEmailForm = function(email) {
     originalShowVerifyEmailForm(email);
-    countdown = 30;
+    countdown = 60;
     countdownEl.textContent = `(${countdown}s)`;
     startCountdown();
     otpInputs[0].focus();
