@@ -612,9 +612,10 @@
   async function loadEducation() {
     const items = await fetchItems(API.educationTraining, 'educationTraining');
     renderTableRows(items, educationTableBody, [
-      { key: 'institution' },
-      { key: 'degree' },
-      { key: 'year' }
+      { key: 'from_year' },
+      { key: 'to_year' },
+      { key: 'qualification' },
+      { key: 'course' }
     ], openEducationModal, async id => {
       if (confirm('Delete this education record?')) {
         const success = await deleteItem(API.educationTraining, id, 'educationTraining');
@@ -634,6 +635,10 @@
         <i class="fas fa-handshake fa-3x text-success mb-3"></i>
         <p class="text-muted">Add your professional memberships and affiliations</p>
       </div>
+
+
+
+
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="membershipOrganization" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Organization</label>
@@ -682,17 +687,17 @@
       </div>
       <div class="row">
         <div class="col-md-6 mb-3">
-          <label for="employmentEmployer" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Employer</label>
-          <input type="text" class="form-control form-control-lg" id="employmentEmployer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
+          <label for="employer" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Employer</label>
+          <input type="text" class="form-control form-control-lg" id="employer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
         </div>
         <div class="col-md-6 mb-3">
-          <label for="employmentPosition" class="form-label fw-bold"><i class="fas fa-user-tie me-1"></i>Position</label>
-          <input type="text" class="form-control form-control-lg" id="employmentPosition" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
+          <label for="position" class="form-label fw-bold"><i class="fas fa-user-tie me-1"></i>Position</label>
+          <input type="text" class="form-control form-control-lg" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
         </div>
       </div>
       <div class="mb-3">
-        <label for="employmentDuration" class="form-label fw-bold"><i class="fas fa-calendar-alt me-1"></i>Duration</label>
-        <input type="text" class="form-control form-control-lg" id="employmentDuration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
+        <label for="duration" class="form-label fw-bold"><i class="fas fa-calendar-alt me-1"></i>Duration</label>
+        <input type="text" class="form-control form-control-lg" id="duration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
       </div>
       <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -807,28 +812,35 @@
     </div>
 
 
+    <div class="row">
+      
+        <div class="col-md-6 mb-3">
+          <label for="position" class="form-label fw-bold">Position</label>
+          <input type="text" class="form-control form-control" id="position" name="position"  required value="${editItem ? editItem.position : ''}">
+        </div>
+
+
+        <div class="col-md-6 mb-3">
+          <label for="email" class="form-label fw-bold">Email</label>
+          <input type="email" class="form-control form-control" id="email" name="email"  required value="${editItem ? editItem.email : ''}"/>
+            
+        </div>
+    </div>
+
+
+    <div class="row">
+      
+        <div class="col-md-6 mb-3">
+          <label for="contact" class="form-label fw-bold">Contact</label>
+          <input type="text" class="form-control form-control" id="contact" name="contact"  required value="${editItem ? editItem.contact : ''}">
+        </div>
+
+
+       
+    </div>
 
 
 
-
-
-
-
-
-
-
-      <div class="mb-3">
-        <label for="refereeName" class="form-label">Name</label>
-        <input type="text" class="form-control" id="refereeName" name="name" required value="${editItem ? editItem.name : ''}">
-      </div>
-      <div class="mb-3">
-        <label for="refereeRelationship" class="form-label">Relationship</label>
-        <input type="text" class="form-control" id="refereeRelationship" name="relationship" required value="${editItem ? editItem.relationship : ''}">
-      </div>
-      <div class="mb-3">
-        <label for="refereeContact" class="form-label">Contact</label>
-        <input type="text" class="form-control" id="refereeContact" name="contact" required value="${editItem ? editItem.contact : ''}">
-      </div>
     `;
     crudModal.show();
   }
@@ -858,14 +870,14 @@
     <div class="row">
       
         <div class="col-md-6 mb-3">
-          <label for="title" class="form-label fw-bold">Document Title</label>
-          <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
+          <label for="name" class="form-label fw-bold">Full Name</label>
+          <input type="text" class="form-control form-control" id="name" name="name"  value="${editItem ? editItem.name : ''}">
         </div>
 
 
         <div class="col-md-6 mb-3">
           <label for="relationship" class="form-label fw-bold">Relationship</label>
-          <select type="text" class="form-control form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}">
+          <select type="text" class="form-control form-control" id="relationship" name="relationship"  required value="${editItem ? editItem.relationship : ''}">
             <option value="">Select Relationship</option>
             <option value="Spouse">Spouse</option>
             <option value="Child">Child</option>
