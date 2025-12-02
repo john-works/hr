@@ -138,7 +138,7 @@
     showLoginForm();
   });
 
-  /* ---- Register -> show verify email form ---- */
+  /* ---- Login form submit -> send OTP and show verify email form ---- */
   loginForm.addEventListener('submit', async e => {
     e.preventDefault();
     const emailInput = document.getElementById('loginEmail');
@@ -179,17 +179,14 @@
   const countdownEl = document.getElementById('countdown');
   let countdown = 30;
   let countdownInterval;
+  let isValidating = false;
 
   // OTP input handling
   otpInputs.forEach((input, index) => {
     input.addEventListener('input', (e) => {
-      const value = e.target.value;
-
-      // Only allow alphanumeric
-      if (!/^[a-zA-Z0-9]*$/.test(value)) {
-        e.target.value = '';
-        return;
-      }
+      // Strip any non-numeric characters
+      const value = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = value;
 
       // Move to next input if value is entered
       if (value && index < otpInputs.length - 1) {
@@ -220,7 +217,7 @@
       e.preventDefault();
       const pasteData = e.clipboardData.getData('text').trim();
 
-      if (/^\w{6}$/.test(pasteData)) {
+      if (/^[0-9]{6}$/.test(pasteData)) {
         // Fill all inputs with the pasted code
         for (let i = 0; i < otpInputs.length; i++) {
           if (i < pasteData.length) {
@@ -258,24 +255,32 @@
   // Form submission
   otpForm.addEventListener('submit', async e => {
     e.preventDefault();
+    await validateOTP();
+  });
+
+  // Validate OTP
+  async function validateOTP() {
+    if (isValidating) return;
+    isValidating = true;
+
     const code = otpCode.value;
-
-    if (!code || code.length !== 6) {
-      showToast('Please enter a valid 6-digit code.', 'warning');
-      return;
-    }
-
     const pendingUserStr = localStorage.getItem('pendingUser');
     if (!pendingUserStr) {
       showToast('No pending verification found.', 'error');
       showRegisterForm();
+      isValidating = false;
       return;
     }
     const pendingUser = JSON.parse(pendingUserStr);
 
     try {
       // Verify OTP via API
-      await axios.post(API.validateCode, { code, email: pendingUser.email });
+      const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
+
+      // Check if the API indicates failure
+      if (response.data.error || response.data.message === 'Invalid OTP code.' || !response.data.success) {
+        throw new Error(response.data.error || response.data.message || 'Invalid OTP code.');
+      }
 
       // Save session
       setSession({
@@ -286,11 +291,14 @@
       localStorage.removeItem('pendingUser');
 
       showToast('Email verified! You are now logged in.', 'success');
-      window.location.href = 'home.html';
+      isValidating = false;
+      window.location.href = 'index.html';
     } catch (error) {
       showToast('Invalid OTP code. Please try again.', 'error');
+      clearOTPInputs();
+      isValidating = false;
     }
-  });
+  }
 
   // Resend code functionality
   resendLink.addEventListener('click', async () => {
@@ -357,28 +365,6 @@
     startCountdown();
     otpInputs[0].focus();
   };
-
-  /* ---- Login form submit (Email verification only) ---- */
-  loginForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const emailInput = document.getElementById('loginEmail');
-
-    if (!emailInput.value) {
-      showToast('Please enter your email address.', 'warning');
-      return;
-    }
-
-    const email = emailInput.value.toLowerCase().trim();
-
-    // Save pending user and show verification form
-    localStorage.setItem('pendingUser', JSON.stringify({
-      email: email,
-      verified: false,
-    }));
-
-    showVerifyEmailForm(email);
-    loginForm.reset();
-  });
 
   btnLogout.addEventListener('click', () => {
     if (confirm('Are you sure you want to logout?')) {
