@@ -159,11 +159,11 @@
 		// Hide all other areas
 		authArea.style.display = 'none';
 		applicationDashboard.style.display = 'none';
-		
+
 		// Show home page and navbar
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'block';
-		
+
 		// Show/hide auth sidebar based on session
 		const authSidebar = document.getElementById('authSidebar');
 		const user = getSession();
@@ -174,8 +174,23 @@
 				showLoginFormSidebar();
 			}
 		}
-		
+
 		mainNavbar.style.display = 'flex';
+
+		// Show/hide navigation items based on login status
+		const loggedInNav = document.getElementById('loggedInNav');
+		const userDropdownContainer = document.getElementById('userDropdownContainer');
+		const homeNavItem = document.getElementById('homeNavItem');
+		if (user) {
+			if (loggedInNav) loggedInNav.style.display = 'flex';
+			if (userDropdownContainer) userDropdownContainer.style.display = 'block';
+			if (homeNavItem) homeNavItem.style.display = 'none';
+		} else {
+			if (loggedInNav) loggedInNav.style.display = 'none';
+			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+			if (homeNavItem) homeNavItem.style.display = 'block';
+		}
+
 		document.body.classList.remove('auth-view');
 	}
 
@@ -690,9 +705,13 @@
 		btnLogout.addEventListener('click', () => {
 			clearSession();
 			showToast('Logged out successfully', 'success');
-			// Reset to login form
-			showAuth();
-			showLoginForm();
+			// Hide logged in navigation and user dropdown
+			const loggedInNav = document.getElementById('loggedInNav');
+			const userDropdownContainer = document.getElementById('userDropdownContainer');
+			if (loggedInNav) loggedInNav.style.display = 'none';
+			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+			// Redirect to homepage with login form and auto refresh
+			window.location.reload();
 		});
 	}
 
@@ -756,6 +775,15 @@ const API = {
 		mainPanel.querySelectorAll('section[data-step-content]').forEach(sec => {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
 		});
+
+		// Hide sidebar when selecting a job to focus on job selection
+		const sidebar = document.querySelector('aside.sidebar');
+		if (step === 'selectJob') {
+			sidebar.classList.add('d-none');
+		} else {
+			sidebar.classList.remove('d-none');
+		}
+
 		loadStepData(step);
 	}
 
