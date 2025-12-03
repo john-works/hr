@@ -1,7 +1,7 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	const apiUrl = 'http://192.168.32.151:8041/api/v1';
+	let apiUrl = 'http://192.168.32.151:8041/api/v1';
 	const user = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
@@ -698,32 +698,39 @@
 
 	/* =============== Application Logic =============== */
 	// API endpoints - dynamically built with the apiUrl
-	const API = {
-		login: `${apiUrl}/login`,
-		registerForm: `${apiUrl}/register`,
-		personalDetails: `${apiUrl}/application`,
-		educationTraining: `${apiUrl}/educations/${user ? user.id : ''}`,
-		professionalMembership: `${apiUrl}/memberships/${user ? user.id : ''}`,
-		employmentHistory: `${apiUrl}/employments/${user ? user.id : ''}`,
-		documents: `${apiUrl}/documents/${user ? user.id : ''}`,
-		referee: `${apiUrl}/referees/${user ? user.id : ''}`,
-		dependants: `${apiUrl}/dependants/${user ? user.id : ''}`,
-		selectJob: `${apiUrl}/active_vacancies`,
-		checkServerStatus: `${apiUrl}/check-server-status`,
-		getActiveVacancies: `${apiUrl}/active_vacancies`,
-		postApplication: `${apiUrl}/application`,
-		postApplicationSection: `${apiUrl}/application_section`,
-		getApplication: (id) => `${apiUrl}/application/${id}`,
-		getReferees: (id) => `${apiUrl}/referees/${id}`,
-		getDependants: (id) => `${apiUrl}/dependants/${id}`,
-		getDocuments: (id) => `${apiUrl}/documents/${id}`,
-		getEmploymentHistory: (id) => `${apiUrl}/employment_history/${id}`,
-		getEducationTraining: (id) => `${apiUrl}/education_training/${id}`,
-		getProfessionalMemberships: (id) => `${apiUrl}/professional_memberships/${id}`,
-		getSubmittedApplications:(id) => `${apiUrl}/submitted_applications/${id}`,
-		retrieveApplication: `${apiUrl}/retrieve_application`,
-		validateCode: `${apiUrl}/validate_code`,
-	};
+const API = {
+	login: `${apiUrl}/login`,
+	registerForm: `${apiUrl}/register`,
+	personalDetails: `${apiUrl}/application`,
+
+	// === CRUD BASE ENDPOINTS (NO ID INSIDE) ===
+	educationTraining: `${apiUrl}/educations`,
+	professionalMembership: `${apiUrl}/memberships`,
+
+	employmentHistory: `${apiUrl}/employments`,
+	documents: `${apiUrl}/documents`,
+	referee: `${apiUrl}/referees`,
+	dependants: `${apiUrl}/dependants`,
+
+	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
+	getApplication: (id) => `${apiUrl}/application/${id}`,
+	getReferees: (id) => `${apiUrl}/referees/${id}`,
+	getDependants: (id) => `${apiUrl}/dependants/${id}`,
+	getDocuments: (id) => `${apiUrl}/documents/${id}`,
+	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
+	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
+	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
+	getSubmittedApplications: (id) => `${apiUrl}/submitted_applications/${id}`,
+
+	// === JOB/APPLICATION RELATED ===
+	selectJob: `${apiUrl}/active_vacancies`,
+	getActiveVacancies: `${apiUrl}/active_vacancies`,
+	postApplication: `${apiUrl}/application`,
+	postApplicationSection: `${apiUrl}/application_section`,
+	retrieveApplication: `${apiUrl}/retrieve_application`,
+	validateCode: `${apiUrl}/validate_code`,
+};
+
 
 	let dataCache = {};
 
@@ -764,40 +771,48 @@
 		showStep(step);
 	});
 
-	/* ----- Generic Table Renderer ----- */
-	function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
-		tbodyEl.innerHTML = '';
-		if (!items.length) {
-		const colSpan = columns.length + 1;
-		tbodyEl.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No records found.</td></tr>`;
-		return;
-		}
-		items.forEach(item => {
-		const tr = document.createElement('tr');
-		columns.forEach(col => {
-			let val = item[col.key];
-			if (val === undefined || val === null) val = '';
-			tr.insertAdjacentHTML('beforeend', `<td>${val}</td>`);
-		});
+function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
+    tbodyEl.innerHTML = '';
+    if (!items.length) {
+        const colSpan = columns.length + 1;
+        tbodyEl.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No records found.</td></tr>`;
+        return;
+    }
 
-		const tdActions = document.createElement('td');
-		const btnEdit = document.createElement('button');
-		btnEdit.className = 'btn btn-sm btn-primary me-2';
-		btnEdit.type = 'button';
-		btnEdit.innerHTML = '<i class="fa fa-edit"></i>';
-		btnEdit.addEventListener('click', () => editCb(item));
-		const btnDelete = document.createElement('button');
-		btnDelete.className = 'btn btn-sm btn-danger';
-		btnDelete.type = 'button';
-		btnDelete.innerHTML = '<i class="fa fa-trash"></i>';
-		btnDelete.addEventListener('click', () => deleteCb(item.id));
-		tdActions.appendChild(btnEdit);
-		tdActions.appendChild(btnDelete);
-		tr.appendChild(tdActions);
+    items.forEach(item => {
+        const tr = document.createElement('tr');
+        columns.forEach(col => {
+            let val = item[col.key];
+            if (val === undefined || val === null) val = '';
 
-		tbodyEl.appendChild(tr);
-		});
-	}
+            // Use formatter if provided
+            if (col.formatter && typeof col.formatter === 'function') {
+                val = col.formatter(val, item); // pass value and optionally the whole item
+            }
+
+            tr.insertAdjacentHTML('beforeend', `<td>${val}</td>`);
+        });
+
+        const tdActions = document.createElement('td');
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn btn-sm btn-primary me-2';
+        btnEdit.type = 'button';
+        btnEdit.innerHTML = '<i class="fa fa-edit"></i>';
+        btnEdit.addEventListener('click', () => editCb(item));
+
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn btn-sm btn-danger';
+        btnDelete.type = 'button';
+        btnDelete.innerHTML = '<i class="fa fa-trash"></i>';
+        btnDelete.addEventListener('click', () => deleteCb(item.id));
+
+        tdActions.appendChild(btnEdit);
+        tdActions.appendChild(btnDelete);
+        tr.appendChild(tdActions);
+
+        tbodyEl.appendChild(tr);
+    });
+}
 
 	/* ----- Axios CRUD functions ----- */
 	async function fetchItems(apiUrl, key) {
@@ -949,166 +964,229 @@
 	const educationTableBody = document.querySelector('#educationTable tbody');
 	document.getElementById('btnAddEducation').addEventListener('click', () => openEducationModal());
 	function openEducationModal(editItem = null) {
-		crudModalLabel.innerHTML = `<i class="fas fa-graduation-cap me-2"></i>${editItem ? 'Edit Education' : 'Add Education'}`;
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
-		
-		
-		<div class="row">
-			<div class="col-md-6 mb-3">
-			<label for="from_year" class="form-label fw-bold">From Year</label>
-			<select class="form-control form-control" id="from_year" name="from_year" required>
-				<option value="">Select Year</option>
-				${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i).map(year => `<option value="${year}" ${editItem && editItem.from_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-			</select>
-			</div>
-			<div class="col-md-6 mb-3">
-			<label for="to_year" class="form-label fw-bold">To Year</label>
-			<select class="form-control form-control" id="to_year" name="to_year">
-				<option value="">Select Year</option>
-				${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i).map(year => `<option value="${year}" ${editItem && editItem.to_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-			</select>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="col-md-6 mb-3">
-			<label for="qualification" class="form-label fw-bold">Qualification</label>
-			<select type="text" class="form-control form-control" id="qualification" name="qualification" placeholder="e.g. University of Example" required value="${editItem ? editItem.qualification : ''}">
-				<option value="">Select Qualification</option>
-				<option value="PhD">PhD</option>
-				<option value="Masters">Masters</option>
-				<option value="Bachelor">Bachelor</option>
-				<option value="Diploma" >Diploma</option>
-				<option value="Certificate">Certificate</option>
-
-			</select>
-			</div>
-			<div class="col-md-6 mb-3">
-			<label for="course" class="form-label fw-bold">Program/Course</label>
-			<input type="text" class="form-control form-control" id="course" name="course" placeholder="e.g. Bachelor of Science" required value="${editItem ? editItem.course : ''}">
-			</div>
-		</div>
-
-
-
-
-		<div class="alert alert-info">
-			<i class="fas fa-info-circle me-2"></i>
-			Ensure all information is accurate as it will be verified during the application process.
-		</div>
+		crudModalLabel.innerHTML = `
+			<i class="fas fa-graduation-cap me-2"></i>
+			${editItem ? 'Edit Education' : 'Add Education'}
 		`;
+
+		crudItemIdInput.value = editItem ? editItem.id : '';
+
+		crudModalBody.innerHTML = `
+			<input type="hidden" name="applicant_id" value="${user.id}">
+			<div class="row">
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">From Year</label>
+					<select class="form-control" id="start_year" name="start_year" required>
+						<option value="">Select Year</option>
+						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+							.map(year => `<option value="${year}" ${editItem?.start_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+					</select>
+				</div>
+
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">To Year</label>
+					<select class="form-control" id="end_year" name="end_year">
+						<option value="">Select Year</option>
+						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+							.map(year => `<option value="${year}" ${editItem?.end_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+					</select>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-md-10 mb-3">
+					<label class="form-label fw-bold">Qualification</label>
+					<select class="form-control" id="qualification" name="qualification" required>
+						<option value="">Select Qualification</option>
+						<option value="PhD" ${editItem?.qualification === 'PhD' ? 'selected' : ''}>PhD</option>
+						<option value="Masters" ${editItem?.qualification === 'Masters' ? 'selected' : ''}>Masters</option>
+						<option value="Bachelors" ${editItem?.qualification === 'Bachelors' ? 'selected' : ''}>Bachelors</option>
+						<option value="Diploma" ${editItem?.qualification === 'Diploma' ? 'selected' : ''}>Diploma</option>
+						<option value="Certificate" ${editItem?.qualification === 'Certificate' ? 'selected' : ''}>Certificate</option>
+						<option value="Certification" ${editItem?.qualification === 'Certification' ? 'selected' : ''}>Certification</option>
+						
+					</select>
+				</div>
+
+				<div class="col-md-12 mb-3">
+					<label class="form-label fw-bold">Program/Course</label>
+					<input type="text" class="form-control" id="course" name="course"
+						required value="${editItem?.course || ''}">
+				</div>
+				<div class="col-md-12 mb-3">
+					<label class="form-label fw-bold">Institution</label>
+					<input type="text" class="form-control" id="institution" name="institution"
+						required value="${editItem?.institution || ''}">
+				</div>
+			</div>
+			<div class="form-check mb-3">
+				<input class="form-check-input" type="checkbox" value="" id="ongoing" name="ongoing" ${editItem?.ongoing ? 'checked' : ''}>
+				<label class="form-check-label fw-bold" for="ongoing">
+					Ongoing
+				</label>
+			</div>
+		`;
+
 		crudModal.show();
 	}
+
 	async function loadEducation() {
 		try {
-			// Get user data to populate education if available
 			const user = getUser();
 			let items = [];
-			
-			// Try to fetch from API first
-			try {
-				items = await fetchItems(API.educationTraining, 'educationTraining');
-			} catch (error) {
-				// If API fails, try to populate from user object
+
+			if (user && user.id) {
+				// Use GET route for applicant
+				items = await fetchItems(API.getEducationTraining(user.id), 'educationTraining');
+			}
+
+			// fallback if no API data
+			if (!items || items.length === 0) {
 				if (user && user.education && Array.isArray(user.education)) {
 					items = user.education.map((edu, index) => ({
 						id: `user-edu-${index}`,
-						from_year: edu.from_year || edu.start_year || '',
-						to_year: edu.to_year || edu.end_year || '',
+						start_year: edu.start_year || '',
+						end_year: edu.end_year || '',
 						qualification: edu.qualification || edu.degree || '',
-						course: edu.course || edu.program || edu.field_of_study || ''
+						course: edu.course || edu.program || edu.field_of_study || '',
+						institution: edu.institution || '',
+						ongoing: edu.ongoing || false
 					}));
 					dataCache['educationTraining'] = items;
 				}
 			}
-			
-			// If no data from API and no user education, check for individual education properties
-			if (items.length === 0 && user) {
-				const educationFields = ['qualification', 'course', 'from_year', 'to_year', 'degree', 'program', 'field_of_study', 'start_year', 'end_year'];
-				const hasEducationData = educationFields.some(field => user[field]);
-				
-				if (hasEducationData) {
-					items = [{
-						id: 'user-edu-0',
-						from_year: user.from_year || user.start_year || '',
-						to_year: user.to_year || user.end_year || '',
-						qualification: user.qualification || user.degree || '',
-						course: user.course || user.program || user.field_of_study || ''
-					}];
-					dataCache['educationTraining'] = items;
+
+			// Render table
+			renderTableRows(
+				items,
+				educationTableBody,
+				[
+					{ key: 'start_year' },
+					{ key: 'end_year' },
+					{ key: 'qualification' },
+					{ key: 'course' },
+					{ key: 'institution' },
+					{ key: 'ongoing', formatter: val => val ? 'Ongoing' : 'Completed' }
+				],
+				openEducationModal,
+				async id => {
+					if (confirm('Delete this education record?')) {
+						const success = await deleteItem(API.educationTraining, id, 'educationTraining');
+						if (success) loadEducation();
+						showToast('Education record deleted.', 'success');
+					}
 				}
-			}
-			
-			renderTableRows(items, educationTableBody, [
-				{ key: 'from_year' },
-				{ key: 'to_year' },
-				{ key: 'qualification' },
-				{ key: 'course' }
-			], openEducationModal, async id => {
-				if (confirm('Delete this education record?')) {
-					const success = await deleteItem(API.educationTraining, id, 'educationTraining');
-					if (success) loadEducation();
-				}
-			});
+			);
 		} catch (error) {
 			console.error('Error loading education:', error);
-			renderTableRows([], educationTableBody, [
-				{ key: 'from_year' },
-				{ key: 'to_year' },
-				{ key: 'qualification' },
-				{ key: 'course' }
-			], openEducationModal, async id => {
-				if (confirm('Delete this education record?')) {
-					const success = await deleteItem(API.educationTraining, id, 'educationTraining');
-					if (success) loadEducation();
-				}
-			});
 		}
 	}
 
+	// // Professional Membership
+	// const membershipTableBody = document.querySelector('#membershipTable tbody');
+	// document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
+	// function openMembershipModal(editItem = null) {
+	// 	crudModalLabel.innerHTML = `<i class="fas fa-users me-2"></i>${editItem ? 'Edit Membership' : 'Add Membership'}`;
+	// 	crudItemIdInput.value = editItem ? editItem.id : '';
+	// 	crudModalBody.innerHTML = `
+	// 	<input type="hidden" name="applicant_id" value="${user.id}">
+	// 	<div class="row">
+	// 		<div class="col-md-12 mb-2">
+	// 			<label for="membershipInstitute" class="form-label fw-bold">Institute</label>
+	// 			<input type="text" class="form-control form-control" id="membershipInstitute" name="institute" placeholder="ISACA, Rotary, Lions Club" required value="${editItem ? editItem.institute : ''}">
+	// 		</div>
+	// 		<div class="col-md-6 mb-2">
+	// 			<label for="membershipType" class="form-label fw-bold">Membership Type</label>
+	// 			<input type="text" class="form-control form-control" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
+	// 		</div>
+	// 		<div class="col-md-6 mb-2">
+	// 			<label for="membershipNumber" class="form-label fw-bold">Membership Year</label>
+	// 			<input type="text" class="form-control form-control" id="membershipNumber" name="year" placeholder="e.g. 2023" required value="${editItem ? editItem.year : ''}">
+	// 		</div>
+	// 	</div>
+	// 	`;
+	// 	crudModal.show();
+	// }
+
 	// Professional Membership
-	const membershipTableBody = document.querySelector('#membershipTable tbody');
-	document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
-	function openMembershipModal(editItem = null) {
-		crudModalLabel.innerHTML = `<i class="fas fa-users me-2"></i>${editItem ? 'Edit Membership' : 'Add Membership'}`;
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
-		<div class="text-center mb-4">
-			<i class="fas fa-handshake fa-3x text-success mb-3"></i>
-			<p class="text-muted">Add your professional memberships and affiliations</p>
-		</div>
+const membershipTableBody = document.querySelector('#membershipTable tbody');
+
+document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
+
+function openMembershipModal(editItem = null) {
+
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-users me-2"></i>
+        ${editItem ? 'Edit Membership' : 'Add Membership'}
+    `;
+
+    // Set ID (used for update)
+    crudItemIdInput.value = editItem ? editItem.id : '';
+
+    // Modal form body
+    crudModalBody.innerHTML = `
+        <input type="hidden" name="applicant_id" value="${user.id}">
+
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Institute</label>
+                <input type="text" class="form-control" 
+                    id="membershipInstitute" 
+                    name="institute" 
+                    placeholder="ISACA, Rotary, Lions Club" 
+                    required
+                    value="${editItem?.institute || ''}">
+            </div>
+
+            <div class="col-md-8 mb-3">
+                <label class="form-label fw-bold">Membership Type</label>
+                <input type="text" class="form-control"
+                    id="membershipType" 
+                    name="type" 
+                    placeholder="Full Member, Student"
+                    required
+                    value="${editItem?.type || ''}">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Membership Year</label>
+                <input type="number" class="form-control"
+                    id="membershipYear"
+                    name="year"
+                    placeholder="e.g. 2023"
+                    required
+                    value="${editItem?.year || ''}">
+            </div>
+        </div>
+    `;
+
+    crudModal.show();
+}
 
 
-
-
-		<div class="row">
-			<div class="col-md-6 mb-3">
-			<label for="membershipOrganization" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Organization</label>
-			<input type="text" class="form-control form-control-lg" id="membershipOrganization" name="organization" placeholder="e.g. IEEE, ACM" required value="${editItem ? editItem.organization : ''}">
-			</div>
-			<div class="col-md-6 mb-3">
-			<label for="membershipType" class="form-label fw-bold"><i class="fas fa-id-badge me-1"></i>Membership Type</label>
-			<input type="text" class="form-control form-control-lg" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
-			</div>
-		</div>
-		<div class="mb-3">
-			<label for="membershipNumber" class="form-label fw-bold"><i class="fas fa-hashtag me-1"></i>Membership Number</label>
-			<input type="text" class="form-control form-control-lg" id="membershipNumber" name="number" placeholder="e.g. 123456789" required value="${editItem ? editItem.number : ''}">
-		</div>
-		<div class="alert alert-success">
-			<i class="fas fa-lightbulb me-2"></i>
-			Professional memberships demonstrate your commitment to your field and can strengthen your application.
-		</div>
-		`;
-		crudModal.show();
-	}
 	async function loadMembership() {
-		const items = await fetchItems(API.professionalMembership, 'professionalMembership');
+		const user = getUser();
+		let items = [];
+		if (user && user.id) {
+			// Use GET route for applicant
+			items = await fetchItems(API.getProfessionalMemberships(user.id), 'professionalMembership');
+		}
+		// fallback if no API data
+		if (!items || items.length === 0) {
+			if (user && user.memberships && Array.isArray(user.memberships)) {
+				items = user.memberships.map((mem, index) => ({
+					id: `user-mem-${index}`,
+					institute: mem.institute || '',
+					type: mem.type || '',
+					year: mem.year || ''
+				}));
+				dataCache['professionalMembership'] = items;
+			}
+		}
 		renderTableRows(items, membershipTableBody, [
-		{ key: 'organization' },
+		{ key: 'institute' },
 		{ key: 'type' },
-		{ key: 'number' }
+		{ key: 'year' }
 		], openMembershipModal, async id => {
 		if (confirm('Delete this membership record?')) {
 			const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
@@ -1131,16 +1209,16 @@
 		<div class="row">
 			<div class="col-md-6 mb-3">
 			<label for="employer" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Employer</label>
-			<input type="text" class="form-control form-control-lg" id="employer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
+			<input type="text" class="form-control form-control" id="employer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
 			</div>
 			<div class="col-md-6 mb-3">
 			<label for="position" class="form-label fw-bold"><i class="fas fa-user-tie me-1"></i>Position</label>
-			<input type="text" class="form-control form-control-lg" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
+			<input type="text" class="form-control form-control" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
 			</div>
 		</div>
 		<div class="mb-3">
 			<label for="duration" class="form-label fw-bold"><i class="fas fa-calendar-alt me-1"></i>Duration</label>
-			<input type="text" class="form-control form-control-lg" id="duration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
+			<input type="text" class="form-control form-control" id="duration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
 		</div>
 		<div class="alert alert-warning">
 			<i class="fas fa-exclamation-triangle me-2"></i>
@@ -1167,56 +1245,74 @@
 	const documentsTableBody = document.querySelector('#documentsTable tbody');
 	document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentsModal());
 	function openDocumentsModal(editItem = null) {
-		crudModalLabel.innerHTML = `<i class="fas fa-file-upload me-2"></i>${editItem ? 'Edit Document' : 'Upload Document'}`;
+		crudModalLabel.innerHTML = `
+			<i class="fas fa-file-upload me-2"></i>
+			${editItem ? 'Edit Document' : 'Upload Document'}
+		`;
 		crudItemIdInput.value = editItem ? editItem.id : '';
 		crudModalBody.innerHTML = `
+			<input type="hidden" name="applicant_id" value="${user.id}">
+			<div class="row">
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">Document Type</label>
+					<select class="form-control" id="document_type" name="document_type" required>
+						<option value="">Select Document Type</option>
 
-		<div class="row">
-			<div class="col-md-6 mb-3">
-			<label for="qualification" class="form-label fw-bold">Qualification</label>
-			<select type="text" class="form-control form-control" id="qualification" name="qualification" placeholder="e.g. University of Example" required value="${editItem ? editItem.qualification : ''}">
-				<option value="">Select Qualification</option>
-				<option value="PhD">PhD</option>
-				<option value="Masters">Masters</option>
-				<option value="Bachelor">Bachelor</option>
-				<option value="Diploma" >Diploma</option>
-				<option value="Certificate">Certificate</option>
-				<option value="NationId">Nation Id</option>
-				<option value="Cover Page">Cover Page</option>
+						${[
+							"PhD", "Masters", "Bachelor", "Diploma",
+							"Certificate", "Certification", "NationId"
+						].map(type => `
+							<option value="${type}" ${editItem?.document_type === type ? 'selected' : ''}>
+								${type}
+							</option>
+						`).join('')}
 
+					</select>
+				</div>
 
-			</select>
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">Document Title</label>
+					<input type="text" class="form-control"
+						id="title" name="title"
+						placeholder="e.g. Transcript"
+						required
+						value="${editItem?.title || ''}">
+				</div>
 			</div>
-			<div class="col-md-6 mb-3">
-			<label for="title" class="form-label fw-bold">Document Title</label>
-			<input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
+
+			<div class="mb-3">
+				<label class="form-label fw-bold">
+					<i class="fas fa-upload me-1"></i> Choose File
+				</label>
+			
+				<input type="file" class="form-control"
+					id="file" name="file"
+					accept="application/pdf"
+					${editItem ? '' : 'required'}>
 			</div>
-		</div>
 
-
-
-		<div class="mb-3">
-			<label for="file" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
-			<input type="file" class="form-control form-control" id="file" name="file" accept="application/pdf" ${editItem ? '' : 'required'}>
-		</div>
-
-		<div class="alert alert-info">
-			<i class="fas fa-shield-alt me-2"></i>
-			All uploaded documents are encrypted and stored securely. Only authorized personnel will have access.
-		</div>
+			<div class="alert alert-info">
+				<i class="fas fa-shield-alt me-2"></i>
+				All uploaded documents are encrypted and stored securely.
+				Only authorized personnel will have access.
+			</div>
 		`;
-		crudModal.show();
 
-		// Add file validation
-		const documentFileInput = document.getElementById('documentFile');
-		documentFileInput.addEventListener('change', (e) => {
-		const file = e.target.files[0];
-		if (file && file.type !== 'application/pdf') {
-			showToast('Please select a PDF file only.', 'error');
-			e.target.value = ''; // Clear the input
-		}
+		crudModal.show();
+		// File validation (PDF-only)
+		const fileInput = document.getElementById('file');
+
+		fileInput.addEventListener('change', (e) => {
+			const file = e.target.files[0];
+
+			if (file && file.type !== 'application/pdf') {
+				showToast('Please select a PDF file only.', 'error');
+				e.target.value = ''; // reset the input
+			}
 		});
 	}
+
+
 	async function loadDocuments() {
 		const items = await fetchItems(API.documents, 'documents');
 		renderTableRows(items, documentsTableBody, [
@@ -1440,38 +1536,43 @@
 		return;
 		}
 		const data = {};
+		data.applicant_id = crudForm.querySelector('input[name="applicant_id"]').value;
 		crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
-		if (input.type === 'file') {
-			data[input.name] = input.files.length > 0 ? input.files[0].name : '';
-		} else {
-			data[input.name] = input.value.trim();
-		}
+			if (input.type === 'file') {
+				data[input.name] = input.files.length > 0 ? input.files[0].name : '';
+			} else if (input.type === 'checkbox') {
+				data[input.name] = input.checked; // true or false
+			} else {
+				data[input.name] = input.value.trim();
+			}
 		});
 
+
 		const id = crudItemIdInput.value || null;
+		console.log('Current Item ID:', id);
 		let key = '';
 		switch (currentStep) {
-		case 'educationTraining': apiUrl = API.educationTraining; key = 'educationTraining'; break;
-		case 'professionalMembership': apiUrl = API.professionalMembership; key = 'professionalMembership'; break;
-		case 'employmentHistory': apiUrl = API.employmentHistory; key = 'employmentHistory'; break;
-		case 'documents': apiUrl = API.documents; key = 'documents'; if (!id) data.uploadedOn = new Date().toLocaleDateString(); break;
-		case 'referee': apiUrl = API.referee; key = 'referee'; break;
-		case 'dependants': apiUrl = API.dependants; key = 'dependants'; break;
-		default:
+			case 'educationTraining': apiUrl = API.educationTraining; key = 'educationTraining'; break;
+			case 'professionalMembership': apiUrl = API.professionalMembership; key = 'professionalMembership'; break;
+			case 'employmentHistory': apiUrl = API.employmentHistory; key = 'employmentHistory'; break;
+			case 'documents': apiUrl = API.documents; key = 'documents'; if (!id) data.uploadedOn = new Date().toLocaleDateString(); break;
+			case 'referee': apiUrl = API.referee; key = 'referee'; break;
+			case 'dependants': apiUrl = API.dependants; key = 'dependants'; break;
+			default:
 			showToast('Unsupported step form.', 'error');
 			crudModal.hide();
 			return;
 		}
 		try {
-		if (id) {
-			await updateItem(apiUrl, id, data, key);
-			showToast('Record updated.', 'success');
-		} else {
-			await createItem(apiUrl, data, key);
-			showToast('Record created.', 'success');
-		}
-		crudModal.hide();
-		await loadStepData(currentStep);
+			if (id) {
+				await updateItem(apiUrl, id, data, key);
+				showToast('Record updated.', 'success');
+			} else {
+				await createItem(apiUrl, data, key);
+				showToast('Record created.', 'success');
+			}
+			crudModal.hide();
+			await loadStepData(currentStep);
 		} catch {}
 	});
 
