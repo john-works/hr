@@ -1222,16 +1222,12 @@ function openEmploymentModal(editItem = null) {
 		<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
-					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>
-					
+					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>	
 				</div>
-
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">To Year</label>
 					<input type="date" class="form-control calander"  name="end_date" value="${editItem?.end_date || ''}"/>	
 		</div>
-
-
 		<div class="row">
 			<div class="col-md-12 mb-3">
 				<label for="employer" class="form-label fw-bold">Employer</label>
@@ -1247,24 +1243,19 @@ function openEmploymentModal(editItem = null) {
 
 		<div class="row">
 			<div class="col-md-12 mb-3">
-				<label for="key_duties" class="form-label	fw-bold">Key Duties</label>					
-				<textarea class="form-control" id="key_duties" name="key_duties" placeholder="Describe your key duties here..." rows="4" required>${editItem?.key_duties || ''}</textarea>
+				<label for="duties" class="form-label	fw-bold">Key Duties</label>					
+				<textarea class="form-control" id="duties" name="duties" placeholder="Describe your key duties here..." rows="4" required value="${editItem?.duties || ''}</textarea>
 			</div>
 		</div>
 
 		<div class="form-check mb-3">
-			<input class="form-check-input" type="checkbox" value="" id="is_current" fw-bold name="is_current" ${editItem?.is_current ? 'checked' : ''}>
+			<input class="form-check-input" type="checkbox" value="" id="is_current" fw-bold name="is_current" value="${editItem?.is_current ? 'checked' : ''}>
 			<label class="form-check-label " for="is_current">	
 				Currently Employed Here
-
-
-
     `;
 
     crudModal.show();
 }
-
-
 	async function loadEmployment() {
 		const user = getUser();
 		let items = [];
@@ -1281,7 +1272,7 @@ function openEmploymentModal(editItem = null) {
 					end_date: mem.end_date || '',
 					employer: mem.employer || '',
 					position: mem.position || '',
-					key_duties: mem.key_duties || '',
+					duties: mem.duties || '',
 					is_current: mem.is_current || false
 					
 				}));
@@ -1293,7 +1284,8 @@ function openEmploymentModal(editItem = null) {
 		{ key: 'end_date' },
 		{ key: 'employer' },
 		{ key: 'position' },
-		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
+		{ key: 'duties' },
+		// { key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
 		], openEmploymentModal, async id => {
 		if (confirm('Delete this employment record?')) {
 			const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
@@ -1310,83 +1302,123 @@ function openEmploymentModal(editItem = null) {
 
 
 
+		
+// Referee 
+const refereeTableBody = document.querySelector('#refereeTable tbody');
 
+document.getElementById('btnAddReferee').addEventListener('click', () => openRefereeModal());
 
+function openRefereeModal(editItem = null) {
 
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-briefcase me-2"></i>
+        ${editItem ? 'Edit Referee' : 'Add Referee'}
+    `;
 
+    // Set ID (used for update)
+    crudItemIdInput.value = editItem ? editItem.id : '';
 
-
-
-
-	// Referee
-	const refereeTableBody = document.querySelector('#refereeTable tbody');
-	document.getElementById('btnAddReferee').addEventListener('click', () => openRefereeModal());
-	function openRefereeModal(editItem = null) {
-		crudModalLabel.textContent = editItem ? 'Edit Referee' : 'Add Referee';
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
+    // Modal form body
+    crudModalBody.innerHTML = `
+        <input type="hidden" name="applicant_id" value="${user.id}">
 
 		<div class="row">
 		
 			<div class="col-md-6 mb-3">
-			<label for="full_name" class="form-label fw-bold">Full Name</label>
-			<input type="text" class="form-control" id="full_name" name="full_name"  required value="${editItem ? editItem.full_name : ''}">
+			<label for="name" class="form-label fw-bold">Full Name</label>
+			<input type="text" class="form-control" id="name" name="name"  required value="${editItem?.name || ''}">
 			</div>
 
+
+			<div class="col-md-6 mb-3">
+			<label for="address" class="form-label fw-bold">Address</label>
+			<input type="text" class="form-control" id="address" name="address"  required value="${editItem?.address || ''}"/>
+				
+			</div>
+		</div>
+
+		<div class="row">
+		
+			<div class="col-md-6 mb-3">
+				<label for="position" class="form-label fw-bold">Position</label>
+				<input type="text" class="form-control" id="position" name="position"  required value="${editItem?.position || ''}">
+			</div>
+			<div class="col-md-6 mb-3">
+				<label for="email" class="form-label fw-bold">Email</label>
+				<input type="email" class="form-control" id="email" name="email"  required value="${editItem?.email || ''}"/>
+				
+			</div>
+		</div>
+		position
+
+		<div class="row">
+		
+			<div class="col-md-6 mb-3">
+			<label for="tel" class="form-label fw-bold">Contact</label>
+			<input type="text" class="form-control" id="tel" name="tel"  required value="${editItem?.tel || ''}">
+			</div>
 
 			<div class="col-md-6 mb-3">
 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<input type="text" class="form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}"/>
-				
-			</div>
+			<input type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem?.relationship || ''}"/>
+
 		</div>
+    `;
 
-
-		<div class="row">
-		
-			<div class="col-md-6 mb-3">
-			<label for="position" class="form-label fw-bold">Position</label>
-			<input type="text" class="form-control" id="position" name="position"  required value="${editItem ? editItem.position : ''}">
-			</div>
-
-
-			<div class="col-md-6 mb-3">
-			<label for="email" class="form-label fw-bold">Email</label>
-			<input type="email" class="form-control" id="email" name="email"  required value="${editItem ? editItem.email : ''}"/>
-				
-			</div>
-		</div>
-
-
-		<div class="row">
-		
-			<div class="col-md-6 mb-3">
-			<label for="contact" class="form-label fw-bold">Contact</label>
-			<input type="text" class="form-control" id="contact" name="contact"  required value="${editItem ? editItem.contact : ''}">
-			</div>
-
-
-		
-		</div>
-
-
-
-		`;
-		crudModal.show();
-	}
+    crudModal.show();
+}
 	async function loadReferee() {
-		const items = await fetchItems(API.referee, 'referee');
+		const user = getUser();
+		let items = [];
+		if (user && user.id) {
+			// Use GET route for applicant
+			items = await fetchItems(API.referee(user.id), 'referee');
+		}
+		// fallback if no API data
+		if (!items || items.length === 0) {
+			if (user && user.referees && Array.isArray(user.referees)) {
+				items = user.referees.map((mem, index) => ({
+					id: `user-mem-${index}`,
+					name: mem.name || '',
+					relationship: mem.relationship || '',
+					tel: mem.tel || '',
+					email: mem.email || '',
+					address: mem.address || '',
+					position: mem.position || ''
+					
+				}));
+				dataCache['referee'] = items;
+			}
+		}
 		renderTableRows(items, refereeTableBody, [
 		{ key: 'name' },
 		{ key: 'relationship' },
-		{ key: 'contact' }
+		{ key: 'tel' },
+		{ key: 'email' },
+		{ key: 'address' },
+		{ key: 'position' }
 		], openRefereeModal, async id => {
-		if (confirm('Delete this referee?')) {
+		if (confirm('Delete this employment record?')) {
 			const success = await deleteItem(API.referee, id, 'referee');
 			if (success) loadReferee();
 		}
 		});
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 	// Dependants
 	const dependantsTableBody = document.querySelector('#dependantsTable tbody');
