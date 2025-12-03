@@ -1247,14 +1247,10 @@ function openEmploymentModal(editItem = null) {
 				<label for="position" class="form-label fw-bold">Duties</label>
 				<textarea class="form-control" id="duties" name="duties"  rows="7" placeholder="e.g.  Developed web applications " required>${editItem?.duties || ''}</textarea>			
 		</div>
+		
 
-		<div class="form-check mb-3">
-				<input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
-				<label class="form-check-label fw-bold" for="is_current">
-					Currently Working Here
-				</label>
-		</div>
-	
+		
+
     `;
 
     crudModal.show();
