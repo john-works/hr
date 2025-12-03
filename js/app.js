@@ -1093,20 +1093,23 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 	// 	<div class="row">
 	// 		<div class="col-md-12 mb-2">
 	// 			<label for="membershipInstitute" class="form-label fw-bold">Institute</label>
-	// 			<input type="text" class="form-control form-control" id="membershipInstitute" name="institute" placeholder="ISACA, Rotary, Lions Club" required value="${editItem ? editItem.institute : ''}">
+	// 			<input type="text" class="form-control" id="membershipInstitute" name="institute" placeholder="ISACA, Rotary, Lions Club" required value="${editItem ? editItem.institute : ''}">
 	// 		</div>
 	// 		<div class="col-md-6 mb-2">
 	// 			<label for="membershipType" class="form-label fw-bold">Membership Type</label>
-	// 			<input type="text" class="form-control form-control" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
+	// 			<input type="text" class="form-control" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
 	// 		</div>
 	// 		<div class="col-md-6 mb-2">
 	// 			<label for="membershipNumber" class="form-label fw-bold">Membership Year</label>
-	// 			<input type="text" class="form-control form-control" id="membershipNumber" name="year" placeholder="e.g. 2023" required value="${editItem ? editItem.year : ''}">
+	// 			<input type="text" class="form-control" id="membershipNumber" name="year" placeholder="e.g. 2023" required value="${editItem ? editItem.year : ''}">
 	// 		</div>
 	// 	</div>
 	// 	`;
 	// 	crudModal.show();
 	// }
+
+
+
 
 	// Professional Membership
 const membershipTableBody = document.querySelector('#membershipTable tbody');
@@ -1195,44 +1198,102 @@ function openMembershipModal(editItem = null) {
 		});
 	}
 
-	// Employment History
-	const employmentTableBody = document.querySelector('#employmentTable tbody');
-	document.getElementById('btnAddEmployment').addEventListener('click', () => openEmploymentModal());
-	function openEmploymentModal(editItem = null) {
-		crudModalLabel.innerHTML = `<i class="fas fa-briefcase me-2"></i>${editItem ? 'Edit Employment' : 'Add Employment'}`;
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
-		<div class="text-center mb-4">
-			<i class="fas fa-building fa-3x text-warning mb-3"></i>
-			<p class="text-muted">Share your work experience and career progression</p>
-		</div>
+
+	
+// Employment History
+const employmentTableBody = document.querySelector('#employmentTable tbody');
+
+document.getElementById('btnAddEmployment').addEventListener('click', () => openEmploymentModal());
+
+function openEmploymentModal(editItem = null) {
+
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-briefcase me-2"></i>
+        ${editItem ? 'Edit Employment' : 'Add Employment'}
+    `;
+
+    // Set ID (used for update)
+    crudItemIdInput.value = editItem ? editItem.id : '';
+
+    // Modal form body
+    crudModalBody.innerHTML = `
+        <input type="hidden" name="applicant_id" value="${user.id}">
+
 		<div class="row">
-			<div class="col-md-6 mb-3">
-			<label for="employer" class="form-label fw-bold"><i class="fas fa-building me-1"></i>Employer</label>
-			<input type="text" class="form-control form-control" id="employer" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem ? editItem.employer : ''}">
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">From Year</label>
+					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>
+					
+				</div>
+
+				<div class="col-md-6 mb-3">
+					<label class="form-label fw-bold">To Year</label>
+					<input type="date" class="form-control calander"  name="end_date" value="${editItem?.end_date || ''}"/>	
+		</div>
+
+
+		<div class="row">
+			<div class="col-md-12 mb-3">
+				<label for="employer" class="form-label fw-bold">Employer</label>
+				<input type="text" class="form-control" id="from_date" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem?.employer || ''}">
+			
 			</div>
-			<div class="col-md-6 mb-3">
-			<label for="position" class="form-label fw-bold"><i class="fas fa-user-tie me-1"></i>Position</label>
-			<input type="text" class="form-control form-control" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem ? editItem.position : ''}">
+		
+			<div class="col-md-12 mb-3">
+				<label for="position" class="form-label fw-bold">Position Held</label>
+				<input type="text" class="form-control" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem?.position || ''}">			
 			</div>
 		</div>
-		<div class="mb-3">
-			<label for="duration" class="form-label fw-bold"><i class="fas fa-calendar-alt me-1"></i>Duration</label>
-			<input type="text" class="form-control form-control" id="duration" name="duration" placeholder="e.g. Jan 2020 - Dec 2022" required value="${editItem ? editItem.duration : ''}">
+
+		<div class="row">
+			<div class="col-md-12 mb-3">
+				<label for="key_duties" class="form-label	fw-bold">Key Duties</label>					
+				<textarea class="form-control" id="key_duties" name="key_duties" placeholder="Describe your key duties here..." rows="4" required>${editItem?.key_duties || ''}</textarea>
+			</div>
 		</div>
-		<div class="alert alert-warning">
-			<i class="fas fa-exclamation-triangle me-2"></i>
-			Provide accurate employment details as they may be verified through background checks.
-		</div>
-		`;
-		crudModal.show();
-	}
+
+		<div class="form-check mb-3">
+			<input class="form-check-input" type="checkbox" value="" id="is_current" fw-bold name="is_current" ${editItem?.is_current ? 'checked' : ''}>
+			<label class="form-check-label " for="is_current">	
+				Currently Employed Here
+
+
+
+    `;
+
+    crudModal.show();
+}
+
+
 	async function loadEmployment() {
-		const items = await fetchItems(API.employmentHistory, 'employmentHistory');
+		const user = getUser();
+		let items = [];
+		if (user && user.id) {
+			// Use GET route for applicant
+			items = await fetchItems(API.getEmploymentHistory(user.id), 'employmentHistory');
+		}
+		// fallback if no API data
+		if (!items || items.length === 0) {
+			if (user && user.employments && Array.isArray(user.employments)) {
+				items = user.employments.map((mem, index) => ({
+					id: `user-mem-${index}`,
+					start_date: mem.start_date || '',
+					end_date: mem.end_date || '',
+					employer: mem.employer || '',
+					position: mem.position || '',
+					key_duties: mem.key_duties || '',
+					is_current: mem.is_current || false
+					
+				}));
+				dataCache['employmentHistory'] = items;
+			}
+		}
 		renderTableRows(items, employmentTableBody, [
+		{ key: 'start_date' },
+		{ key: 'end_date' },
 		{ key: 'employer' },
 		{ key: 'position' },
-		{ key: 'duration' }
+		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
 		], openEmploymentModal, async id => {
 		if (confirm('Delete this employment record?')) {
 			const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
@@ -1241,91 +1302,21 @@ function openMembershipModal(editItem = null) {
 		});
 	}
 
-	// Documents
-	const documentsTableBody = document.querySelector('#documentsTable tbody');
-	document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentsModal());
-	function openDocumentsModal(editItem = null) {
-		crudModalLabel.innerHTML = `
-			<i class="fas fa-file-upload me-2"></i>
-			${editItem ? 'Edit Document' : 'Upload Document'}
-		`;
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
-			<input type="hidden" name="applicant_id" value="${user.id}">
-			<div class="row">
-				<div class="col-md-6 mb-3">
-					<label class="form-label fw-bold">Document Type</label>
-					<select class="form-control" id="document_type" name="document_type" required>
-						<option value="">Select Document Type</option>
-
-						${[
-							"PhD", "Masters", "Bachelor", "Diploma",
-							"Certificate", "Certification", "NationId"
-						].map(type => `
-							<option value="${type}" ${editItem?.document_type === type ? 'selected' : ''}>
-								${type}
-							</option>
-						`).join('')}
-
-					</select>
-				</div>
-
-				<div class="col-md-6 mb-3">
-					<label class="form-label fw-bold">Document Title</label>
-					<input type="text" class="form-control"
-						id="title" name="title"
-						placeholder="e.g. Transcript"
-						required
-						value="${editItem?.title || ''}">
-				</div>
-			</div>
-
-			<div class="mb-3">
-				<label class="form-label fw-bold">
-					<i class="fas fa-upload me-1"></i> Choose File
-				</label>
-			
-				<input type="file" class="form-control"
-					id="file" name="file"
-					accept="application/pdf"
-					${editItem ? '' : 'required'}>
-			</div>
-
-			<div class="alert alert-info">
-				<i class="fas fa-shield-alt me-2"></i>
-				All uploaded documents are encrypted and stored securely.
-				Only authorized personnel will have access.
-			</div>
-		`;
-
-		crudModal.show();
-		// File validation (PDF-only)
-		const fileInput = document.getElementById('file');
-
-		fileInput.addEventListener('change', (e) => {
-			const file = e.target.files[0];
-
-			if (file && file.type !== 'application/pdf') {
-				showToast('Please select a PDF file only.', 'error');
-				e.target.value = ''; // reset the input
-			}
-		});
-	}
 
 
-	async function loadDocuments() {
-		const items = await fetchItems(API.documents, 'documents');
-		renderTableRows(items, documentsTableBody, [
-		{ key: 'name' },
-		{ key: 'type' },
-		{ key: 'uploadedOn' }
-		], openDocumentsModal, async id => {
-		if (confirm('Delete this document?')) {
-			const success = await deleteItem(API.documents, id, 'documents');
-			if (success) loadDocuments();
-		}
-		});
-	}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	// Referee
 	const refereeTableBody = document.querySelector('#refereeTable tbody');
@@ -1339,13 +1330,13 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			<label for="full_name" class="form-label fw-bold">Full Name</label>
-			<input type="text" class="form-control form-control" id="full_name" name="full_name"  required value="${editItem ? editItem.full_name : ''}">
+			<input type="text" class="form-control" id="full_name" name="full_name"  required value="${editItem ? editItem.full_name : ''}">
 			</div>
 
 
 			<div class="col-md-6 mb-3">
 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<input type="text" class="form-control form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}"/>
+			<input type="text" class="form-control" id="relationship" name="relationship" placeholder="e.g. University of Example" required value="${editItem ? editItem.relationship : ''}"/>
 				
 			</div>
 		</div>
@@ -1355,13 +1346,13 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			<label for="position" class="form-label fw-bold">Position</label>
-			<input type="text" class="form-control form-control" id="position" name="position"  required value="${editItem ? editItem.position : ''}">
+			<input type="text" class="form-control" id="position" name="position"  required value="${editItem ? editItem.position : ''}">
 			</div>
 
 
 			<div class="col-md-6 mb-3">
 			<label for="email" class="form-label fw-bold">Email</label>
-			<input type="email" class="form-control form-control" id="email" name="email"  required value="${editItem ? editItem.email : ''}"/>
+			<input type="email" class="form-control" id="email" name="email"  required value="${editItem ? editItem.email : ''}"/>
 				
 			</div>
 		</div>
@@ -1371,7 +1362,7 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			<label for="contact" class="form-label fw-bold">Contact</label>
-			<input type="text" class="form-control form-control" id="contact" name="contact"  required value="${editItem ? editItem.contact : ''}">
+			<input type="text" class="form-control" id="contact" name="contact"  required value="${editItem ? editItem.contact : ''}">
 			</div>
 
 
@@ -1410,13 +1401,13 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			<label for="name" class="form-label fw-bold">Full Name</label>
-			<input type="text" class="form-control form-control" id="name" name="name"  value="${editItem ? editItem.name : ''}">
+			<input type="text" class="form-control" id="name" name="name"  value="${editItem ? editItem.name : ''}">
 			</div>
 
 
 			<div class="col-md-6 mb-3">
 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<select type="text" class="form-control form-control" id="relationship" name="relationship"  required value="${editItem ? editItem.relationship : ''}">
+			<select type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem ? editItem.relationship : ''}">
 				<option value="">Select Relationship</option>
 				<option value="Spouse">Spouse</option>
 				<option value="Child">Child</option>
@@ -1435,7 +1426,7 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			<label for="age" class="form-label fw-bold">Age</label>
-			<input type="number" class="form-control form-control" id="age" name="age"  required value="${editItem ? editItem.age : ''}">
+			<input type="number" class="form-control" id="age" name="age"  required value="${editItem ? editItem.age : ''}">
 			</div>
 
 
