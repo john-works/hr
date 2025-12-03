@@ -133,12 +133,20 @@
 		authArea.style.display = 'none';
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'none';
-		
+
 		// Show app area and navbar
 		applicationDashboard.style.display = 'block';
 		mainNavbar.style.display = 'flex';
 		document.body.classList.remove('auth-view');
-		
+
+		// Update navigation items for logged-in user
+		const loggedInNav = document.getElementById('loggedInNav');
+		const userDropdownContainer = document.getElementById('userDropdownContainer');
+		const homeNavItem = document.getElementById('homeNavItem');
+		if (loggedInNav) loggedInNav.style.display = 'flex';
+		if (userDropdownContainer) userDropdownContainer.style.display = 'block';
+		if (homeNavItem) homeNavItem.style.display = 'none';
+
 		// Show default step (selectJob)
 		showStep('personalDetails');
 	}
@@ -624,10 +632,9 @@
 
 		showToast('Email verified! You are now logged in.', 'success');
 		isValidating = false;
-		
-		// Show app area after successful verification
-		showDashboard();
-		initAppAfterLogin();
+
+		// Reload page to refresh state
+		window.location.reload();
 		} catch (error) {
 		showToast('Invalid OTP code. Please try again.', 'error');
 		clearOTPInputs();
@@ -767,21 +774,27 @@ const API = {
 	}
 
 	/* ----- Sidebar Navigation ----- */
-	function showStep(step) {
+function showStep(step) {
 		currentStep = step;
 		sidebarNav.querySelectorAll('a.nav-link').forEach(a => {
-		a.classList.toggle('active', a.getAttribute('data-step') === step);
+		const stepAttr = a.getAttribute('data-step');
+		a.classList.toggle('active', stepAttr === step);
+		if (step === 'selectJob' && stepAttr !== 'selectJob') {
+			a.classList.add('disabled');
+		} else {
+			a.classList.remove('disabled');
+		}
 		});
 		mainPanel.querySelectorAll('section[data-step-content]').forEach(sec => {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
 		});
 
-		// Hide sidebar when selecting a job to focus on job selection
+		// Show sidebar for selectJob to allow navigation, hide for other steps
 		const sidebar = document.querySelector('aside.sidebar');
 		if (step === 'selectJob') {
-			sidebar.classList.add('d-none');
-		} else {
 			sidebar.classList.remove('d-none');
+		} else {
+			sidebar.classList.add('d-none');
 		}
 
 		loadStepData(step);
