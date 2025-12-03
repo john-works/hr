@@ -1284,7 +1284,7 @@ function openEmploymentModal(editItem = null) {
 		{ key: 'employer' },
 		{ key: 'position' },
 		{ key: 'duties' },
-		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
+		// { key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
 		], openEmploymentModal, async id => {
 		if (confirm('Delete this employment record?')) {
 			const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
@@ -1364,7 +1364,7 @@ function openRefereeModal(editItem = null) {
 		let items = [];
 		if (user && user.id) {
 			// Use GET route for applicant
-			items = await fetchItems(API.referee(user.id), 'referee');
+			items = await fetchItems(API.getReferees(user.id), 'referee');
 		}
 		// fallback if no API data
 		if (!items || items.length === 0) {
@@ -1397,6 +1397,92 @@ function openRefereeModal(editItem = null) {
 		});
 	}
 
+
+	
+// Documents 
+const documentsTableBody = document.querySelector('#documentsTable tbody');
+
+document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentModal());
+
+function openDocumentModal(editItem = null) {
+
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-briefcase me-2"></i>
+        ${editItem ? 'Edit Referee' : 'Add Referee'}
+    `;
+
+    // Set ID (used for update)
+    crudItemIdInput.value = editItem ? editItem.id : '';
+
+    // Modal form body
+    crudModalBody.innerHTML = `
+        <input type="hidden" name="applicant_id" value="${user.id}">
+
+		<div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="document_type" class="form-label fw-bold">Document Type</label>
+          <select type="text" class="form-control form-control" id="document_type" name="document_type"  required value="${editItem?.document_type|| ''}">
+            <option value="">Select type</option>
+            <option value="PhD">PhD</option>
+            <option value="Masters">Masters</option>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Diploma" >Diploma</option>
+            <option value="Certificate">Certificate</option>
+            <option value="NationId">Nation Id</option>
+            
+
+
+          </select>
+          </div>
+        <div class="col-md-6 mb-3">
+          <label for="title" class="form-label fw-bold">Document Title</label>
+          <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
+        </div>
+      </div>
+
+
+
+      <div class="mb-3">
+        <label for="file_path" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
+        <input type="file" class="form-control form-control" id="file_path" name="file_path" accept="application/pdf" ${editItem ? '' : 'required'}>
+      </div>
+
+    
+    `;
+
+    crudModal.show();
+}
+	async function loadDocuments() {
+		const user = getUser();
+		let items = [];
+		if (user && user.id) {
+			// Use GET route for applicant
+			items = await fetchItems(API.getDocuments(user.id), 'referee');
+		}
+		// fallback if no API data
+		if (!items || items.length === 0) {
+			if (user && user.documents && Array.isArray(user.documents)) {
+				items = user.documents.map((mem, index) => ({
+					id: `user-mem-${index}`,
+					document_type: mem.document_type || '',
+					title: mem.title || '',
+					file_path: mem.file_path || ''
+					
+				}));
+				dataCache['documents'] = items;
+			}
+		}
+		renderTableRows(items, documentsTableBody, [
+		{ key: 'document_type' },	
+		{ key: 'title' },
+		{ key: 'file_path', formatter: val => `<a href="${val}" target="_blank">View Document</a>` }
+		], openDocumentModal, async id => {
+		if (confirm('Delete this employment record?')) {
+			const success = await deleteItem(API.documents, id, 'documents');
+			if (success) loadDocuments();
+		}
+		});
+	}
 
 
 
@@ -1484,15 +1570,6 @@ function openDependantModal(editItem = null) {
 		}
 		});
 	}
-
-
-
-
-
-
-
-
-
 
 
 	// Preview Application
