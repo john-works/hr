@@ -1,10 +1,10 @@
 :root {
-  --primary-color: #1624c9;
-  --secondary-color: #1624c9;
+  --primary-color: #0a4a7a;
+  --secondary-color: #0a4a7a;
   --accent-color: #ff6b35;
   --light-color: #f8fafc;
   --dark-color: #343a40;
-  --success-color: #171344;
+  --success-color: #0a4a7a;
   --warning-color: #ffc107;
   --danger-color: #dc3545;
   --border-radius: 12px;
@@ -27,7 +27,7 @@ body.auth-view {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: url('../download.jpeg') no-repeat center center fixed;
+  background: url('../img/background.jpeg') no-repeat center center fixed;
   background-size: cover;
   position: relative;
 }
@@ -48,7 +48,7 @@ body.auth-view::before {
   position: sticky;
   top: 0;
   z-index: 1030;
-  background-color: #000435 !important;
+  background-color: #0a4a7a !important;
 }
 
 /* Toast Notifications */
@@ -133,7 +133,7 @@ body.auth-view::before {
 /* Sidebar Styling */
 .sidebar {
   min-height: 75vh;
-  background: #000435;
+  background: #0a4a7a;
   color: white;
   padding: 1.5rem 1rem;
   border-radius: 0;
@@ -171,7 +171,7 @@ body.auth-view::before {
 }
 
 .sidebar .nav-link.active {
-  background-color: #3174f6;
+  background-color: rgba(49, 116, 246, 0.2);
   color: white;
   box-shadow: 0 4px 12px rgba(49, 116, 246, 0.3);
 }
@@ -597,12 +597,12 @@ main {
 
 /* Custom button color for btnAddEmployment */
 #btnAddEmployment {
-  background-color: #000435 !important;
+  background-color: #0a4a7a !important;
 }
 
-/* Change all btn-success buttons to #000435 */
+/* Change all btn-success buttons to #0a4a7a */
 .btn-success {
-  background-color: #000435 !important;
+  background-color: #0a4a7a !important;
 }
 
 /* Notes Board Styling */
@@ -817,7 +817,7 @@ main {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('../download.jpeg') no-repeat center center;
+  background: url('../img/background.jpeg') no-repeat center center;
   background-size: cover;
   opacity: 0.1;
   z-index: 0;
