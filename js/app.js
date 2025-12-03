@@ -749,8 +749,8 @@ const API = {
 	getSubmittedApplications: (id) => `${apiUrl}/submitted_applications/${id}`,
 
 	// === JOB/APPLICATION RELATED ===
-	selectJob: `${apiUrl}/active_vacancies`,
-	getActiveVacancies: `${apiUrl}/active_vacancies`,
+	selectJob: `${apiUrl}/vacancies`,
+	getActiveVacancies: `${apiUrl}/vacancies`,
 	postApplication: `${apiUrl}/application`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
