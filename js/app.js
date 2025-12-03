@@ -1295,14 +1295,7 @@ function openEmploymentModal(editItem = null) {
 	}
 
 
-
-
-
-
-
-
-
-		
+	
 // Referee 
 const refereeTableBody = document.querySelector('#refereeTable tbody');
 
@@ -1408,38 +1401,36 @@ function openRefereeModal(editItem = null) {
 
 
 
+// // Dependants
+const dependantsTableBody = document.querySelector('#dependantsTable tbody');
 
+document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
 
+function openDependantModal(editItem = null) {
 
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-briefcase me-2"></i>
+        ${editItem ? 'Edit Dependant' : 'Add Dependant'}
+    `;
 
+    // Set ID (used for update)
+    crudItemIdInput.value = editItem ? editItem.id : '';
 
+    // Modal form body
+    crudModalBody.innerHTML = `
+        <input type="hidden" name="applicant_id" value="${user.id}">
 
-
-
-
-
-	
-
-	// Dependants
-	const dependantsTableBody = document.querySelector('#dependantsTable tbody');
-	document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
-	function openDependantModal(editItem = null) {
-		crudModalLabel.textContent = editItem ? 'Edit Dependant' : 'Add Dependant';
-		crudItemIdInput.value = editItem ? editItem.id : '';
-		crudModalBody.innerHTML = `
-
-
-		<div class="row">
+			<div class="row">
 		
 			<div class="col-md-6 mb-3">
 			<label for="name" class="form-label fw-bold">Full Name</label>
-			<input type="text" class="form-control" id="name" name="name"  value="${editItem ? editItem.name : ''}">
+			<input type="text" class="form-control" id="name" name="name"  value="${editItem?.name || ''}" required>
 			</div>
 
 
 			<div class="col-md-6 mb-3">
 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<select type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem ? editItem.relationship : ''}">
+			<select type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
 				<option value="">Select Relationship</option>
 				<option value="Spouse">Spouse</option>
 				<option value="Child">Child</option>
@@ -1449,39 +1440,61 @@ function openRefereeModal(editItem = null) {
 			</select>
 			</div>
 		</div>
-
-
-		
-
-		
 		<div class="row">
 		
 			<div class="col-md-6 mb-3">
-			<label for="age" class="form-label fw-bold">Age</label>
-			<input type="number" class="form-control" id="age" name="age"  required value="${editItem ? editItem.age : ''}">
+			<label for="birth_date" class="form-label fw-bold">Date of Birth</label>
+			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.age || ''}">
 			</div>
-
-
-			
 		</div>
+    `;
 
-		
-		`;
-		crudModal.show();
-	}
+    crudModal.show();
+}
 	async function loadDependants() {
-		const items = await fetchItems(API.dependants, 'dependants');
+		const user = getUser();
+		let items = [];
+		if (user && user.id) {
+			// Use GET route for applicant
+			items = await fetchItems(API.getDependants(user.id), 'dependantsdependants');
+		}
+		dependants:
+
+		// fallback if no API data
+		if (!items || items.length === 0) {
+			if (user && user.dependants && Array.isArray(user.dependants)) {
+				items = user.dependants.map((mem, index) => ({
+					id: `user-mem-${index}`,
+					name: mem.name || '',
+					birth_date: mem.birth_date || '',
+					relationship: mem.relationship || ''
+					
+					
+				}));
+				dataCache['dependants'] = items;
+			}
+		}
 		renderTableRows(items, dependantsTableBody, [
 		{ key: 'name' },
 		{ key: 'relationship' },
-		{ key: 'age' }
+		{ key: 'birth_date' }	
 		], openDependantModal, async id => {
-		if (confirm('Delete this dependant?')) {
+		if (confirm('Delete this dependants record?')) {
 			const success = await deleteItem(API.dependants, id, 'dependants');
 			if (success) loadDependants();
 		}
 		});
 	}
+
+
+
+
+
+
+
+
+
+
 
 	// Preview Application
 	const previewSection = document.querySelector('section[data-step-content="previewApplication"]');
