@@ -1,7 +1,7 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.204.1:8041/api/v1';
+	let apiUrl = 'http://192.168.32.211:8041/api/v1';
 	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
