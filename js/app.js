@@ -133,13 +133,17 @@
 
 	/* ----- Display logic based on session ----- */
 	function showDashboard() {
-		// Hide all other areas
-		authArea.style.display = 'block';
-		const homePage = document.getElementById('homePage');
-		if (homePage) homePage.style.display = 'block';
+		// Hide login form
+		authArea.style.display = 'none';
 
-		// Show app area and navbar
+		// Hide home page
+		const homePage = document.getElementById('homePage');
+		if (homePage) homePage.style.display = 'none';
+
+		// Show application dashboard
 		applicationDashboard.style.display = 'block';
+
+		// Show navbar
 		mainNavbar.style.display = 'flex';
 		document.body.classList.remove('auth-view');
 
@@ -149,9 +153,6 @@
 		if (loggedInNav) loggedInNav.style.display = 'flex';
 		if (userDropdownContainer) userDropdownContainer.style.display = 'block';
 		if (homeNavItem) homeNavItem.style.display = 'none';
-
-		// Show default step (selectJob)
-		showStep('personalDetails');
 	}
 
 	function showAuth() {
@@ -159,8 +160,8 @@
 		applicationDashboard.style.display = 'none';
 		mainNavbar.style.display = 'none';
 		const homePage = document.getElementById('homePage');
-		if (homePage) homePage.style.display = 'none';
-		
+		if (homePage) homePage.style.display = 'block';
+
 		// Show auth area
 		authArea.style.display = 'block';
 		document.body.classList.add('auth-view');
@@ -168,7 +169,7 @@
 
 	function showHomePage() {
 		// Hide all other areas
-		authArea.style.display = 'block';
+		authArea.style.display = currentUser ? 'none' : 'block';
 		applicationDashboard.style.display = 'none';
 
 		// Show home page and navbar
@@ -1968,7 +1969,7 @@ function openDependantModal(editItem = null) {
 				const isValid = await validateTokenWithBackend();
 				if (isValid) {
 					// Token valid and user exists in DB
-					showHomePage();
+					showDashboard();
 					initAppAfterLogin();
 				} else {
 					// User no longer exists or token invalid
