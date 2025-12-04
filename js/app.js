@@ -123,13 +123,7 @@
 		verifyEmailForm.style.display = 'none';
 	}
 
-	function showVerifyEmailForm(email) {
-		alert('The verify email function is currently disabled.');
-		loginForm.style.display = 'none';
-		registerForm.style.display = 'none';
-		verifyEmailForm.style.display = 'block';
-		document.getElementById('verifyEmailText').textContent = email;
-	}
+
 
 	/* ----- Display logic based on session ----- */
 	function showDashboard() {
@@ -499,74 +493,7 @@
 	
 
 
-	// Validate OTP
-	async function validateOTP() {
-		if (isValidating) return;
-		isValidating = true;
 
-		const code = otpCode.value;
-		const pendingUserStr = localStorage.getItem('pendingUser');
-		if (!pendingUserStr) {
-			showToast('No pending verification found.', 'error');
-			showRegisterForm();
-			isValidating = false;
-			return;
-		}
-		const pendingUser = JSON.parse(pendingUserStr);
-
-		try {
-			// Verify OTP via API
-			const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
-
-			// Check if the API indicates failure (even with 200 status)
-			// Handle various error message patterns
-			if (response.data.error || 
-				response.data.message === 'Invalid OTP code.' || 
-				(response.data.message && response.data.message.toLowerCase().includes('invalid')) ||
-				!response.data.success) {
-				showToast(response.data.message || response.data.error || 'Invalid OTP code.', 'error');
-				isValidating = false;
-				// Clear OTP inputs
-				otpInputs.forEach(input => {
-					input.value = '';
-					input.classList.remove('filled');
-				});
-				if (otpCode) otpCode.value = '';
-				if (verifyBtn) verifyBtn.disabled = true;
-				if (otpInputs[0]) otpInputs[0].focus();
-				return;
-			}
-
-			// Save user and token objects to localStorage
-			if (response.data.user) {
-				localStorage.setItem('user', JSON.stringify(response.data.user));
-				currentUser = response.data.user; // Update currentUser
-			}
-			if (response.data.token) {
-				localStorage.setItem('token', response.data.token);
-			}
-
-			// Save session
-			setSession({
-				email: pendingUser.email,
-				name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
-				role: 'Applicant',
-				user: response.data.user || null,
-				token: response.data.token || null
-			});
-			localStorage.removeItem('pendingUser');
-
-			showToast('Email verified! You are now logged in.', 'success');
-			isValidating = false;
-
-			// Reload page to refresh state
-			window.location.reload();
-		} catch (error) {
-			showToast('Invalid OTP code. Please try again.', 'error');
-			clearOTPInputs();
-			isValidating = false;
-		}
-	}
 
 	// Resend code functionality
 	resendLink.addEventListener('click', async () => {
@@ -1056,7 +983,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			</div>
 
 			<div class="row">
-				<div class="col-md-10 mb-3">
+			<div class="col-md-8 mb-3">
 					<label class="form-label fw-bold">Qualification</label>
 					<select class="form-control" id="qualification" name="qualification" required>
 						<option value="">Select Qualification</option>
@@ -1065,8 +992,20 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 						<option value="Bachelors" ${editItem?.qualification === 'Bachelors' ? 'selected' : ''}>Bachelors</option>
 						<option value="Diploma" ${editItem?.qualification === 'Diploma' ? 'selected' : ''}>Diploma</option>
 						<option value="Certificate" ${editItem?.qualification === 'Certificate' ? 'selected' : ''}>Certificate</option>
-						<option value="Certification" ${editItem?.qualification === 'Certification' ? 'selected' : ''}>Certification</option>
-						
+						<option value="Professional Certification" ${editItem?.qualification === 'Professional Certification' ? 'selected' : ''}>Professional Certification</option>
+
+					</select>
+				</div>
+
+				<div class="col-md-4 mb-3" id="classOfDegreeContainer" style="display: none;">
+					<label class="form-label fw-bold">Class of Degree</label>
+					<select class="form-control" id="class_of_degree" name="class_of_degree">
+						<option value="">Select Class</option>
+						<option value="First Class" ${editItem?.class_of_degree === 'First Class' ? 'selected' : ''}>First Class</option>
+						<option value="Second Class Upper" ${editItem?.class_of_degree === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
+						<option value="Second Class Lower" ${editItem?.class_of_degree === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
+						<option value="Third Class" ${editItem?.class_of_degree === 'Third Class' ? 'selected' : ''}>Third Class</option>
+						<option value="Pass" ${editItem?.class_of_degree === 'Pass' ? 'selected' : ''}>Pass</option>
 					</select>
 				</div>
 
@@ -1090,6 +1029,23 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 		`;
 
 		crudModal.show();
+
+		// Toggle Class of Degree visibility based on qualification
+		function toggleClassOfDegree() {
+			const qualification = document.getElementById('qualification').value;
+			const container = document.getElementById('classOfDegreeContainer');
+			if (qualification === 'Bachelors') {
+				container.style.display = 'block';
+			} else {
+				container.style.display = 'none';
+			}
+		}
+
+		// Add event listener to qualification select
+		document.getElementById('qualification').addEventListener('change', toggleClassOfDegree);
+
+		// Initial toggle for edit mode
+		toggleClassOfDegree();
 	}
 
 	async function loadEducation() {
@@ -1152,33 +1108,6 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 		}
 	}
 
-	// // Professional Membership
-	// const membershipTableBody = document.querySelector('#membershipTable tbody');
-	// document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
-	// function openMembershipModal(editItem = null) {
-	// 	crudModalLabel.innerHTML = `<i class="fas fa-users me-2"></i>${editItem ? 'Edit Membership' : 'Add Membership'}`;
-	// 	crudItemIdInput.value = editItem ? editItem.id : '';
-	// 	crudModalBody.innerHTML = `
-	// 	<input type="hidden" name="applicant_id" value="${user.id}">
-	// 	<div class="row">
-	// 		<div class="col-md-12 mb-2">
-	// 			<label for="membershipInstitute" class="form-label fw-bold">Institute</label>
-	// 			<input type="text" class="form-control" id="membershipInstitute" name="institute" placeholder="ISACA, Rotary, Lions Club" required value="${editItem ? editItem.institute : ''}">
-	// 		</div>
-	// 		<div class="col-md-6 mb-2">
-	// 			<label for="membershipType" class="form-label fw-bold">Membership Type</label>
-	// 			<input type="text" class="form-control" id="membershipType" name="type" placeholder="e.g. Full Member, Student" required value="${editItem ? editItem.type : ''}">
-	// 		</div>
-	// 		<div class="col-md-6 mb-2">
-	// 			<label for="membershipNumber" class="form-label fw-bold">Membership Year</label>
-	// 			<input type="text" class="form-control" id="membershipNumber" name="year" placeholder="e.g. 2023" required value="${editItem ? editItem.year : ''}">
-	// 		</div>
-	// 	</div>
-	// 	`;
-	// 	crudModal.show();
-	// }
-
-
 
 
 	// Professional Membership
@@ -1219,18 +1148,29 @@ function openMembershipModal(editItem = null) {
                     placeholder="Full Member, Student"
                     required
                     value="${editItem?.type || ''}">
+        </div>
+		
+		<div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Enrollment Year</label>
+                <select class="form-control" id="end_year" name="enrollment_year" required>
+						<option value="">Select Year</option>
+						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+							.map(year => `<option value="${year}" ${editItem?.enrollment_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+				</select>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <label class="form-label fw-bold">Membership Year</label>
-                <input type="number" class="form-control"
-                    id="membershipYear"
-                    name="year"
-                    placeholder="e.g. 2023"
-                    required
-                    value="${editItem?.year || ''}">
-            </div>
-        </div>
+		
+			<div class="col-md-6 mb-3">
+				<label class="form-label fw-bold">Year of Expiry</label>
+				<select class="form-control" id="expiry_year" name="expiry_year">
+						<option value="">Select Year</option>
+						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+							.map(year => `<option value="${year}" ${editItem?.expiry_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+					</select>
+			</div>
+		</div>
+        
     `;
 
     crudModal.show();
@@ -1336,6 +1276,13 @@ function openEmploymentModal(editItem = null) {
 				<label for="position" class="form-label fw-bold">Duties</label>
 				<textarea class="form-control" id="duties" name="duties"  rows="7" placeholder="e.g.  Developed web applications " required>${editItem?.duties || ''}</textarea>			
 		</div>
+
+		<div class="form-check mb-3">
+				<input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
+				<label class="form-check-label fw-bold" for="is_current">
+					Currently Employed Here
+				</label>
+		</div>
 		
 
 		
@@ -1431,7 +1378,6 @@ function openRefereeModal(editItem = null) {
 				
 			</div>
 		</div>
-		position
 
 		<div class="row">
 		
@@ -1498,8 +1444,8 @@ document.getElementById('btnAddDocument').addEventListener('click', () => openDo
 function openDocumentModal(editItem = null) {
 
     crudModalLabel.innerHTML = `
-        <i class="fas fa-briefcase me-2"></i>
-        ${editItem ? 'Edit Referee' : 'Add Referee'}
+        <i class="fas fa-file me-2"></i>
+        ${editItem ? 'Edit Document' : 'Add Document'}
     `;
 
     // Set ID (used for update)
@@ -1519,7 +1465,11 @@ function openDocumentModal(editItem = null) {
             <option value="Bachelor">Bachelor</option>
             <option value="Diploma" >Diploma</option>
             <option value="Certificate">Certificate</option>
-            <option value="NationId">Nation Id</option>
+			<option value="Professional Certification">Professional Certification</option>
+            <option value="NationId">National Id</option>
+			<option value="LC 1 Letter">LC 1 Letter</option>
+			<option value="University Refference Letter">University Reference Letter</option>
+			<option value="Reccommendation Letter">Recommendation Letter</option>
             
 
 
@@ -1550,7 +1500,7 @@ function openDocumentModal(editItem = null) {
 		}
 		let items = [];
 		// Use GET route for applicant
-		items = await fetchItems(API.getDocuments(currentUser.id), 'referee');
+		items = await fetchItems(API.getDocuments(currentUser.id), 'documents');
 		// fallback if no API data
 		if (!items || items.length === 0) {
 			if (currentUser && currentUser.documents && Array.isArray(currentUser.documents)) {
@@ -1559,17 +1509,17 @@ function openDocumentModal(editItem = null) {
 					document_type: mem.document_type || '',
 					title: mem.title || '',
 					file_path: mem.file_path || ''
-					
+
 				}));
 				dataCache['documents'] = items;
 			}
 		}
 		renderTableRows(items, documentsTableBody, [
-		{ key: 'document_type' },	
+		{ key: 'document_type' },
 		{ key: 'title' },
 		{ key: 'file_path', formatter: val => `<a href="${val}" target="_blank">View Document</a>` }
 		], openDocumentModal, async id => {
-		if (confirm('Delete this employment record?')) {
+		if (confirm('Delete this document record?')) {
 			const success = await deleteItem(API.documents, id, 'documents');
 			if (success) loadDocuments();
 		}
