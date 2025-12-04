@@ -266,7 +266,7 @@ main {
 
 /* Authentication Container */
 .auth-container {
-  max-width: 420px;
+  max-width:600px;
   margin: 4rem auto;
   padding: 2.5rem;
   background: white;

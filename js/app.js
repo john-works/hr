@@ -1,14 +1,15 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.32.151:8041/api/v1';
-	const user = getUser();
+	let apiUrl = 'http://192.168.204.1:8041/api/v1';
+	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
 	const applicationDashboard = document.getElementById('applicationDashboard');
 	const mainNavbar = document.getElementById('mainNavbar');
 	const userDropdown = document.getElementById('userDropdown');
 	const navbarUserName = document.getElementById('navbarUserName');
+	const loggedInNav = document.getElementById('loggedInNav');
 	const btnLogout = document.getElementById('btnLogout');
 	const loginForm = document.getElementById('loginForm');
 	const registerForm = document.getElementById('registerForm');
@@ -115,12 +116,15 @@
 		registerForm.style.display = 'none';
 		verifyEmailForm.style.display = 'none';
 	}
+
 	function showRegisterForm() {
 		loginForm.style.display = 'none';
 		registerForm.style.display = 'block';
 		verifyEmailForm.style.display = 'none';
 	}
+
 	function showVerifyEmailForm(email) {
+		alert('The verify email function is currently disabled.');
 		loginForm.style.display = 'none';
 		registerForm.style.display = 'none';
 		verifyEmailForm.style.display = 'block';
@@ -130,9 +134,9 @@
 	/* ----- Display logic based on session ----- */
 	function showDashboard() {
 		// Hide all other areas
-		authArea.style.display = 'none';
+		authArea.style.display = 'block';
 		const homePage = document.getElementById('homePage');
-		if (homePage) homePage.style.display = 'none';
+		if (homePage) homePage.style.display = 'block';
 
 		// Show app area and navbar
 		applicationDashboard.style.display = 'block';
@@ -140,7 +144,6 @@
 		document.body.classList.remove('auth-view');
 
 		// Update navigation items for logged-in user
-		const loggedInNav = document.getElementById('loggedInNav');
 		const userDropdownContainer = document.getElementById('userDropdownContainer');
 		const homeNavItem = document.getElementById('homeNavItem');
 		if (loggedInNav) loggedInNav.style.display = 'flex';
@@ -165,31 +168,20 @@
 
 	function showHomePage() {
 		// Hide all other areas
-		authArea.style.display = 'none';
+		authArea.style.display = 'block';
 		applicationDashboard.style.display = 'none';
 
 		// Show home page and navbar
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'block';
 
-		// Show/hide auth sidebar based on session
-		const authSidebar = document.getElementById('authSidebar');
-		const user = getSession();
-		if (authSidebar) {
-			authSidebar.style.display = user ? 'none' : 'block';
-			// Reset to login form when showing homepage
-			if (!user) {
-				showLoginFormSidebar();
-			}
-		}
 
 		mainNavbar.style.display = 'flex';
 
 		// Show/hide navigation items based on login status
-		const loggedInNav = document.getElementById('loggedInNav');
 		const userDropdownContainer = document.getElementById('userDropdownContainer');
 		const homeNavItem = document.getElementById('homeNavItem');
-		if (user) {
+		if (currentUser) {
 			if (loggedInNav) loggedInNav.style.display = 'flex';
 			if (userDropdownContainer) userDropdownContainer.style.display = 'block';
 			if (homeNavItem) homeNavItem.style.display = 'none';
@@ -216,52 +208,15 @@
 		});
 	}
 
-	/* ----- Sidebar Authentication UI Toggle ----- */
-	function showLoginFormSidebar() {
-		const loginForm = document.getElementById('loginFormSidebar');
-		const registerForm = document.getElementById('registerFormSidebar');
-		const verifyForm = document.getElementById('verifyEmailFormSidebar');
-		if (loginForm) loginForm.style.display = 'block';
-		if (registerForm) registerForm.style.display = 'none';
-		if (verifyForm) verifyForm.style.display = 'none';
-	}
-
-	function showRegisterFormSidebar() {
-		const loginForm = document.getElementById('loginFormSidebar');
-		const registerForm = document.getElementById('registerFormSidebar');
-		const verifyForm = document.getElementById('verifyEmailFormSidebar');
-		if (loginForm) loginForm.style.display = 'none';
-		if (registerForm) registerForm.style.display = 'block';
-		if (verifyForm) verifyForm.style.display = 'none';
-	}
-
-	function showVerifyEmailFormSidebar(email) {
-		const loginForm = document.getElementById('loginFormSidebar');
-		const registerForm = document.getElementById('registerFormSidebar');
-		const verifyForm = document.getElementById('verifyEmailFormSidebar');
-		const emailText = document.getElementById('verifyEmailTextSidebar');
+	function showVerifyEmailForm(email) {
+		const loginForm = document.getElementById('loginForm');
+		const registerForm = document.getElementById('registerForm');
+		const verifyForm = document.getElementById('verifyEmailForm');
+		const emailText = document.getElementById('verifyEmailText');
 		if (loginForm) loginForm.style.display = 'none';
 		if (registerForm) registerForm.style.display = 'none';
 		if (verifyForm) verifyForm.style.display = 'block';
 		if (emailText) emailText.textContent = email;
-	}
-
-	// Sidebar register toggle
-	const showRegisterSidebar = document.getElementById('showRegisterSidebar');
-	if (showRegisterSidebar) {
-		showRegisterSidebar.addEventListener('click', (e) => {
-			e.preventDefault();
-			showRegisterFormSidebar();
-		});
-	}
-
-	// Sidebar login toggle
-	const showLoginSidebar = document.getElementById('showLoginSidebar');
-	if (showLoginSidebar) {
-		showLoginSidebar.addEventListener('click', (e) => {
-			e.preventDefault();
-			showLoginFormSidebar();
-		});
 	}
 
 	/* ---- Register form submit -> register user and send OTP ---- */
@@ -310,17 +265,17 @@
 		}
 
 		const data = {
-		first_name: fnameInput.value.trim(),
-		last_name: lnameInput.value.trim(),
-		email: emailInput.value.toLowerCase().trim(),
-		password: passwordInput.value,
-		password_confirmation: confirmPasswordInput.value,
-		nin: ninInput.value.trim(),
-		dob: dobInput.value,
-		gender: genderInput.value,
-		marital_status: maritalInput.value,
-		phone_number: phoneInput.value.trim(),
-		middle_name: middleInput.value.trim(),
+			first_name: fnameInput.value.trim(),
+			last_name: lnameInput.value.trim(),
+			email: emailInput.value.toLowerCase().trim(),
+			password: passwordInput.value,
+			password_confirmation: confirmPasswordInput.value,
+			nin: ninInput.value.trim(),
+			dob: dobInput.value,
+			gender: genderInput.value,
+			marital_status: maritalInput.value,
+			phone_number: phoneInput.value.trim(),
+			middle_name: middleInput.value.trim(),
 		};
 
 		try {
@@ -358,7 +313,14 @@
 
 		try {
 			// Send OTP via API
-			await axios.post(API.login, { email, password: loginPasswordInputValue });
+			const response = await axios.post(API.login, { email, password: loginPasswordInputValue });
+			
+			// Check if response contains error message (backend returns 200 with error message)
+			if (response.data.message && response.data.message.toLowerCase().includes('invalid credentials')) {
+				showToast(response.data.message, 'error');
+				return; // Don't proceed with OTP
+			}
+			
 			showToast('OTP sent to your email.', 'success');
 
 			// Save "pendingUser" temporarily to localStorage
@@ -367,130 +329,19 @@
 				verified: false,
 			}));
 
-			showAuth();
+			// showAuth();
 			showVerifyEmailForm(email);
 			formElement.reset();
 		} catch (error) {
-			showToast('Failed to send OTP. Please try again.', 'error');
+			// Error is already handled by Axios interceptor
+			// Just prevent form submission from continuing
+			console.error('Login error:', error);
 		}
 	}
 
 	if (loginForm) {
 		loginForm.addEventListener('submit', async e => {
 			await handleLoginSubmit(e, 'loginEmail', 'loginPassword', loginForm);
-		});
-	}
-
-	// Sidebar login form
-	const loginFormSidebar = document.getElementById('loginFormSidebar');
-	if (loginFormSidebar) {
-		loginFormSidebar.addEventListener('submit', async e => {
-			e.preventDefault();
-			const emailInput = document.getElementById('loginEmailSidebar');
-			const passwordInput = document.getElementById('loginPasswordSidebar');
-
-			if (!emailInput.value) {
-				showToast('Please enter your email address.', 'warning');
-				return;
-			}
-
-			const email = emailInput.value.toLowerCase().trim();
-			const password = passwordInput.value;
-
-			try {
-				// Send OTP via API
-				await axios.post(API.login, { email, password });
-				showToast('OTP sent to your email.', 'success');
-
-				// Save "pendingUser" temporarily to localStorage
-				localStorage.setItem('pendingUser', JSON.stringify({
-					email: email,
-					verified: false,
-				}));
-
-				showVerifyEmailFormSidebar(email);
-				loginFormSidebar.reset();
-			} catch (error) {
-				showToast('Failed to send OTP. Please try again.', 'error');
-			}
-		});
-	}
-
-	// Sidebar register form
-	const registerFormSidebar = document.getElementById('registerFormSidebar');
-	if (registerFormSidebar) {
-		registerFormSidebar.addEventListener('submit', async e => {
-			e.preventDefault();
-			const fnameInput = document.getElementById('first_name_sidebar');
-			const lnameInput = document.getElementById('last_name_sidebar');
-			const emailInput = document.getElementById('email_sidebar');
-			const passwordInput = document.getElementById('password_sidebar');
-			const ninInput = document.getElementById('nin_sidebar');
-			const genderInput = document.getElementById('gender_sidebar');
-			const maritalInput = document.getElementById('marital_status_sidebar');
-			const phoneInput = document.getElementById('phone_number_sidebar');
-			const middleInput = document.getElementById('middle_name_sidebar');
-			const dobInput = document.getElementById('dob_sidebar');
-			const confirmPasswordInput = document.getElementById('password_confirmation_sidebar');
-
-			// Check required fields
-			const fields = [
-				{ input: fnameInput, name: 'First Name' },
-				{ input: lnameInput, name: 'Last Name' },
-				{ input: emailInput, name: 'Email' },
-				{ input: passwordInput, name: 'Password' },
-				{ input: confirmPasswordInput, name: 'Confirm Password' },
-				{ input: ninInput, name: 'National ID' },
-				{ input: dobInput, name: 'Date of Birth' },
-				{ input: genderInput, name: 'Gender' },
-				{ input: maritalInput, name: 'Marital Status' },
-				{ input: phoneInput, name: 'Phone Number' }
-			];
-
-			for (const field of fields) {
-				if (!field.input || !field.input.value.trim()) {
-					showToast(`Please fill in the ${field.name} field.`, 'warning');
-					if (field.input) field.input.focus();
-					return;
-				}
-			}
-
-			if (passwordInput.value !== confirmPasswordInput.value) {
-				showToast('Passwords do not match.', 'warning');
-				confirmPasswordInput.focus();
-				return;
-			}
-
-			const data = {
-				first_name: fnameInput.value.trim(),
-				last_name: lnameInput.value.trim(),
-				email: emailInput.value.toLowerCase().trim(),
-				password: passwordInput.value,
-				password_confirmation: confirmPasswordInput.value,
-				nin: ninInput.value.trim(),
-				dob: dobInput.value,
-				gender: genderInput.value,
-				marital_status: maritalInput.value,
-				phone_number: phoneInput.value.trim(),
-				middle_name: middleInput.value.trim(),
-			};
-
-			try {
-				// Register user via API
-				await axios.post(API.registerForm, data);
-				showToast('Registration successful! OTP sent to your email.', 'success');
-
-				// Save "pendingUser" temporarily to localStorage
-				localStorage.setItem('pendingUser', JSON.stringify({
-					email: data.email,
-					verified: false,
-				}));
-
-				showVerifyEmailFormSidebar(data.email);
-				registerFormSidebar.reset();
-			} catch (error) {
-				showToast('Registration failed. Please try again.', 'error');
-			}
 		});
 	}
 
@@ -584,9 +435,69 @@
 	if (otpForm) {
 		otpForm.addEventListener('submit', async e => {
 			e.preventDefault();
-			await validateOTP();
+			const code = otpCode.value;
+			const pendingUserStr = localStorage.getItem('pendingUser');
+			if (!pendingUserStr) {
+				showToast('No pending verification found.', 'error');
+				showLoginForm();
+				return;
+			}
+			const pendingUser = JSON.parse(pendingUserStr);
+
+			try {
+				// Verify OTP via API
+				const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
+
+				// Check if the API indicates failure (even with 200 status)
+				// Handle various error message patterns
+				if (response.data.error || 
+					response.data.message === 'Invalid OTP code.' || 
+					(response.data.message && response.data.message.toLowerCase().includes('invalid')) ||
+					!response.data.success) {
+					showToast(response.data.message || response.data.error || 'Invalid OTP code.', 'error');
+					// Clear OTP inputs
+					otpInputs.forEach(input => {
+						input.value = '';
+						input.classList.remove('filled');
+					});
+					if (otpCode) otpCode.value = '';
+					if (verifyBtn) verifyBtn.disabled = true;
+					if (otpInputs[0]) otpInputs[0].focus();
+					return;
+				}
+
+				// Save user and token objects to localStorage
+				if (response.data.user) {
+					localStorage.setItem('user', JSON.stringify(response.data.user));
+					currentUser = response.data.user; // Update currentUser
+				}
+				if (response.data.token) {
+					localStorage.setItem('token', response.data.token);
+				}
+
+				// Save session
+				setSession({
+					email: pendingUser.email,
+					name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
+					role: 'Applicant',
+					user: response.data.user || null,
+					token: response.data.token || null
+				});
+				localStorage.removeItem('pendingUser');
+
+				showToast('Email verified! You are now logged in.', 'success');
+				
+				// Show app area after successful verification
+				showDashboard();
+				initAppAfterLogin();
+			} catch (error) {
+				// Error is already handled by Axios interceptor for HTTP errors
+				console.error('OTP verification error:', error);
+			}
 		});
 	}
+	
+
 
 	// Validate OTP
 	async function validateOTP() {
@@ -596,49 +507,64 @@
 		const code = otpCode.value;
 		const pendingUserStr = localStorage.getItem('pendingUser');
 		if (!pendingUserStr) {
-		showToast('No pending verification found.', 'error');
-		showRegisterForm();
-		isValidating = false;
-		return;
+			showToast('No pending verification found.', 'error');
+			showRegisterForm();
+			isValidating = false;
+			return;
 		}
 		const pendingUser = JSON.parse(pendingUserStr);
 
 		try {
-		// Verify OTP via API
-		const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
+			// Verify OTP via API
+			const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
 
-		// Check if the API indicates failure
-		if (response.data.error || response.data.message === 'Invalid OTP code.' || !response.data.success) {
-			throw new Error(response.data.error || response.data.message || 'Invalid OTP code.');
-		}
+			// Check if the API indicates failure (even with 200 status)
+			// Handle various error message patterns
+			if (response.data.error || 
+				response.data.message === 'Invalid OTP code.' || 
+				(response.data.message && response.data.message.toLowerCase().includes('invalid')) ||
+				!response.data.success) {
+				showToast(response.data.message || response.data.error || 'Invalid OTP code.', 'error');
+				isValidating = false;
+				// Clear OTP inputs
+				otpInputs.forEach(input => {
+					input.value = '';
+					input.classList.remove('filled');
+				});
+				if (otpCode) otpCode.value = '';
+				if (verifyBtn) verifyBtn.disabled = true;
+				if (otpInputs[0]) otpInputs[0].focus();
+				return;
+			}
 
-		// Save user and token objects to localStorage
-		if (response.data.user) {
-			localStorage.setItem('user', JSON.stringify(response.data.user));
-		}
-		if (response.data.token) {
-			localStorage.setItem('token', response.data.token);
-		}
+			// Save user and token objects to localStorage
+			if (response.data.user) {
+				localStorage.setItem('user', JSON.stringify(response.data.user));
+				currentUser = response.data.user; // Update currentUser
+			}
+			if (response.data.token) {
+				localStorage.setItem('token', response.data.token);
+			}
 
-		// Save session
-		setSession({
-			email: pendingUser.email,
-			name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
-			role: 'Applicant',
-			user: response.data.user || null,
-			token: response.data.token || null
-		});
-		localStorage.removeItem('pendingUser');
+			// Save session
+			setSession({
+				email: pendingUser.email,
+				name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
+				role: 'Applicant',
+				user: response.data.user || null,
+				token: response.data.token || null
+			});
+			localStorage.removeItem('pendingUser');
 
-		showToast('Email verified! You are now logged in.', 'success');
-		isValidating = false;
+			showToast('Email verified! You are now logged in.', 'success');
+			isValidating = false;
 
-		// Reload page to refresh state
-		window.location.reload();
+			// Reload page to refresh state
+			window.location.reload();
 		} catch (error) {
-		showToast('Invalid OTP code. Please try again.', 'error');
-		clearOTPInputs();
-		isValidating = false;
+			showToast('Invalid OTP code. Please try again.', 'error');
+			clearOTPInputs();
+			isValidating = false;
 		}
 	}
 
@@ -711,9 +637,9 @@
 	if (btnLogout) {
 		btnLogout.addEventListener('click', () => {
 			clearSession();
+			currentUser = null; // Clear currentUser
 			showToast('Logged out successfully', 'success');
 			// Hide logged in navigation and user dropdown
-			const loggedInNav = document.getElementById('loggedInNav');
 			const userDropdownContainer = document.getElementById('userDropdownContainer');
 			if (loggedInNav) loggedInNav.style.display = 'none';
 			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
@@ -727,19 +653,18 @@
 const API = {
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
-	personalDetails: `${apiUrl}/application`,
-
 	// === CRUD BASE ENDPOINTS (NO ID INSIDE) ===
 	educationTraining: `${apiUrl}/educations`,
 	professionalMembership: `${apiUrl}/memberships`,
-
 	employmentHistory: `${apiUrl}/employments`,
 	documents: `${apiUrl}/documents`,
 	referee: `${apiUrl}/referees`,
 	dependants: `${apiUrl}/dependants`,
 
 	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
-	getApplication: (id) => `${apiUrl}/application/${id}`,
+	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
+	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
+	getApplication: (id) => `${apiUrl}/applications/${id}`,
 	getReferees: (id) => `${apiUrl}/referees/${id}`,
 	getDependants: (id) => `${apiUrl}/dependants/${id}`,
 	getDocuments: (id) => `${apiUrl}/documents/${id}`,
@@ -751,7 +676,7 @@ const API = {
 	// === JOB/APPLICATION RELATED ===
 	selectJob: `${apiUrl}/vacancies`,
 	getActiveVacancies: `${apiUrl}/vacancies`,
-	postApplication: `${apiUrl}/application`,
+	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
 	validateCode: `${apiUrl}/validate_code`,
@@ -759,6 +684,75 @@ const API = {
 
 
 	let dataCache = {};
+
+	/* ========== Axios Interceptor for Global Error Handling ========== */
+	/**
+	 * Response interceptor to catch all API errors globally
+	 * Handles 401 (unauthorized), 404 (not found), validation errors, and other errors
+	 */
+	axios.interceptors.response.use(
+		response => response, // Pass through successful responses
+		error => {
+			// Handle error responses
+			if (error.response) {
+				const status = error.response.status;
+				const data = error.response.data;
+				const message = data?.message || 'An error occurred';
+
+				// Handle 401 Unauthorized - invalid credentials or expired token
+				if (status === 401) {
+					showToast(message || 'Invalid credentials. Please try again.', 'error');
+					return Promise.reject(error);
+				}
+
+				// Handle 404 Not Found - user doesn't exist
+				if (status === 404) {
+					showToast(message || 'User not found. Please check your credentials.', 'error');
+					return Promise.reject(error);
+				}
+
+				// Handle 422 Unprocessable Entity - Validation errors
+				if (status === 422) {
+					// Check if backend returns validation errors object
+					if (data?.errors && typeof data.errors === 'object') {
+						// Format validation errors: combine all error messages
+						const errorMessages = Object.entries(data.errors)
+							.map(([field, errors]) => {
+								// errors can be an array or a string
+								const errorArray = Array.isArray(errors) ? errors : [errors];
+								return errorArray.join(', ');
+							})
+							.join(' | ');
+						showToast(errorMessages || 'Validation failed. Please check your input.', 'error');
+					} else {
+						// Fallback to message if no errors object
+						showToast(message || 'Validation failed. Please check your input.', 'error');
+					}
+					return Promise.reject(error);
+				}
+
+				// Handle other client errors (400, etc.)
+				if (status >= 400 && status < 500) {
+					showToast(message || 'Request failed. Please check your input.', 'error');
+					return Promise.reject(error);
+				}
+
+				// Handle server errors (500+)
+				if (status >= 500) {
+					showToast('Server error. Please try again later.', 'error');
+					return Promise.reject(error);
+				}
+			} else if (error.request) {
+				// Request made but no response received
+				showToast('No response from server. Please check your connection.', 'error');
+			} else {
+				// Error in request setup
+				showToast('An error occurred. Please try again.', 'error');
+			}
+
+			return Promise.reject(error);
+		}
+	);
 
 	function getSection(key) {
 		const map = {
@@ -858,10 +852,17 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 	/* ----- Axios CRUD functions ----- */
 	async function fetchItems(apiUrl, key) {
 		try {
+		console.log('fetchItems called:');
+		console.log('  URL parameter type:', typeof apiUrl);
+		console.log('  URL parameter:', apiUrl);
+		console.log('  Cache Key:', key);
+		console.log('  URL includes "memberships/memberships"?', apiUrl.includes('memberships/memberships'));
 		const response = await axios.get(apiUrl);
+		console.log('fetchItems response:', response.data);
 		dataCache[key] = response.data || [];
 		return dataCache[key];
 		} catch (e) {
+		console.error('fetchItems error for', key, ':', e);
 		showToast(`Error fetching ${key}`, 'error');
 		return [];
 		}
@@ -869,29 +870,47 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 
 	async function createItem(apiUrl, item, key) {
 		try {
-		const response = await axios.post(apiUrl, item);
-		dataCache[key] = dataCache[key] || [];
-		dataCache[key].push(response.data);
-		return response.data;
+			console.log('createItem called:');
+			console.log('  URL:', apiUrl);
+			console.log('  Data:', item);
+			
+			const response = await axios.post(apiUrl, item);
+			console.log('=== createItem FULL RESPONSE ===');
+			console.log('response.data:', response.data);
+			console.log('All fields in response.data:', Object.keys(response.data));
+			Object.keys(response.data).forEach(key => {
+				console.log(`  ${key}:`, response.data[key]);
+			});
+			
+			dataCache[key] = dataCache[key] || [];
+			dataCache[key].push(response.data);
+			return response.data;
 		} catch (e) {
-		showToast(`Error creating item`, 'error');
-		throw e;
+			showToast(`Error creating item`, 'error');
+			console.error('createItem error:', e);
+			throw e;
 		}
-	}
-
-	async function updateItem(apiUrl, id, item, key) {
+	}	async function updateItem(apiUrl, id, item, key) {
 		try {
-		const response = await axios.put(`${apiUrl}/${id}`, item);
-		const index = dataCache[key].findIndex(i => i.id === id);
-		if (index > -1) dataCache[key][index] = response.data;
-		return response.data;
+			const fullUrl = `${apiUrl}/${id}`;
+			console.log('updateItem called:');
+			console.log('  Base URL:', apiUrl);
+			console.log('  ID:', id);
+			console.log('  Full URL:', fullUrl);
+			console.log('  Data:', item);
+			
+			const response = await axios.put(fullUrl, item);
+			console.log('updateItem response:', response.data);
+			
+			const index = dataCache[key].findIndex(i => i.id === id);
+			if (index > -1) dataCache[key][index] = response.data;
+			return response.data;
 		} catch (e) {
-		showToast(`Error updating item`, 'error');
-		throw e;
+			showToast(`Error updating item`, 'error');
+			console.error('updateItem error:', e);
+			throw e;
 		}
-	}
-
-	async function deleteItem(apiUrl, id, key) {
+	}	async function deleteItem(apiUrl, id, key) {
 		try {
 		await axios.delete(`${apiUrl}/${id}`);
 		dataCache[key] = dataCache[key].filter(i => i.id !== id);
@@ -907,24 +926,27 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 	// Personal Details
 	const formPersonalDetails = document.getElementById('formPersonalDetails');
 	async function loadPersonalDetails() {
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
+		}
 		try {
 		// Fetch personal details or create default from session
-		const response = await axios.get(API.personalDetails);
+		const response = await axios.get(API.personalDetails(currentUser.id));
 		const session = getSession();
-		const user = getUser();
 		let pd = response.data || {};
 		
 		// If no saved data, prefill from user object in localStorage first, then session
-		if (!pd.email && user) {
-			pd.email = user.email || '';
-			pd.firstName = user.first_name || '';
-			pd.middleName = user.middle_name || '';
-			pd.lastName = user.last_name || '';
-			pd.contact = user.phone_number || '';
-			pd.nin = user.nin || '';
-			pd.gender = user.gender || '';
-			pd.dob = user.dob || '';
-			pd.status = user.marital_status || '';
+		if (!pd.email && currentUser) {
+			pd.email = currentUser.email || '';
+			pd.firstName = currentUser.first_name || '';
+			pd.middleName = currentUser.middle_name || '';
+			pd.lastName = currentUser.last_name || '';
+			pd.contact = currentUser.phone_number || '';
+			pd.nin = currentUser.nin || '';
+			pd.gender = currentUser.gender || '';
+			pd.dob = currentUser.dob || '';
+			pd.status = currentUser.marital_status || '';
 		} else if (!pd.email && session) {
 			pd.email = session.email;
 		}
@@ -941,19 +963,18 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 		document.getElementById('statusDetail').value = pd.status || '';
 		} catch {
 		// show fallback - try to populate from user object if available
-		const user = getUser();
 		const session = getSession();
 		
-		if (user) {
-			document.getElementById('firstName').value = user.first_name || '';
-			document.getElementById('middleName').value = user.middle_name || '';
-			document.getElementById('lastName').value = user.last_name || '';
-			document.getElementById('emailDetail').value = user.email || '';
-			document.getElementById('contact').value = user.phone_number || '';
-			document.getElementById('ninDetail').value = user.nin || '';
-			document.getElementById('genderDetail').value = user.gender || '';
-			document.getElementById('dobDetail').value = user.dob || '';
-			document.getElementById('statusDetail').value = user.marital_status || '';
+		if (currentUser) {
+			document.getElementById('firstName').value = currentUser.first_name || '';
+			document.getElementById('middleName').value = currentUser.middle_name || '';
+			document.getElementById('lastName').value = currentUser.last_name || '';
+			document.getElementById('emailDetail').value = currentUser.email || '';
+			document.getElementById('contact').value = currentUser.phone_number || '';
+			document.getElementById('ninDetail').value = currentUser.nin || '';
+			document.getElementById('genderDetail').value = currentUser.gender || '';
+			document.getElementById('dobDetail').value = currentUser.dob || '';
+			document.getElementById('statusDetail').value = currentUser.marital_status || '';
 		} else if (session) {
 			document.getElementById('firstName').value = '';
 			document.getElementById('middleName').value = '';
@@ -993,7 +1014,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			status: document.getElementById('statusDetail').value,
 			};
 			try {
-			await axios.post(API.personalDetails, data);
+			await axios.put(API.personalDetails(currentUser.id), data);
 			showToast('Personal details saved.', 'success');
 			} catch {
 			showToast('Failed to save personal details.', 'error');
@@ -1013,7 +1034,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 		crudItemIdInput.value = editItem ? editItem.id : '';
 
 		crudModalBody.innerHTML = `
-			<input type="hidden" name="applicant_id" value="${user.id}">
+			<input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 			<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
@@ -1072,19 +1093,27 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 	}
 
 	async function loadEducation() {
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
+		}
 		try {
-			const user = getUser();
 			let items = [];
 
-			if (user && user.id) {
-				// Use GET route for applicant
-				items = await fetchItems(API.getEducationTraining(user.id), 'educationTraining');
-			}
+			// Use GET route for applicant
+			console.log('=== loadEducation DEBUG ===');
+			console.log('currentUser:', currentUser);
+			console.log('currentUser.id:', currentUser.id);
+			console.log('typeof currentUser.id:', typeof currentUser.id);
+			
+			const educationUrl = API.getEducationTraining(currentUser.id);
+			console.log('loadEducation - API URL being called:', educationUrl);
+			items = await fetchItems(educationUrl, 'educationTraining');
 
 			// fallback if no API data
 			if (!items || items.length === 0) {
-				if (user && user.education && Array.isArray(user.education)) {
-					items = user.education.map((edu, index) => ({
+				if (currentUser && currentUser.education && Array.isArray(currentUser.education)) {
+					items = currentUser.education.map((edu, index) => ({
 						id: `user-edu-${index}`,
 						start_year: edu.start_year || '',
 						end_year: edu.end_year || '',
@@ -1169,7 +1198,7 @@ function openMembershipModal(editItem = null) {
 
     // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${user.id}">
+        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
         <div class="row">
             <div class="col-md-12 mb-3">
@@ -1209,16 +1238,35 @@ function openMembershipModal(editItem = null) {
 
 
 	async function loadMembership() {
-		const user = getUser();
-		let items = [];
-		if (user && user.id) {
-			// Use GET route for applicant
-			items = await fetchItems(API.getProfessionalMemberships(user.id), 'professionalMembership');
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
 		}
+		console.log('=== loadMembership DEBUG ===');
+		console.log('currentUser:', currentUser);
+		console.log('currentUser.id:', currentUser.id);
+		console.log('typeof currentUser.id:', typeof currentUser.id);
+		
+		let items = [];
+		// Use GET route for applicant
+		console.log('loadMembership - About to call API.getProfessionalMemberships');
+		console.log('loadMembership - currentUser.id value:', currentUser.id);
+		console.log('loadMembership - API.professionalMembership:', API.professionalMembership);
+		console.log('loadMembership - API.getProfessionalMemberships toString:', API.getProfessionalMemberships.toString());
+		console.log('loadMembership - API object keys:', Object.keys(API));
+		console.log('loadMembership - Entire API object:', JSON.stringify({
+			professionalMembership: API.professionalMembership,
+			getProfessionalMemberships: 'function'
+		}));
+		const membershipUrl = API.getProfessionalMemberships(currentUser.id);
+		console.log('loadMembership - Returned membershipUrl:', membershipUrl);
+		console.log('loadMembership - typeof membershipUrl:', typeof membershipUrl);
+		console.log('loadMembership - API URL being called:', membershipUrl);
+		items = await fetchItems(membershipUrl, 'professionalMembership');
 		// fallback if no API data
 		if (!items || items.length === 0) {
-			if (user && user.memberships && Array.isArray(user.memberships)) {
-				items = user.memberships.map((mem, index) => ({
+			if (currentUser && currentUser.memberships && Array.isArray(currentUser.memberships)) {
+				items = currentUser.memberships.map((mem, index) => ({
 					id: `user-mem-${index}`,
 					institute: mem.institute || '',
 					type: mem.type || '',
@@ -1258,7 +1306,7 @@ function openEmploymentModal(editItem = null) {
 
     // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${user.id}">
+        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 		<div class="row">
 				<div class="col-md-6 mb-3">
@@ -1297,16 +1345,17 @@ function openEmploymentModal(editItem = null) {
     crudModal.show();
 }
 	async function loadEmployment() {
-		const user = getUser();
-		let items = [];
-		if (user && user.id) {
-			// Use GET route for applicant
-			items = await fetchItems(API.getEmploymentHistory(user.id), 'employmentHistory');
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
 		}
+		let items = [];
+		// Use GET route for applicant
+		items = await fetchItems(API.getEmploymentHistory(currentUser.id), 'employmentHistory');
 		// fallback if no API data
 		if (!items || items.length === 0) {
-			if (user && user.employments && Array.isArray(user.employments)) {
-				items = user.employments.map((mem, index) => ({
+			if (currentUser && currentUser.employments && Array.isArray(currentUser.employments)) {
+				items = currentUser.employments.map((mem, index) => ({
 					id: `user-mem-${index}`,
 					start_date: mem.start_date || '',
 					end_date: mem.end_date || '',
@@ -1353,7 +1402,7 @@ function openRefereeModal(editItem = null) {
 
     // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${user.id}">
+        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 		<div class="row">
 		
@@ -1401,16 +1450,17 @@ function openRefereeModal(editItem = null) {
     crudModal.show();
 }
 	async function loadReferee() {
-		const user = getUser();
-		let items = [];
-		if (user && user.id) {
-			// Use GET route for applicant
-			items = await fetchItems(API.getReferees(user.id), 'referee');
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
 		}
+		let items = [];
+		// Use GET route for applicant
+		items = await fetchItems(API.getReferees(currentUser.id), 'referee');
 		// fallback if no API data
 		if (!items || items.length === 0) {
-			if (user && user.referees && Array.isArray(user.referees)) {
-				items = user.referees.map((mem, index) => ({
+			if (currentUser && currentUser.referees && Array.isArray(currentUser.referees)) {
+				items = currentUser.referees.map((mem, index) => ({
 					id: `user-mem-${index}`,
 					name: mem.name || '',
 					relationship: mem.relationship || '',
@@ -1457,7 +1507,7 @@ function openDocumentModal(editItem = null) {
 
     // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${user.id}">
+        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 		<div class="row">
         <div class="col-md-6 mb-3">
@@ -1494,16 +1544,17 @@ function openDocumentModal(editItem = null) {
     crudModal.show();
 }
 	async function loadDocuments() {
-		const user = getUser();
-		let items = [];
-		if (user && user.id) {
-			// Use GET route for applicant
-			items = await fetchItems(API.getDocuments(user.id), 'referee');
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
 		}
+		let items = [];
+		// Use GET route for applicant
+		items = await fetchItems(API.getDocuments(currentUser.id), 'referee');
 		// fallback if no API data
 		if (!items || items.length === 0) {
-			if (user && user.documents && Array.isArray(user.documents)) {
-				items = user.documents.map((mem, index) => ({
+			if (currentUser && currentUser.documents && Array.isArray(currentUser.documents)) {
+				items = currentUser.documents.map((mem, index) => ({
 					id: `user-mem-${index}`,
 					document_type: mem.document_type || '',
 					title: mem.title || '',
@@ -1544,7 +1595,7 @@ function openDependantModal(editItem = null) {
 
     // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${user.id}">
+        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 			<div class="row">
 		
@@ -1578,18 +1629,18 @@ function openDependantModal(editItem = null) {
     crudModal.show();
 }
 	async function loadDependants() {
-		const user = getUser();
-		let items = [];
-		if (user && user.id) {
-			// Use GET route for applicant
-			items = await fetchItems(API.getDependants(user.id), 'dependantsdependants');
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
 		}
-		dependants:
+		let items = [];
+		// Use GET route for applicant
+		items = await fetchItems(API.getDependants(currentUser.id), 'dependantsdependants');
 
 		// fallback if no API data
 		if (!items || items.length === 0) {
-			if (user && user.dependants && Array.isArray(user.dependants)) {
-				items = user.dependants.map((mem, index) => ({
+			if (currentUser && currentUser.dependants && Array.isArray(currentUser.dependants)) {
+				items = currentUser.dependants.map((mem, index) => ({
 					id: `user-mem-${index}`,
 					name: mem.name || '',
 					birth_date: mem.birth_date || '',
@@ -1684,6 +1735,10 @@ function openDependantModal(editItem = null) {
 	/* -------- Modal Submit Handler -------- */
 	crudForm.addEventListener('submit', async e => {
 		e.preventDefault();
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
+		}
 		if (!crudForm.checkValidity()) {
 		crudForm.classList.add('was-validated');
 		return;
@@ -1703,25 +1758,42 @@ function openDependantModal(editItem = null) {
 
 		const id = crudItemIdInput.value || null;
 		console.log('Current Item ID:', id);
+		
+		// Extract numeric ID if it contains a path (e.g., "educations/2001" -> "2001")
+		let numericId = id;
+		if (id && typeof id === 'string' && id.includes('/')) {
+			numericId = id.split('/').pop(); // Get the last part after /
+		}
+		
 		let key = '';
+		let stepApiUrl = ''; // Use local variable, not global apiUrl!
 		switch (currentStep) {
-			case 'educationTraining': apiUrl = API.educationTraining; key = 'educationTraining'; break;
-			case 'professionalMembership': apiUrl = API.professionalMembership; key = 'professionalMembership'; break;
-			case 'employmentHistory': apiUrl = API.employmentHistory; key = 'employmentHistory'; break;
-			case 'documents': apiUrl = API.documents; key = 'documents'; if (!id) data.uploadedOn = new Date().toLocaleDateString(); break;
-			case 'referee': apiUrl = API.referee; key = 'referee'; break;
-			case 'dependants': apiUrl = API.dependants; key = 'dependants'; break;
+			case 'educationTraining': stepApiUrl = API.educationTraining; key = 'educationTraining'; break;
+			case 'professionalMembership': stepApiUrl = API.professionalMembership; key = 'professionalMembership'; break;
+			case 'employmentHistory': stepApiUrl = API.employmentHistory; key = 'employmentHistory'; break;
+			case 'documents': stepApiUrl = API.documents; key = 'documents'; if (!numericId) data.uploadedOn = new Date().toLocaleDateString(); break;
+			case 'referee': stepApiUrl = API.referee; key = 'referee'; break;
+			case 'dependants': stepApiUrl = API.dependants; key = 'dependants'; break;
 			default:
 			showToast('Unsupported step form.', 'error');
 			crudModal.hide();
 			return;
 		}
 		try {
-			if (id) {
-				await updateItem(apiUrl, id, data, key);
+			console.log('=== CRUD FORM SUBMIT DEBUG ===');
+			console.log('Current Step:', currentStep);
+			console.log('Raw ID from input:', id);
+			console.log('Extracted numericId:', numericId);
+			console.log('API URL for step:', stepApiUrl);
+			console.log('Full data being sent:', data);
+			
+			if (numericId) {
+				console.log('UPDATE: Will call updateItem with URL:', stepApiUrl, 'and ID:', numericId);
+				await updateItem(stepApiUrl, numericId, data, key);
 				showToast('Record updated.', 'success');
 			} else {
-				await createItem(apiUrl, data, key);
+				console.log('CREATE: Will call createItem with URL:', stepApiUrl);
+				await createItem(stepApiUrl, data, key);
 				showToast('Record created.', 'success');
 			}
 			crudModal.hide();
@@ -1731,6 +1803,9 @@ function openDependantModal(editItem = null) {
 
 	/* -------- Load Data for step -------- */
 	async function loadStepData(step) {
+		console.log('=== loadStepData called ===');
+		console.log('loadStepData - step parameter:', step);
+		console.log('loadStepData - currentStep global:', currentStep);
 		switch (step) {
 		case 'personalDetails': await loadPersonalDetails(); break;
 		case 'educationTraining': await loadEducation(); break;
@@ -1751,7 +1826,19 @@ function openDependantModal(editItem = null) {
 
 		// Show user in navbar dropdown
 		navbarUserName.textContent = session.name || session.email;
-		userDropdown.textContent = 'Hello ' + session.email;
+		
+		// Set dropdown text with user's full name or empty if no currentUser
+		if (currentUser && currentUser.first_name && currentUser.last_name) {
+			userDropdown.textContent = 'Hello ' + currentUser.first_name + ' ' + currentUser.last_name;
+		} else {
+			userDropdown.textContent = '';
+			loggedInNav
+		}
+
+		// Hide loggedInNav if no currentUser
+		if (loggedInNav) {
+			loggedInNav.style.display = (!currentUser || !currentUser.id) ? 'none' : 'block';
+		}
 
 		// Show default step
 		showStep(currentStep);
@@ -1776,143 +1863,6 @@ function openDependantModal(editItem = null) {
 		});
 		form.querySelectorAll('.invalid-feedback').forEach(div => {
 		div.textContent = '';
-		});
-	}
-
-
-	// Sidebar OTP form handling
-	const otpFormSidebar = document.getElementById('otpFormSidebar');
-	const otpInputsSidebar = document.querySelectorAll('#verifyEmailFormSidebar .otp-input');
-	const otpCodeSidebar = document.getElementById('otpCodeSidebar');
-	const verifyBtnSidebar = document.getElementById('verifyBtnSidebar');
-
-	// OTP input handling for sidebar
-	otpInputsSidebar.forEach((input, index) => {
-		input.addEventListener('input', (e) => {
-			// Strip any non-numeric characters
-			const value = e.target.value.replace(/[^0-9]/g, '');
-			e.target.value = value;
-
-			// Move to next input if value is entered
-			if (value && index < otpInputsSidebar.length - 1) {
-				otpInputsSidebar[index + 1].focus();
-			}
-
-			// Update OTP code and check if all fields are filled
-			updateOTPCodeSidebar();
-			checkOTPCompleteSidebar();
-
-			// Add filled class for visual feedback
-			if (value) {
-				e.target.classList.add('filled');
-			} else {
-				e.target.classList.remove('filled');
-			}
-		});
-
-		// Handle backspace
-		input.addEventListener('keydown', (e) => {
-			if (e.key === 'Backspace' && !e.target.value && index > 0) {
-				otpInputsSidebar[index - 1].focus();
-			}
-		});
-
-		// Handle paste
-		input.addEventListener('paste', (e) => {
-			e.preventDefault();
-			const pasteData = e.clipboardData.getData('text').trim();
-
-			if (/^[0-9]{6}$/.test(pasteData)) {
-				// Fill all inputs with the pasted code
-				for (let i = 0; i < otpInputsSidebar.length; i++) {
-					if (i < pasteData.length) {
-						otpInputsSidebar[i].value = pasteData[i];
-						otpInputsSidebar[i].classList.add('filled');
-					}
-				}
-
-				// Focus on the last input
-				if (pasteData.length === 6) {
-					otpInputsSidebar[5].focus();
-				}
-
-				updateOTPCodeSidebar();
-				checkOTPCompleteSidebar();
-			}
-		});
-	});
-
-	// Update the hidden OTP code field for sidebar
-	function updateOTPCodeSidebar() {
-		let code = '';
-		otpInputsSidebar.forEach(input => {
-			code += input.value;
-		});
-		if (otpCodeSidebar) otpCodeSidebar.value = code;
-	}
-
-	// Check if all OTP fields are filled for sidebar
-	function checkOTPCompleteSidebar() {
-		const isComplete = Array.from(otpInputsSidebar).every(input => input.value !== '');
-		if (verifyBtnSidebar) verifyBtnSidebar.disabled = !isComplete;
-	}
-
-	// Sidebar OTP form submission
-	if (otpFormSidebar) {
-		otpFormSidebar.addEventListener('submit', async e => {
-			e.preventDefault();
-			const code = otpCodeSidebar.value;
-			const pendingUserStr = localStorage.getItem('pendingUser');
-			if (!pendingUserStr) {
-				showToast('No pending verification found.', 'error');
-				showLoginFormSidebar();
-				return;
-			}
-			const pendingUser = JSON.parse(pendingUserStr);
-
-			try {
-				// Verify OTP via API
-				const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
-
-				// Check if the API indicates failure
-				if (response.data.error || response.data.message === 'Invalid OTP code.' || !response.data.success) {
-					throw new Error(response.data.error || response.data.message || 'Invalid OTP code.');
-				}
-
-				// Save user and token objects to localStorage
-				if (response.data.user) {
-					localStorage.setItem('user', JSON.stringify(response.data.user));
-				}
-				if (response.data.token) {
-					localStorage.setItem('token', response.data.token);
-				}
-
-				// Save session
-				setSession({
-					email: pendingUser.email,
-					name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
-					role: 'Applicant',
-					user: response.data.user || null,
-					token: response.data.token || null
-				});
-				localStorage.removeItem('pendingUser');
-
-				showToast('Email verified! You are now logged in.', 'success');
-				
-				// Show app area after successful verification
-				showDashboard();
-				initAppAfterLogin();
-			} catch (error) {
-				showToast('Invalid OTP code. Please try again.', 'error');
-				// Clear OTP inputs
-				otpInputsSidebar.forEach(input => {
-					input.value = '';
-					input.classList.remove('filled');
-				});
-				if (otpCodeSidebar) otpCodeSidebar.value = '';
-				if (verifyBtnSidebar) verifyBtnSidebar.disabled = true;
-				if (otpInputsSidebar[0]) otpInputsSidebar[0].focus();
-			}
 		});
 	}
 
@@ -1944,33 +1894,6 @@ function openDependantModal(editItem = null) {
 		});
 	}
 
-	// Sidebar password toggles
-	const togglePasswordSidebar = document.getElementById('togglePasswordSidebar');
-	const passwordSidebar = document.getElementById('password_sidebar');
-	const eyeIconSidebar = document.getElementById('eyeIconSidebar');
-
-	if (togglePasswordSidebar && passwordSidebar && eyeIconSidebar) {
-		togglePasswordSidebar.addEventListener('click', () => {
-			const type = passwordSidebar.getAttribute('type') === 'password' ? 'text' : 'password';
-			passwordSidebar.setAttribute('type', type);
-			eyeIconSidebar.classList.toggle('fa-eye');
-			eyeIconSidebar.classList.toggle('fa-eye-slash');
-		});
-	}
-
-	const togglePassword2Sidebar = document.getElementById('togglePassword2Sidebar');
-	const passwordConfirmSidebar = document.getElementById('password_confirmation_sidebar');
-	const eyeIcon2Sidebar = document.getElementById('eyeIcon2Sidebar');
-
-	if (togglePassword2Sidebar && passwordConfirmSidebar && eyeIcon2Sidebar) {
-		togglePassword2Sidebar.addEventListener('click', () => {
-			const type = passwordConfirmSidebar.getAttribute('type') === 'password' ? 'text' : 'password';
-			passwordConfirmSidebar.setAttribute('type', type);
-			eyeIcon2Sidebar.classList.toggle('fa-eye');
-			eyeIcon2Sidebar.classList.toggle('fa-eye-slash');
-		});
-	}
-
 	/* -------- Global functions for navigation -------- */
 	window.showStep = showStep;
 	window.showHomePage = showHomePage;
@@ -1997,15 +1920,72 @@ function openDependantModal(editItem = null) {
 		showRegisterForm();
 	};
 
+	/* -------- Token Validation -------- */
+	/**
+	 * Validate that user still exists in database
+	 * @returns {Promise<boolean>} true if token/user is valid
+	 */
+	async function validateTokenWithBackend() {
+		const token = getToken();
+
+		if (!token || !currentUser || !currentUser.id) {
+			return false;
+		}
+
+		try {
+			// Call API to verify user still exists
+			const response = await axios.get(API.personalDetails(currentUser.id), {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			// If successful, update currentUser with fresh DB data
+			if (response.data && response.data.id) {
+				currentUser = response.data;
+				localStorage.setItem('user', JSON.stringify(response.data));
+				return true;
+			}
+			return false;
+		} catch (error) {
+			// 404 = User not found, 401 = Unauthorized
+			if (error.response?.status === 404 || error.response?.status === 401) {
+				clearSession();
+				currentUser = null;
+				return false;
+			}
+			// For other errors, assume token is still valid
+			return true;
+		}
+	}
+
 	/* -------- Init -------- */
-	function init() {
+	async function init() {
 		const user = getSession();
 		if (user) {
-			// If logged in, show home page by default
-			showHomePage();
-			initAppAfterLogin();
+			// User has session - validate token with backend
+			try {
+				const isValid = await validateTokenWithBackend();
+				if (isValid) {
+					// Token valid and user exists in DB
+					showHomePage();
+					initAppAfterLogin();
+				} else {
+					// User no longer exists or token invalid
+					// showToast('Your session is no longer valid. Please log in again.', 'warning');
+					//hide loggedInNav
+					loggedInNav.style.display = 'none';
+					showHomePage();
+					showLoginForm();
+				}
+			} catch (error) {
+				// Network error - show home page but allow user to try again
+				console.error('Error validating token:', error);
+				showHomePage();
+				initAppAfterLogin();
+			}
 		} else {
-			// If not logged in, show home page with login cards
+			// Not logged in, show home page with login cards
 			showHomePage();
 			const urlParams = new URLSearchParams(window.location.search);
 			if (urlParams.get('register') === 'true') {
