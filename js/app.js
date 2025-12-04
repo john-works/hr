@@ -487,10 +487,9 @@
 				localStorage.removeItem('pendingUser');
 
 				showToast('Email verified! You are now logged in.', 'success');
-				
-				// Show app area after successful verification
-				showDashboard();
-				initAppAfterLogin();
+
+				// Reload page to refresh state and show logged-in navigation
+				window.location.reload();
 			} catch (error) {
 				// Error is already handled by Axios interceptor for HTTP errors
 				console.error('OTP verification error:', error);
@@ -1830,15 +1829,14 @@ function openDependantModal(editItem = null) {
 		
 		// Set dropdown text with user's full name or empty if no currentUser
 		if (currentUser && currentUser.first_name && currentUser.last_name) {
-			userDropdown.textContent = 'Hello ' + currentUser.first_name + ' ' + currentUser.last_name;
+			userDropdown.textContent = currentUser.first_name + ' ' + currentUser.last_name;
 		} else {
-			userDropdown.textContent = '';
-			loggedInNav
+			userDropdown.textContent = session.name || session.email || 'User';
 		}
 
 		// Hide loggedInNav if no currentUser
 		if (loggedInNav) {
-			loggedInNav.style.display = (!currentUser || !currentUser.id) ? 'none' : 'block';
+			loggedInNav.style.display = (!currentUser || !currentUser.id) ? 'none' : 'flex';
 		}
 
 		// Show default step
