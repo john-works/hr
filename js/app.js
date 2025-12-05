@@ -1,7 +1,7 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.32.211:8041/api/v1';
+	let apiUrl = 'http://192.168.32.191:8041/api/v1';
 	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
@@ -999,13 +999,13 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 
 				<div class="col-md-4 mb-3" id="classOfDegreeContainer" style="display: none;">
 					<label class="form-label fw-bold">Class of Degree</label>
-					<select class="form-control" id="class_of_degree" name="class_of_degree">
+					<select class="form-control" id="degree_class" name="degree_class">
 						<option value="">Select Class</option>
-						<option value="First Class" ${editItem?.class_of_degree === 'First Class' ? 'selected' : ''}>First Class</option>
-						<option value="Second Class Upper" ${editItem?.class_of_degree === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
-						<option value="Second Class Lower" ${editItem?.class_of_degree === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
-						<option value="Third Class" ${editItem?.class_of_degree === 'Third Class' ? 'selected' : ''}>Third Class</option>
-						<option value="Pass" ${editItem?.class_of_degree === 'Pass' ? 'selected' : ''}>Pass</option>
+						<option value="First Class" ${editItem?.degree_class === 'First Class' ? 'selected' : ''}>First Class</option>
+						<option value="Second Class Upper" ${editItem?.degree_class === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
+						<option value="Second Class Lower" ${editItem?.degree_class === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
+						<option value="Third Class" ${editItem?.degree_class === 'Third Class' ? 'selected' : ''}>Third Class</option>
+						<option value="Pass" ${editItem?.degree_class === 'Pass' ? 'selected' : ''}>Pass</option>
 					</select>
 				</div>
 
@@ -1076,6 +1076,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 						qualification: edu.qualification || edu.degree || '',
 						course: edu.course || edu.program || edu.field_of_study || '',
 						institution: edu.institution || '',
+						degree_class: edu.degree_class || '',
 						ongoing: edu.ongoing || false
 					}));
 					dataCache['educationTraining'] = items;
@@ -1092,6 +1093,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 					{ key: 'qualification' },
 					{ key: 'course' },
 					{ key: 'institution' },
+					{ key: 'degree_class' },
 					{ key: 'ongoing', formatter: val => val ? 'Ongoing' : 'Completed' }
 				],
 				openEducationModal,
@@ -1129,27 +1131,7 @@ function openMembershipModal(editItem = null) {
     crudModalBody.innerHTML = `
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
-        <div class="row">
-            <div class="col-md-12 mb-3">
-                <label class="form-label fw-bold">Institute</label>
-                <input type="text" class="form-control" 
-                    id="membershipInstitute" 
-                    name="institute" 
-                    placeholder="ISACA, Rotary, Lions Club" 
-                    required
-                    value="${editItem?.institute || ''}">
-            </div>
 
-            <div class="col-md-8 mb-3">
-                <label class="form-label fw-bold">Membership Type</label>
-                <input type="text" class="form-control"
-                    id="membershipType" 
-                    name="type" 
-                    placeholder="Full Member, Student"
-                    required
-                    value="${editItem?.type || ''}">
-        </div>
-		
 		<div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-bold">Enrollment Year</label>
@@ -1171,6 +1153,40 @@ function openMembershipModal(editItem = null) {
 			</div>
 		</div>
         
+
+        
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Institute</label>
+                <input type="text" class="form-control" 
+                    id="membershipInstitute" 
+                    name="institute" 
+                    placeholder="Eg, ISACA, Rotary, Lions Club" 
+                    required
+                    value="${editItem?.institute || ''}">
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Membership Type</label>
+                <input type="text" class="form-control"
+                    id="membershipType" 
+                    name="type" 
+                    placeholder="Eg, Member, Student, Chairperson"
+                    required
+                    value="${editItem?.type || ''}">
+       		</div>
+		
+
+
+		
+			<div class="col-md-12 mb-3">
+				<label class="form-label fw-bold">Membership Number</label>
+				<input type="text" class="form-control"
+					id="membershipNumber" 
+					name="membership_number"	
+					placeholder="Eg, 12345"
+					value="${editItem?.membership_number || ''}">
+			</div>
+	
     `;
 
     crudModal.show();
@@ -1208,17 +1224,23 @@ function openMembershipModal(editItem = null) {
 			if (currentUser && currentUser.memberships && Array.isArray(currentUser.memberships)) {
 				items = currentUser.memberships.map((mem, index) => ({
 					id: `user-mem-${index}`,
-					institute: mem.institute || '',
+					enrollment_year: mem.enrollment_year || '',
+					expiry_year: mem.expiry_year || '',
+					membership_number: mem.membership_number || '',
 					type: mem.type || '',
-					year: mem.year || ''
+					institute: mem.institute || ''
+					
+					
 				}));
 				dataCache['professionalMembership'] = items;
 			}
 		}
 		renderTableRows(items, membershipTableBody, [
-		{ key: 'institute' },
+		{ key: 'enrollment_year' },
+		{ key: 'expiry_year' },
+		{ key: 'membership_number' },
 		{ key: 'type' },
-		{ key: 'year' }
+		{ key: 'institute' }
 		], openMembershipModal, async id => {
 		if (confirm('Delete this membership record?')) {
 			const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
@@ -1248,15 +1270,25 @@ function openEmploymentModal(editItem = null) {
     crudModalBody.innerHTML = `
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
+
+		<div class="form-check mb-3">
+				<input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
+				<label class="form-check-label fw-bold" for="is_current">
+					Currently Employed Here
+				</label>
+		</div>
+		
+		
 		<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
-					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>	
+					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>
 				</div>
-				<div class="col-md-6 mb-3">
+				<div class="col-md-6 mb-3" id="end_date_container" ${editItem?.is_current ? 'style="display: none;"' : ''}>
 					<label class="form-label fw-bold">To Year</label>
-					<input type="date" class="form-control calander"  name="end_date" value="${editItem?.end_date || ''}"/>	
-		</div>
+					<input type="date" class="form-control calander"  name="end_date" value="${editItem?.end_date || ''}" ${editItem?.is_current ? 'disabled' : ''}/>
+
+				</div>
 		</div>
 
 		<div class="row">
@@ -1277,12 +1309,6 @@ function openEmploymentModal(editItem = null) {
 				<textarea class="form-control" id="duties" name="duties"  rows="7" placeholder="e.g.  Developed web applications " required>${editItem?.duties || ''}</textarea>			
 		</div>
 
-		<div class="form-check mb-3">
-				<input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
-				<label class="form-check-label fw-bold" for="is_current">
-					Currently Employed Here
-				</label>
-		</div>
 		
 
 		
@@ -1290,6 +1316,15 @@ function openEmploymentModal(editItem = null) {
     `;
 
     crudModal.show();
+
+    // Add event listener to toggle end_date input disabled state
+    const checkbox = document.getElementById('is_current');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    if (checkbox && endDateInput) {
+        checkbox.addEventListener('change', () => {
+            endDateInput.disabled = checkbox.checked;
+        });
+    }
 }
 	async function loadEmployment() {
 		if (!currentUser || !currentUser.id) {
@@ -1321,7 +1356,7 @@ function openEmploymentModal(editItem = null) {
 		{ key: 'employer' },
 		{ key: 'position' },
 		{ key: 'duties' },
-		// { key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
+		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
 		], openEmploymentModal, async id => {
 		if (confirm('Delete this employment record?')) {
 			const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
