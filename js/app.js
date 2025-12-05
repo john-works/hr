@@ -32,6 +32,10 @@
 	const crudItemIdInput = document.getElementById('crudItemId');
 	const crudSaveBtn = document.getElementById('crudSaveBtn');
 
+	// Bootstrap modal for Job Details
+	const jobDetailsModalEl = document.getElementById('jobDetailsModal');
+	const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
+
 	// Sidebar nav
 	const sidebarNav = document.getElementById('sidebarNav');
 	const mainPanel = document.getElementById('mainPanel');
@@ -710,9 +714,9 @@ function showStep(step) {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
 		});
 
-		// Show sidebar for selectJob to allow navigation, hide for other steps
+		// Show sidebar for selectJob and previewApplication to allow navigation, hide for other steps
 		const sidebar = document.querySelector('aside.sidebar');
-		if (step === 'selectJob') {
+		if (step === 'selectJob' || step === 'previewApplication') {
 			sidebar.classList.remove('d-none');
 		} else {
 			sidebar.classList.add('d-none');
@@ -777,15 +781,9 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 }
 
 	/* ----- Axios CRUD functions ----- */
-	async function fetchItems(apiUrl, key) {
+async function fetchItems(apiUrl, key) {
 		try {
-		console.log('fetchItems called:');
-		console.log('  URL parameter type:', typeof apiUrl);
-		console.log('  URL parameter:', apiUrl);
-		console.log('  Cache Key:', key);
-		console.log('  URL includes "memberships/memberships"?', apiUrl.includes('memberships/memberships'));
 		const response = await axios.get(apiUrl);
-		console.log('fetchItems response:', response.data);
 		dataCache[key] = response.data || [];
 		return dataCache[key];
 		} catch (e) {
@@ -797,18 +795,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 
 	async function createItem(apiUrl, item, key) {
 		try {
-			console.log('createItem called:');
-			console.log('  URL:', apiUrl);
-			console.log('  Data:', item);
-			
 			const response = await axios.post(apiUrl, item);
-			console.log('=== createItem FULL RESPONSE ===');
-			console.log('response.data:', response.data);
-			console.log('All fields in response.data:', Object.keys(response.data));
-			Object.keys(response.data).forEach(key => {
-				console.log(`  ${key}:`, response.data[key]);
-			});
-			
 			dataCache[key] = dataCache[key] || [];
 			dataCache[key].push(response.data);
 			return response.data;
@@ -817,7 +804,9 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			console.error('createItem error:', e);
 			throw e;
 		}
-	}	async function updateItem(apiUrl, id, item, key) {
+	}
+
+	async function updateItem(apiUrl, id, item, key) {
 		try {
 			const fullUrl = `${apiUrl}/${id}`;
 			console.log('updateItem called:');
@@ -825,10 +814,10 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			console.log('  ID:', id);
 			console.log('  Full URL:', fullUrl);
 			console.log('  Data:', item);
-			
+
 			const response = await axios.put(fullUrl, item);
 			console.log('updateItem response:', response.data);
-			
+
 			const index = dataCache[key].findIndex(i => i.id === id);
 			if (index > -1) dataCache[key][index] = response.data;
 			return response.data;
@@ -837,7 +826,9 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			console.error('updateItem error:', e);
 			throw e;
 		}
-	}	async function deleteItem(apiUrl, id, key) {
+	}
+
+	async function deleteItem(apiUrl, id, key) {
 		try {
 		await axios.delete(`${apiUrl}/${id}`);
 		dataCache[key] = dataCache[key].filter(i => i.id !== id);
@@ -1060,13 +1051,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 			let items = [];
 
 			// Use GET route for applicant
-			console.log('=== loadEducation DEBUG ===');
-			console.log('currentUser:', currentUser);
-			console.log('currentUser.id:', currentUser.id);
-			console.log('typeof currentUser.id:', typeof currentUser.id);
-			
 			const educationUrl = API.getEducationTraining(currentUser.id);
-			console.log('loadEducation - API URL being called:', educationUrl);
 			items = await fetchItems(educationUrl, 'educationTraining');
 
 			// fallback if no API data
@@ -1201,26 +1186,9 @@ function openMembershipModal(editItem = null) {
 			showToast('User not authenticated. Please log in.', 'warning');
 			return;
 		}
-		console.log('=== loadMembership DEBUG ===');
-		console.log('currentUser:', currentUser);
-		console.log('currentUser.id:', currentUser.id);
-		console.log('typeof currentUser.id:', typeof currentUser.id);
-		
 		let items = [];
 		// Use GET route for applicant
-		console.log('loadMembership - About to call API.getProfessionalMemberships');
-		console.log('loadMembership - currentUser.id value:', currentUser.id);
-		console.log('loadMembership - API.professionalMembership:', API.professionalMembership);
-		console.log('loadMembership - API.getProfessionalMemberships toString:', API.getProfessionalMemberships.toString());
-		console.log('loadMembership - API object keys:', Object.keys(API));
-		console.log('loadMembership - Entire API object:', JSON.stringify({
-			professionalMembership: API.professionalMembership,
-			getProfessionalMemberships: 'function'
-		}));
 		const membershipUrl = API.getProfessionalMemberships(currentUser.id);
-		console.log('loadMembership - Returned membershipUrl:', membershipUrl);
-		console.log('loadMembership - typeof membershipUrl:', typeof membershipUrl);
-		console.log('loadMembership - API URL being called:', membershipUrl);
 		items = await fetchItems(membershipUrl, 'professionalMembership');
 		// fallback if no API data
 		if (!items || items.length === 0) {
@@ -1623,7 +1591,7 @@ function openDependantModal(editItem = null) {
 		}
 		let items = [];
 		// Use GET route for applicant
-		items = await fetchItems(API.getDependants(currentUser.id), 'dependantsdependants');
+		items = await fetchItems(API.getDependants(currentUser.id), 'dependants');
 
 		// fallback if no API data
 		if (!items || items.length === 0) {
@@ -1655,6 +1623,15 @@ function openDependantModal(editItem = null) {
 	// Preview Application
 	const previewSection = document.querySelector('section[data-step-content="previewApplication"]');
 	async function loadPreview() {
+		// Automatically fetch all data when reaching preview
+		await loadPersonalDetails();
+		await loadEducation();
+		await loadMembership();
+		await loadEmployment();
+		await loadDocuments();
+		await loadReferee();
+		await loadDependants();
+
 		let html = '<div class="row">';
 
 		const sectionTitles = {
@@ -1738,6 +1715,50 @@ function openDependantModal(editItem = null) {
 
 	// Select Job
 	const jobTableBody = document.querySelector('#jobTable tbody');
+
+	// Function to show job details modal
+	function showJobDetailsModal(job) {
+		document.getElementById('jobDetailsModalLabel').textContent = job.name || 'Job Details';
+		const body = document.getElementById('jobDetailsModalBody');
+		body.innerHTML = `
+			<div class="row">
+				<div class="col-md-6">
+					<h6>Location:</h6>
+					<p>${job.location || 'N/A'}</p>
+				</div>
+				<div class="col-md-6">
+					<h6>Deadline:</h6>
+					<p>${job.deadline || 'N/A'}</p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<h6>Description:</h6>
+					<p>${job.description || 'No description available.'}</p>
+				</div>
+			</div>
+			${job.requirements ? `
+			<div class="row">
+				<div class="col-12">
+					<h6>Requirements:</h6>
+					<p>${job.requirements}</p>
+				</div>
+			</div>
+			` : ''}
+		`;
+		const applyBtn = document.getElementById('btnApplyFromModal');
+		if (isBrowseMode) {
+			applyBtn.style.display = 'none';
+		} else {
+			applyBtn.style.display = 'inline-block';
+			applyBtn.onclick = () => {
+				showStep('previewApplication');
+				jobDetailsModal.hide();
+			};
+		}
+		jobDetailsModal.show();
+	}
+
 	async function loadJobs() {
 		try {
 		const response = await axios.get(API.selectJob);
@@ -1760,8 +1781,7 @@ function openDependantModal(editItem = null) {
 			btnView.type = 'button';
 			btnView.innerHTML = '<i class="fa fa-eye"></i> View';
 			btnView.addEventListener('click', () => {
-			showToast(`Viewing job: ${job.name}`, 'info');
-			// Add view logic here, e.g., open modal with job details
+				showJobDetailsModal(job);
 			});
 			tdActions.appendChild(btnView);
 
@@ -1771,8 +1791,7 @@ function openDependantModal(editItem = null) {
 			btnApply.type = 'button';
 			btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
 			btnApply.addEventListener('click', () => {
-				showToast(`Applying for job: ${job.name}`, 'success');
-				// Add apply logic here
+				showJobDetailsModal(job);
 			});
 			tdActions.appendChild(btnApply);
 			}
@@ -1810,8 +1829,6 @@ function openDependantModal(editItem = null) {
 
 
 		const id = crudItemIdInput.value || null;
-		console.log('Current Item ID:', id);
-		
 		// Extract numeric ID if it contains a path (e.g., "educations/2001" -> "2001")
 		let numericId = id;
 		if (id && typeof id === 'string' && id.includes('/')) {
@@ -1833,19 +1850,10 @@ function openDependantModal(editItem = null) {
 			return;
 		}
 		try {
-			console.log('=== CRUD FORM SUBMIT DEBUG ===');
-			console.log('Current Step:', currentStep);
-			console.log('Raw ID from input:', id);
-			console.log('Extracted numericId:', numericId);
-			console.log('API URL for step:', stepApiUrl);
-			console.log('Full data being sent:', data);
-			
 			if (numericId) {
-				console.log('UPDATE: Will call updateItem with URL:', stepApiUrl, 'and ID:', numericId);
 				await updateItem(stepApiUrl, numericId, data, key);
 				showToast('Record updated.', 'success');
 			} else {
-				console.log('CREATE: Will call createItem with URL:', stepApiUrl);
 				await createItem(stepApiUrl, data, key);
 				showToast('Record created.', 'success');
 			}
@@ -1856,9 +1864,6 @@ function openDependantModal(editItem = null) {
 
 	/* -------- Load Data for step -------- */
 	async function loadStepData(step) {
-		console.log('=== loadStepData called ===');
-		console.log('loadStepData - step parameter:', step);
-		console.log('loadStepData - currentStep global:', currentStep);
 		switch (step) {
 		case 'personalDetails': await loadPersonalDetails(); break;
 		case 'educationTraining': await loadEducation(); break;
