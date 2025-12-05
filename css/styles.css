@@ -1026,3 +1026,15 @@ main {
     padding: 1rem;
   }
 }
+
+/* Application Guidelines Alert Styling */
+.alert.alert-info {
+  left: -0;
+  right: -0;
+}
+
+.alert.alert-info ol li {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}

@@ -1745,14 +1745,14 @@ function openDependantModal(editItem = null) {
 
 			<div class="row">
 				<div class="col-md-6">
-					<p>Position:	<strong>${job.name || 'N/A'}</strong></p>
-					<p>Vacancy:	<strong>${job.vacancy_number || 'N/A'}</strong></p>
-					<p>Reports to:	<strong>${job.reports_to || 'N/A'}</strong></p> 
-					<p>Department:<strong> ${job.department || 'N/A'}</strong></p>
-					<p>Department Head:<strong>	${job.department_head || 'N/A'}</strong></p> 
-					<p>Deadline:	<strong>${job.deadline || 'N/A'}</strong></p>
+					<p><strong>Position:	${job.name || 'N/A'}</strong></p>
+					<p><strong>Vacancy:	${job.vacancy_number || 'N/A'}</strong></p>
+					<p><strong>Reports to:	${job.reports_to || 'N/A'}</strong></p> 
+					<p><strong>Department: ${job.department || 'N/A'}</strong></p>
+					<p><strong>Department Head:	${job.department_head || 'N/A'}</strong></p> 
+					<p><strong>Deadline:	${job.deadline || 'N/A'}</strong></p>
 				
-			
+			</div>
 			<hr/>
 
 			<p><strong>Job Purpose:</strong> ${job.purpose || 'N/A'}</p>
@@ -1763,7 +1763,15 @@ function openDependantModal(editItem = null) {
 
 			<p><strong>CONDITIONS OF SERVICE:</strong> ${job.conditions || 'N/A'}</p>
 
-			<p><strong>APPLICATION GUIDELINES:</strong> ${job.guidelines || 'N/A'}</p>
+		<div class="mb-3 alert alert-info">
+			<p><strong>APPLICATION GUIDELINES:</strong></p>
+			<ol>
+				<li>All qualified candidates should submit completed application forms downloaded from www.ppda.go.ug (Look for Careers, Jobs, Vacancies and application form) and relevant academic documents via Email to; recruitment@ppda.go.ug with the job position applied for as the subject.</li>
+				<li>The attachments should be limited to the following documents; a duly filled application form, National ID, O-level and A-level Certificates, Honours Degree, Master’s Degree, and any other Qualifications required.</li>
+				<li>All attachments should be sent as one file in PDF format not exceeding 20 MBs.</li>
+				<li>The subject of the email should be “Application for the Position of Manager Human Resources”</li>
+			</ol>
+		</div>
 		`;
 		const applyBtn = document.getElementById('btnApplyFromModal');
 		if (isBrowseMode) {
