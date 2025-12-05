@@ -1812,12 +1812,61 @@ function openDocumentModal(editItem = null) {
 			submitBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
 		});
 
-		submitBtn.addEventListener('click', () => {
+		submitBtn.addEventListener('click', async () => {
 			if (!termsCheckbox.checked) {
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
 				return;
 			}
-			showToast('Application submitted successfully!', 'success');
+
+			if (!currentUser || !currentUser.id) {
+				showToast('User not authenticated. Please log in.', 'warning');
+				return;
+			}
+
+			if (!selectedJob || !selectedJob.id) {
+				showToast('Please select a job to apply for.', 'warning');
+				return;
+			}
+
+			try {
+				// Prepare application data
+				const applicationData = {
+					applicant_id: parseInt(currentUser.id),
+					vacancy_id: parseInt(selectedJob.id),
+					personal_details: dataCache.personalDetails ? dataCache.personalDetails[0] : {},
+					education_training: dataCache.educationTraining || [],
+					professional_membership: dataCache.professionalMembership || [],
+					employment_history: dataCache.employmentHistory || [],
+					documents: dataCache.documents || [],
+					referees: dataCache.referee || [],
+					dependants: dataCache.dependants || [],
+					submission_date: new Date().toISOString(),
+					status: 'submitted'
+				};
+console.log('Submitting application data:', applicationData);
+//log vacancy id
+console.log('Vacancy ID:', selectedJob.id);
+				// Submit application to API
+				const response = await axios.post(API.postApplication, applicationData);
+
+				if (response.data && response.data.success) {
+					showToast('Application submitted successfully!', 'success');
+
+					// Reset application state
+					hasSelectedJob = false;
+					selectedJob = null;
+					dataCache = {};
+
+					// Navigate to My Applications section
+					showStep('myApplication');
+					loadSubmittedApplications();
+				} else {
+					showToast('Failed to submit application. Please try again.', 'error');
+				}
+			} catch (error) {
+				console.error('Error submitting application:', error);
+				showToast('Failed to submit application. Please try again.', 'error');
+			}
 		});
 	}
 
