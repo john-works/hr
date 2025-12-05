@@ -1,7 +1,7 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.32.191:8041/api/v1';
+	let apiUrl = 'http://172.20.10.3:8041/api/v1';
 	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
@@ -1843,9 +1843,9 @@ function openDocumentModal(editItem = null) {
 					submission_date: new Date().toISOString(),
 					status: 'submitted'
 				};
-console.log('Submitting application data:', applicationData);
-//log vacancy id
-console.log('Vacancy ID:', selectedJob.id);
+// console.log('Submitting application data:', applicationData);
+// //log vacancy id
+// console.log('Vacancy ID:', selectedJob.id);
 				// Submit application to API
 				const response = await axios.post(API.postApplication, applicationData);
 
