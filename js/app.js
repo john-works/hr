@@ -22,6 +22,8 @@
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
+	// Track if user has selected a job to apply
+	let hasSelectedJob = false;
 
 	// Bootstrap modal for CRUD
 	const crudModalEl = document.getElementById('crudModal');
@@ -165,7 +167,7 @@
 		document.body.classList.add('auth-view');
 	}
 
-	function showHomePage() {
+function showHomePage() {
 		// Hide all other areas
 		authArea.style.display = currentUser ? 'none' : 'block';
 		applicationDashboard.style.display = 'none';
@@ -191,6 +193,9 @@
 		}
 
 		document.body.classList.remove('auth-view');
+
+		// Load jobs into homepage alert
+		loadHomepageJobs();
 	}
 
 	/* ----- Event Listeners for Auth Toggle ----- */
@@ -1702,7 +1707,7 @@ function openDependantModal(editItem = null) {
 			<h4 class="mb-4"><i class="fas fa-eye me-2"></i>Preview Application</h4>
 			${html}
 			<div class="text-center mt-4">
-				<button class="btn btn-success btn-lg" id="btnSubmitApplication">
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''}>
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
@@ -1752,6 +1757,7 @@ function openDependantModal(editItem = null) {
 		} else {
 			applyBtn.style.display = 'inline-block';
 			applyBtn.onclick = () => {
+				hasSelectedJob = true;
 				showStep('previewApplication');
 				jobDetailsModal.hide();
 			};
@@ -1976,6 +1982,44 @@ function openDependantModal(editItem = null) {
 		showAuth();
 		showRegisterForm();
 	};
+
+	// Function to handle job click from homepage
+	window.handleJobClick = function(jobId) {
+		if (!currentUser) {
+			showAuth();
+			showLoginForm();
+		} else {
+			showSection('selectJob');
+		}
+	};
+
+	// Function to load jobs into homepage alert
+	async function loadHomepageJobs() {
+		try {
+			const response = await axios.get(API.selectJob);
+			const jobs = response.data.data || [];
+			const jobListDiv = document.getElementById('homepageJobList');
+			if (!jobs.length) {
+				jobListDiv.innerHTML = '<p>No jobs available at the moment.</p>';
+				return;
+			}
+			let html = '<ul class="list-group list-group-flush">';
+			jobs.forEach(job => {
+				html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>${job.name || ''}</strong><br>
+						<small class="text-muted">${job.location || ''} - Deadline: ${job.deadline || ''}</small>
+					</div>
+					<button class="btn btn-sm btn-primary" onclick="handleJobClick(${job.id})">Apply</button>
+				</li>`;
+			});
+			html += '</ul>';
+			jobListDiv.innerHTML = html;
+		} catch (error) {
+			console.error('Error loading homepage jobs:', error);
+			document.getElementById('homepageJobList').innerHTML = '<p>Failed to load jobs.</p>';
+		}
+	}
 
 	/* -------- Token Validation -------- */
 	/**
