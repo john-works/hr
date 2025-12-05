@@ -24,6 +24,7 @@
 	const isBrowseMode = urlParams.get('mode') === 'browse';
 	// Track if user has selected a job to apply
 	let hasSelectedJob = false;
+	let selectedJob = null;
 
 	// Bootstrap modal for CRUD
 	const crudModalEl = document.getElementById('crudModal');
@@ -79,6 +80,45 @@
 
 	function getToken() {
 		return localStorage.getItem('token');
+	}
+
+	/* ----- Auto-Logout for Inactivity ---- */
+	const INACTIVITY_TIMEOUT = 10 * 1000; // 10 seconds for testing (originally 5 minutes)
+	let inactivityTimer;
+
+	function resetInactivityTimer() {
+		clearTimeout(inactivityTimer);
+		if (currentUser) {
+			inactivityTimer = setTimeout(() => {
+				autoLogout();
+			}, INACTIVITY_TIMEOUT);
+		}
+	}
+
+function autoLogout() {
+	clearSession();
+	currentUser = null;
+	showToast('You have been automatically logged out due to inactivity.', 'warning');
+	showHomePage();
+	// Hide logged in navigation
+	const loggedInNav = document.getElementById('loggedInNav');
+	const userDropdownContainer = document.getElementById('userDropdownContainer');
+	if (loggedInNav) loggedInNav.style.display = 'none';
+	if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+	stopInactivityTracking();
+}
+
+	function startInactivityTracking() {
+		// List of events to track for activity
+		const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+		events.forEach(event => {
+			document.addEventListener(event, resetInactivityTimer, true);
+		});
+		resetInactivityTimer();
+	}
+
+	function stopInactivityTracking() {
+		clearTimeout(inactivityTimer);
 	}
 
 	/* ----- Toast Notification Utility ----- */
@@ -600,6 +640,7 @@ const API = {
 	documents: `${apiUrl}/documents`,
 	referee: `${apiUrl}/referees`,
 	dependants: `${apiUrl}/dependants`,
+	myApplications: `${apiUrl}/myapplication`,
 
 	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
 	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
@@ -611,7 +652,8 @@ const API = {
 	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
 	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
 	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
-	getMyApplications: (id) => `${apiUrl}/submitted_applications/${id}`,
+	getMyApplications: (id) => `${apiUrl}/myapplication/${id}`,
+	
 
 	// === JOB/APPLICATION RELATED ===
 	selectJob: `${apiUrl}/vacancies`,
@@ -1543,12 +1585,12 @@ function openDocumentModal(editItem = null) {
 
 
 
-// // Dependants
-const dependantsTableBody = document.querySelector('#dependantsTable tbody');
+	// Dependants
+	const dependantsTableBody = document.querySelector('#dependantsTable tbody');
 
-document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
+	document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
 
-function openDependantModal(editItem = null) {
+	function openDependantModal(editItem = null) {
 
     crudModalLabel.innerHTML = `
         <i class="fas fa-briefcase me-2"></i>
@@ -1563,7 +1605,7 @@ function openDependantModal(editItem = null) {
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 			<div class="row">
-		
+
 			<div class="col-md-6 mb-3">
 			<label for="name" class="form-label fw-bold">Full Name</label>
 			<input type="text" class="form-control" id="name" name="name"  value="${editItem?.name || ''}" required>
@@ -1583,10 +1625,10 @@ function openDependantModal(editItem = null) {
 			</div>
 		</div>
 		<div class="row">
-		
+
 			<div class="col-md-6 mb-3">
 			<label for="birth_date" class="form-label fw-bold">Date of Birth</label>
-			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.age || ''}">
+			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.birth_date || ''}">
 			</div>
 		</div>
     `;
@@ -1610,8 +1652,8 @@ function openDependantModal(editItem = null) {
 					name: mem.name || '',
 					birth_date: mem.birth_date || '',
 					relationship: mem.relationship || ''
-					
-					
+
+
 				}));
 				dataCache['dependants'] = items;
 			}
@@ -1619,13 +1661,48 @@ function openDependantModal(editItem = null) {
 		renderTableRows(items, dependantsTableBody, [
 		{ key: 'name' },
 		{ key: 'relationship' },
-		{ key: 'birth_date' }	
+		{ key: 'birth_date' }
 		], openDependantModal, async id => {
 		if (confirm('Delete this dependants record?')) {
 			const success = await deleteItem(API.dependants, id, 'dependants');
 			if (success) loadDependants();
 		}
 		});
+	}
+
+	// Submitted Applications
+	const myApplicationsTableBody = document.querySelector('#myApplicationsTable tbody');
+
+	async function loadSubmittedApplications() {
+		if (!currentUser || !currentUser.id) {
+			showToast('User not authenticated. Please log in.', 'warning');
+			return;
+		}
+		try {
+			let items = [];
+			// Fetch submitted applications for the current user
+			const response = await axios.get(API.getMyApplications(currentUser.id));
+			items = response.data || [];
+			dataCache['submittedApplications'] = items;
+
+			// Render table
+			renderTableRows(
+				items,
+				myApplicationsTableBody,
+				[
+					{ key: 'interview_id' },
+					{ key: 'post' },
+					{ key: 'department' },
+					{ key: 'application_date', formatter: val => val ? new Date(val).toLocaleDateString() : '' },
+					{ key: 'status' }
+				],
+				null, // No edit function for submitted applications
+				null  // No delete function for submitted applications
+			);
+		} catch (error) {
+			console.error('Error loading submitted applications:', error);
+			showToast('Failed to load submitted applications.', 'error');
+		}
 	}
 
 
@@ -1801,6 +1878,7 @@ function openDependantModal(editItem = null) {
 		} else {
 			applyBtn.style.display = 'inline-block';
 			applyBtn.onclick = () => {
+				selectedJob = job;
 				hasSelectedJob = true;
 				showStep('previewApplication');
 				jobDetailsModal.hide();
