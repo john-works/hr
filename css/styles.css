@@ -853,3 +853,176 @@ main {
   background-color: rgba(173, 216, 230, 0.1);
   transition: var(--transition);
 }
+
+/* Job Selection Styles */
+#jobTable {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+  background: white;
+}
+
+#jobTable thead th {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  font-weight: 600;
+  padding: 1.2rem 1rem;
+  border: none;
+}
+
+#jobTable tbody tr {
+  transition: var(--transition);
+  border-bottom: 1px solid #e9ecef;
+}
+
+#jobTable tbody tr:hover {
+  background-color: rgba(10, 74, 122, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#jobTable tbody td {
+  padding: 1.2rem 1rem;
+  vertical-align: middle;
+}
+
+#jobTable .btn-info {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+#jobTable .btn-info:hover {
+  background: linear-gradient(135deg, #138496, #117a8b);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+}
+
+#jobTable .btn-success {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(10, 74, 122, 0.3);
+}
+
+#jobTable .btn-success:hover {
+  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 74, 122, 0.4);
+}
+
+#jobDetailsModal .modal-content {
+  border-radius: var(--border-radius);
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+#jobDetailsModal .modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-bottom: none;
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  padding: 1.5rem;
+}
+
+#jobDetailsModal .modal-title {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+#jobDetailsModal .modal-body {
+  padding: 2rem;
+  background: #f8fafc;
+}
+
+#jobDetailsModal .modal-body h5 {
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+#jobDetailsModal .modal-body h6 {
+  color: var(--dark-color);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#jobDetailsModal .modal-body p {
+  line-height: 1.6;
+  color: #555;
+}
+
+#jobDetailsModal .row {
+  margin-bottom: 1rem;
+}
+
+#jobDetailsModal .modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+#jobDetailsModal .btn-secondary {
+  background: #6c757d;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+#jobDetailsModal .btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+#jobDetailsModal .btn-success {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 2px 8px rgba(10, 74, 122, 0.3);
+}
+
+#jobDetailsModal .btn-success:hover {
+  background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 74, 122, 0.4);
+}
+
+/* Responsive adjustments for job table */
+@media (max-width: 768px) {
+  #jobTable thead th,
+  #jobTable tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  #jobTable .btn-info,
+  #jobTable .btn-success {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  #jobDetailsModal .modal-body {
+    padding: 1.5rem;
+  }
+
+  #jobDetailsModal .modal-header,
+  #jobDetailsModal .modal-footer {
+    padding: 1rem;
+  }
+}

@@ -38,6 +38,10 @@
 	const jobDetailsModalEl = document.getElementById('jobDetailsModal');
 	const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
 
+	// Bootstrap modal for Login
+	const loginModalEl = document.getElementById('loginModal');
+	const loginModal = new bootstrap.Modal(loginModalEl);
+
 	// Sidebar nav
 	const sidebarNav = document.getElementById('sidebarNav');
 	const mainPanel = document.getElementById('mainPanel');
@@ -1726,30 +1730,40 @@ function openDependantModal(editItem = null) {
 		document.getElementById('jobDetailsModalLabel').textContent = job.name || 'Job Details';
 		const body = document.getElementById('jobDetailsModalBody');
 		body.innerHTML = `
+		
+			<h5 class="mb-3">EXTERNAL VACANCY ANNOUNCEMENT</h5>
+			<p>The Public Procurement and Disposal of Public Assets Authority (PPDA) is 
+			established under the PPDA Act No.1 of 2003 to develop standards and regulate
+			 procurement and disposal practices in respect of all Procuring and Disposing Entities 
+			 which include Central Government Ministries and Departments, Local Governments, State 
+			 Enterprises, Constitutional and Statutory 
+			Bodies and post primary training institutions.</p>
+			
+			<p>The PPDA is seeking to recruit a qualified, competent and highly motivated Ugandan to fill the Position.
+			</p>
+
+
 			<div class="row">
 				<div class="col-md-6">
-					<h6>Location:</h6>
-					<p>${job.location || 'N/A'}</p>
-				</div>
-				<div class="col-md-6">
-					<h6>Deadline:</h6>
-					<p>${job.deadline || 'N/A'}</p>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-12">
-					<h6>Description:</h6>
-					<p>${job.description || 'No description available.'}</p>
-				</div>
-			</div>
-			${job.requirements ? `
-			<div class="row">
-				<div class="col-12">
-					<h6>Requirements:</h6>
-					<p>${job.requirements}</p>
-				</div>
-			</div>
-			` : ''}
+					<p>Position:	<strong>${job.name || 'N/A'}</strong></p>
+					<p>Vacancy:	<strong>${job.vacancy_number || 'N/A'}</strong></p>
+					<p>Reports to:	<strong>${job.reports_to || 'N/A'}</strong></p> 
+					<p>Department:<strong> ${job.department || 'N/A'}</strong></p>
+					<p>Department Head:<strong>	${job.department_head || 'N/A'}</strong></p> 
+					<p>Deadline:	<strong>${job.deadline || 'N/A'}</strong></p>
+				
+			
+			<hr/>
+
+			<p><strong>Job Purpose:</strong> ${job.purpose || 'N/A'}</p>
+
+			<p><strong>Duties and Responsibilities:</strong> ${job.duties || 'N/A'}</p>
+
+			<p><strong>Person Specifications:</strong> ${job.specifications || 'N/A'}</p>
+
+			<p><strong>CONDITIONS OF SERVICE:</strong> ${job.conditions || 'N/A'}</p>
+
+			<p><strong>APPLICATION GUIDELINES:</strong> ${job.guidelines || 'N/A'}</p>
 		`;
 		const applyBtn = document.getElementById('btnApplyFromModal');
 		if (isBrowseMode) {
@@ -1986,8 +2000,7 @@ function openDependantModal(editItem = null) {
 	// Function to handle job click from homepage
 	window.handleJobClick = function(jobId) {
 		if (!currentUser) {
-			showAuth();
-			showLoginForm();
+			document.getElementById('authArea').scrollIntoView({behavior: 'smooth'});
 		} else {
 			showSection('selectJob');
 		}
