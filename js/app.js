@@ -598,7 +598,7 @@ const API = {
 	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
 	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
 	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
-	getSubmittedApplications: (id) => `${apiUrl}/submitted_applications/${id}`,
+	getMyApplications: (id) => `${apiUrl}/submitted_applications/${id}`,
 
 	// === JOB/APPLICATION RELATED ===
 	selectJob: `${apiUrl}/vacancies`,
@@ -888,6 +888,9 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 		document.getElementById('genderDetail').value = pd.gender || '';
 		document.getElementById('dobDetail').value = pd.dob || '';
 		document.getElementById('statusDetail').value = pd.status || '';
+
+		// Store in dataCache for preview
+		dataCache['personalDetails'] = [pd];
 		} catch {
 		// show fallback - try to populate from user object if available
 		const session = getSession();
@@ -1094,7 +1097,7 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
 					{ key: 'course' },
 					{ key: 'institution' },
 					{ key: 'degree_class' },
-					{ key: 'ongoing', formatter: val => val ? 'Ongoing' : 'Completed' }
+					{ key: 'ongoing', formatter: val => val ? 'Current' : 'Past' }
 				],
 				openEducationModal,
 				async id => {
@@ -1652,19 +1655,84 @@ function openDependantModal(editItem = null) {
 	// Preview Application
 	const previewSection = document.querySelector('section[data-step-content="previewApplication"]');
 	async function loadPreview() {
-		let html = '<h5>Summary</h5>';
+		let html = '<div class="row">';
+
+		const sectionTitles = {
+			educationTraining: 'Education & Training',
+			professionalMembership: 'Professional Memberships',
+			employmentHistory: 'Employment History',
+			documents: 'Documents',
+			referee: 'References',
+			dependants: 'Dependants',
+			personalDetails: 'Personal Details'
+		};
+
+		const excludedFields = ['updated_at', 'created_at', 'applicant_id'];
+
 		for (const key in dataCache) {
-		if (!dataCache[key] || dataCache[key].length === 0) continue;
-		html += `<h6>${key.replace(/([A-Z])/g, ' $1').trim()}</h6><ul>`;
-		dataCache[key].forEach(item => {
-			html += '<li>' + Object.entries(item).map(([k, v]) => `${k}: ${v}`).join(', ') + '</li>';
-		});
-		html += '</ul>';
+			if (!dataCache[key] || dataCache[key].length === 0) continue;
+
+			const sectionTitle = sectionTitles[key] || key.replace(/([A-Z])/g, ' $1').trim();
+			const items = dataCache[key];
+			let keys = Object.keys(items[0]).filter(k => !excludedFields.includes(k));
+			if (key === 'personalDetails') {
+				keys = keys.filter(k => k !== 'password' && k !== 'email_verified' && k !== 'nin_verified' && k !== 'id' && k !== 'employee_id' && k !== 'nin' && k !== 'email');
+			}
+			html += `
+				<div class="col-md-12 mb-4">
+					<h5>${sectionTitle}</h5>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								${keys.map(k => {
+									let displayKey = k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+									return `<th>${displayKey}</th>`;
+								}).join('')}
+							</tr>
+						</thead>
+						<tbody>
+							${items.map(item => {
+								return `<tr>${keys.map(k => {
+									let v = item[k];
+									if (v === null || v === undefined || v === '') return '<td></td>';
+									let displayValue = v;
+									// Format dates
+									if (k.includes('date') || k.includes('_at')) {
+										if (v && !isNaN(Date.parse(v))) {
+											displayValue = new Date(v).toLocaleDateString();
+										}
+									}
+									// Format boolean values
+									if (typeof v === 'boolean') {
+										displayValue = v ? 'Yes' : 'No';
+									}
+									// Format ongoing field specifically
+									if (k === 'ongoing') {
+										displayValue = (v == 1 || v === true) ? 'Current' : 'Past';
+									}
+									return `<td>${displayValue}</td>`;
+								}).join('')}</tr>`;
+							}).join('')}
+						</tbody>
+					</table>
+				</div>
+			`;
 		}
-		previewSection.innerHTML = `<h4>Preview Application</h4>${html}<button class="btn btn-primary" id="btnSubmitApplication">Submit Application</button>`;
+
+		html += '</div>';
+
+		previewSection.innerHTML = `
+			<h4 class="mb-4"><i class="fas fa-eye me-2"></i>Preview Application</h4>
+			${html}
+			<div class="text-center mt-4">
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication">
+					<i class="fas fa-paper-plane me-2"></i>Submit Application
+				</button>
+			</div>
+		`;
 
 		document.getElementById('btnSubmitApplication').addEventListener('click', () => {
-		showToast('Application submitted successfully!', 'success');
+			showToast('Application submitted successfully!', 'success');
 		});
 	}
 

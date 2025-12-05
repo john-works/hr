@@ -315,7 +315,7 @@
                         <li class="nav-item" id="homeNavItem"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
-                        <li class="nav-link" href="#" onclick="showSection('previewApplication')">My Applications</a></li>
+                        <li class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li>
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('documents')">Documents</a></li> -->
                     </div>
                 </ul>
@@ -831,6 +831,26 @@
                         </thead>
                         <tbody>
                             <tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- Submitted Applications -->
+                <section data-step-content="myApplication" class="d-none">
+                    <h4 class="main-section-title">My Applications</h4>
+                    <p>Here you can view your submitted applications.</p>
+                    <table class="table data-table mt-3" id="myApplicationsTable">
+                        <thead>
+                            <tr>
+                                <th>Interview ID</th>
+                                <th>Post</th>
+                                <th>Department</th>
+                                <th>Application Date (EAT) AM</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="text-center text-muted">No applications submitted yet.</td></tr>
                         </tbody>
                     </table>
                 </section>
