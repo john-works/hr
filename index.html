@@ -804,7 +804,14 @@
                 <section data-step-content="previewApplication" class="d-none">
                     <h4 class="main-section-title">Preview Application</h4>
                     <p>This section will display a summary of all your entered details for review before submission.</p>
-                    <button class="btn btn-primary" id="btnSubmitApplication">Submit Application</button>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
+                        <label class="form-check-label" for="termsCheckbox">
+                            I agree to the <a href="#" target="_blank">terms and conditions</a>.
+                        </label>
+                    </div>
+                   <button class="btn btn-primary" id="btnSubmitApplication">Submit Application</button>
+                
                 </section>
 
                 <!-- Select a Job -->

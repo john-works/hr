@@ -1711,13 +1711,35 @@ function openDependantModal(editItem = null) {
 			<h4 class="mb-4"><i class="fas fa-eye me-2"></i>Preview Application</h4>
 			${html}
 			<div class="text-center mt-4">
-				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''}>
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''} disabled>
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
+
+
+			<div class="form-check mt-3">
+				<input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
+				<label class="form-check-label" for="termsCheckbox">
+					I agree to the <a href="#" target="_blank">terms and conditions</a>.
+				</label>
+			</div>
+
+
 		`;
 
-		document.getElementById('btnSubmitApplication').addEventListener('click', () => {
+		// Handle terms checkbox
+		const termsCheckbox = document.getElementById('termsCheckbox');
+		const submitBtn = document.getElementById('btnSubmitApplication');
+
+		termsCheckbox.addEventListener('change', () => {
+			submitBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
+		});
+
+		submitBtn.addEventListener('click', () => {
+			if (!termsCheckbox.checked) {
+				showToast('Please agree to the terms and conditions before submitting.', 'warning');
+				return;
+			}
 			showToast('Application submitted successfully!', 'success');
 		});
 	}
