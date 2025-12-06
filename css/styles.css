@@ -1075,3 +1075,580 @@ main {
   overflow-wrap: break-word;
   hyphens: auto;
 }
+
+/* ========== RESPONSIVE DESIGN ENHANCEMENTS ========== */
+
+/* Phone (max-width: 767px) */
+@media (max-width: 767px) {
+  /* General adjustments */
+  body {
+    font-size: 14px;
+    padding: 0;
+  }
+
+  /* Navbar */
+  #mainNavbar .navbar-brand img {
+    max-width: 40px;
+    height: auto;
+  }
+
+  #mainNavbar .navbar-toggler {
+    border: none;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Header */
+  .psc-header {
+    padding: 15px 0;
+  }
+
+  .logo-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .header-title h1 {
+    font-size: 1.1rem;
+  }
+
+  .header-title p {
+    font-size: 0.8rem;
+  }
+
+  /* Main content */
+  .main-content {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+    padding-bottom: 8px;
+  }
+
+  .section-title::after {
+    width: 50px;
+  }
+
+  /* Notification banner */
+  .notification-banner {
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .notification-title {
+    font-size: 1rem;
+  }
+
+  /* Important dates */
+  .important-dates {
+    padding: 15px;
+  }
+
+  .date-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 10px 0;
+  }
+
+  .date-value {
+    align-self: flex-start;
+  }
+
+  /* Authentication section */
+  .auth-container {
+    margin: 1rem auto;
+    padding: 1rem;
+    max-width: 100%;
+  }
+
+  .auth-form-title {
+    font-size: 1.5rem;
+  }
+
+  /* Forms */
+  .form-control-custom {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .btn-psc, .btn-psc-secondary {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  /* Dashboard layout */
+  .container-xxl {
+    padding: 0 15px;
+  }
+
+  /* Sidebar */
+  aside.sidebar {
+    display: none !important; /* Hide sidebar on phone */
+  }
+
+  /* Main panel */
+  main {
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .main-section-title {
+    font-size: 1.25rem;
+  }
+
+  /* Tables */
+  .data-table {
+    font-size: 0.85rem;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .data-table thead th,
+  .data-table td {
+    padding: 0.5rem;
+    min-width: 100px;
+  }
+
+  /* OTP container */
+  .otp-container {
+    gap: 3px;
+  }
+
+  .otp-input {
+    width: 35px;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  /* Footer */
+  footer .row > div {
+    margin-bottom: 1rem;
+  }
+
+  footer h5 {
+    font-size: 1rem;
+  }
+
+  footer ul li {
+    font-size: 0.85rem;
+  }
+
+  /* Modal adjustments */
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .modal-content {
+    border-radius: 8px;
+  }
+
+  /* Job table */
+  #jobTable thead th,
+  #jobTable tbody td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  #jobTable .btn-info,
+  #jobTable .btn-success {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  /* Job details modal */
+  #jobDetailsModal .modal-body {
+    padding: 1rem;
+  }
+
+  #jobDetailsModal .modal-header,
+  #jobDetailsModal .modal-footer {
+    padding: 0.75rem;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    padding: 0.5rem !important;
+  }
+
+  .toast {
+    width: 100%;
+    margin: 0.25rem auto;
+  }
+}
+
+/* Tablet (768px to 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  /* General adjustments */
+  body {
+    font-size: 15px;
+  }
+
+  /* Navbar */
+  #mainNavbar .navbar-brand img {
+    max-width: 50px;
+  }
+
+  /* Header */
+  .psc-header {
+    padding: 20px 0;
+  }
+
+  .logo-container {
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 55px;
+    height: 55px;
+  }
+
+  .header-title h1 {
+    font-size: 1.3rem;
+  }
+
+  .header-title p {
+    font-size: 0.85rem;
+  }
+
+  /* Main content */
+  .main-content {
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+  }
+
+  /* Notification banner */
+  .notification-banner {
+    padding: 18px;
+    margin: 20px 0;
+  }
+
+  /* Important dates */
+  .important-dates {
+    padding: 18px;
+  }
+
+  .date-item {
+    padding: 12px 0;
+  }
+
+  /* Authentication section */
+  .auth-container {
+    margin: 2rem auto;
+    padding: 1.5rem;
+    max-width: 600px;
+  }
+
+  .auth-form-title {
+    font-size: 1.6rem;
+  }
+
+  /* Forms */
+  .form-control-custom {
+    padding: 11px 14px;
+    font-size: 15px;
+  }
+
+  .btn-psc, .btn-psc-secondary {
+    padding: 11px 22px;
+    font-size: 15px;
+  }
+
+  /* Dashboard layout */
+  .container-xxl {
+    padding: 0 20px;
+  }
+
+  /* Sidebar */
+  aside.sidebar {
+    min-height: 60vh;
+    padding: 1rem 0.75rem;
+  }
+
+  /* Main panel */
+  main {
+    padding: 1.5rem;
+  }
+
+  .main-section-title {
+    font-size: 1.4rem;
+  }
+
+  /* Tables */
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .data-table thead th,
+  .data-table td {
+    padding: 0.75rem;
+  }
+
+  /* OTP container */
+  .otp-input {
+    width: 45px;
+    height: 60px;
+    font-size: 22px;
+  }
+
+  /* Footer */
+  footer .row > div {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Job table */
+  #jobTable thead th,
+  #jobTable tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  #jobTable .btn-info,
+  #jobTable .btn-success {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  /* Job details modal */
+  #jobDetailsModal .modal-body {
+    padding: 1.5rem;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    left: 20px !important;
+    right: auto !important;
+    width: 350px !important;
+  }
+}
+
+/* Desktop (992px and up) */
+@media (min-width: 992px) {
+  /* General adjustments */
+  body {
+    font-size: 16px;
+  }
+
+  /* Navbar */
+  #mainNavbar .navbar-brand img {
+    max-width: 60px;
+  }
+
+  /* Header */
+  .psc-header {
+    padding: 25px 0;
+  }
+
+  .logo-container {
+    gap: 15px;
+  }
+
+  .logo-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .header-title h1 {
+    font-size: 1.5rem;
+  }
+
+  .header-title p {
+    font-size: 0.9rem;
+  }
+
+  /* Main content */
+  .main-content {
+    padding: 30px;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  /* Notification banner */
+  .notification-banner {
+    padding: 20px;
+    margin: 25px 0;
+  }
+
+  /* Important dates */
+  .important-dates {
+    padding: 22px;
+  }
+
+  .date-item {
+    padding: 14px 0;
+  }
+
+  /* Authentication section */
+  .auth-container {
+    margin: 4rem auto;
+    padding: 2.5rem;
+    max-width: 600px;
+  }
+
+  .auth-form-title {
+    font-size: 1.75rem;
+  }
+
+  /* Forms */
+  .form-control-custom {
+    padding: 12px 15px;
+    font-size: 16px;
+  }
+
+  .btn-psc, .btn-psc-secondary {
+    padding: 12px 25px;
+    font-size: 16px;
+  }
+
+  /* Dashboard layout */
+  .container-xxl {
+    padding: 0 30px;
+  }
+
+  /* Sidebar */
+  aside.sidebar {
+    min-height: 75vh;
+    padding: 1.5rem 1rem;
+  }
+
+  /* Main panel */
+  main {
+    padding: 2rem;
+  }
+
+  .main-section-title {
+    font-size: 1.5rem;
+  }
+
+  /* Tables */
+  .data-table {
+    font-size: 1rem;
+  }
+
+  .data-table thead th,
+  .data-table td {
+    padding: 1rem;
+  }
+
+  /* OTP container */
+  .otp-input {
+    width: 50px;
+    height: 65px;
+    font-size: 26px;
+  }
+
+  /* Footer */
+  footer .row > div {
+    margin-bottom: 0;
+  }
+
+  /* Job table */
+  #jobTable thead th,
+  #jobTable tbody td {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  #jobTable .btn-info,
+  #jobTable .btn-success {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+
+  /* Job details modal */
+  #jobDetailsModal .modal-body {
+    padding: 2rem;
+  }
+
+  #jobDetailsModal .modal-header,
+  #jobDetailsModal .modal-footer {
+    padding: 1.5rem;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    left: 20px !important;
+    right: auto !important;
+    width: 400px !important;
+  }
+
+  /* Enhanced desktop features */
+  .action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-psc:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(10, 74, 122, 0.25);
+  }
+
+  .main-content:hover {
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Flexible Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive utilities */
+@media (max-width: 767px) {
+  .d-mobile-none {
+    display: none !important;
+  }
+
+  .d-mobile-block {
+    display: block !important;
+  }
+
+  .text-mobile-center {
+    text-align: center !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .d-tablet-none {
+    display: none !important;
+  }
+
+  .d-tablet-block {
+    display: block !important;
+  }
+
+  .text-tablet-center {
+    text-align: center !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .d-desktop-none {
+    display: none !important;
+  }
+
+  .d-desktop-block {
+    display: block !important;
+  }
+
+  .text-desktop-left {
+    text-align: left !important;
+  }
+}
