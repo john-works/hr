@@ -712,7 +712,7 @@ main {
   }
 
   main {
-    padding: 1.5rem;
+    padding: 1rem;
     min-height: auto;
   }
 
@@ -722,10 +722,19 @@ main {
 
   .data-table {
     font-size: 0.9rem;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .data-table thead th,
+  .data-table td {
+    padding: 0.5rem;
+    min-width: 120px;
   }
 
   .card-body {
-    padding: 30px 20px;
+    padding: 20px 15px;
   }
 
   .steps-container {
@@ -737,22 +746,18 @@ main {
   }
 
   .otp-input {
-    width: 50px;
-    height: 60px;
-    font-size: 22px;
+    width: 45px;
+    height: 55px;
+    font-size: 20px;
   }
 
   .otp-container {
-    gap: 8px;
-  }
-
-  .data-table thead th,
-  .data-table td {
-    padding: 0.75rem 0.5rem;
+    gap: 5px;
   }
 
   .action-buttons {
     flex-wrap: wrap;
+    gap: 0.25rem;
   }
 
   .notes-board .row > .col-md-6 {
@@ -765,6 +770,37 @@ main {
 
   .navbar-nav {
     text-align: center;
+  }
+
+  .auth-container {
+    margin: 2rem auto;
+    padding: 1.5rem;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .important-dates {
+    padding: 15px;
+  }
+
+  .date-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .date-value {
+    align-self: flex-start;
+  }
+
+  .footer .row > div {
+    margin-bottom: 1rem;
   }
 }
 
