@@ -5,6 +5,7 @@
 	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
+	const mainContentArea = document.getElementById('mainContentArea');
 	const applicationDashboard = document.getElementById('applicationDashboard');
 	const mainNavbar = document.getElementById('mainNavbar');
 	const userDropdown = document.getElementById('userDropdown');
@@ -213,15 +214,20 @@ function autoLogout() {
 
 function showHomePage() {
 		// Hide all other areas
-		authArea.style.display = currentUser ? 'none' : 'block';
 		applicationDashboard.style.display = 'none';
 
 		// Show home page and navbar
 		const homePage = document.getElementById('homePage');
-		if (homePage) homePage.style.display = 'block';
-
-
 		mainNavbar.style.display = 'flex';
+
+		// On mobile, prioritize auth area if not logged in
+		if (window.innerWidth <= 767 && !currentUser) {
+			if (homePage) homePage.style.display = 'none';
+			authArea.style.display = 'block';
+		} else {
+			if (homePage) homePage.style.display = 'block';
+			authArea.style.display = currentUser ? 'none' : 'block';
+		}
 
 		// Show/hide navigation items based on login status
 		const userDropdownContainer = document.getElementById('userDropdownContainer');
