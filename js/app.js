@@ -765,13 +765,18 @@ function showStep(step) {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
 		});
 
-		// Show sidebar for selectJob and previewApplication to allow navigation, hide for other steps
-		const sidebar = document.querySelector('aside.sidebar');
+	// Show sidebar for selectJob and previewApplication to allow navigation, hide for other steps on desktop
+	// On phone (width <= 767px), always show sidebar
+	const sidebar = document.querySelector('aside.sidebar');
+	if (window.innerWidth <= 767) {
+		sidebar.classList.remove('d-none');
+	} else {
 		if (step === 'selectJob' || step === 'previewApplication') {
 			sidebar.classList.remove('d-none');
 		} else {
 			sidebar.classList.add('d-none');
 		}
+	}
 
 		loadStepData(step);
 	}

@@ -1191,7 +1191,10 @@ main {
 
   /* Sidebar */
   aside.sidebar {
-    display: none !important; /* Hide sidebar on phone */
+    display: block !important; /* Show sidebar on phone */
+    width: 100% !important;
+    margin-bottom: 1rem;
+    border-radius: 8px;
   }
 
   /* Main panel */
