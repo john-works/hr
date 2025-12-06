@@ -1,7 +1,7 @@
 	(() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://172.20.10.3:8041/api/v1';
+	let apiUrl = 'http://192.168.32.158:8041/api/v1';
 	let currentUser = getUser();
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
@@ -656,8 +656,8 @@ const API = {
 	
 
 	// === JOB/APPLICATION RELATED ===
-	selectJob: `${apiUrl}/vacancies`,
-	getActiveVacancies: `${apiUrl}/vacancies`,
+	selectJob: `${apiUrl}/positions`,
+	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
@@ -1787,6 +1787,15 @@ function openDocumentModal(editItem = null) {
 		previewSection.innerHTML = `
 			<h4 class="mb-4"><i class="fas fa-eye me-2"></i>Preview Application</h4>
 			${html}
+
+			<div class="form-check mt-3 font-weight-bold">
+				<input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
+				<label class="form-check-label" for="termsCheckbox">
+					<strong>I certify that the facts given in this form are true to the best of my knowledge and I understand that
+					giving false information can lead to dismissal..</strong>
+				</label>
+			</div>
+
 			<div class="text-center mt-4">
 				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''} disabled>
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
@@ -1794,12 +1803,6 @@ function openDocumentModal(editItem = null) {
 			</div>
 
 
-			<div class="form-check mt-3">
-				<input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
-				<label class="form-check-label" for="termsCheckbox">
-					I agree to the <a href="#" target="_blank">terms and conditions</a>.
-				</label>
-			</div>
 
 
 		`;
@@ -1832,7 +1835,7 @@ function openDocumentModal(editItem = null) {
 				// Prepare application data
 				const applicationData = {
 					applicant_id: parseInt(currentUser.id),
-					vacancy_id: parseInt(selectedJob.id),
+					position_id: parseInt(selectedJob.id),
 					personal_details: dataCache.personalDetails ? dataCache.personalDetails[0] : {},
 					education_training: dataCache.educationTraining || [],
 					professional_membership: dataCache.professionalMembership || [],
@@ -1914,7 +1917,7 @@ function openDocumentModal(editItem = null) {
 		<div class="mb-3 alert alert-info">
 			<p><strong>APPLICATION GUIDELINES:</strong></p>
 			<ol>
-				<li>All qualified candidates should submit completed application forms downloaded from www.ppda.go.ug (Look for Careers, Jobs, Vacancies and application form) and relevant academic documents via Email to; recruitment@ppda.go.ug with the job position applied for as the subject.</li>
+				<li>All qualified candidates should submit completed application forms downloaded from www.ppda.go.ug (Look for Careers, Jobs, positions and application form) and relevant academic documents via Email to; recruitment@ppda.go.ug with the job position applied for as the subject.</li>
 				<li>The attachments should be limited to the following documents; a duly filled application form, National ID, O-level and A-level Certificates, Honours Degree, Master’s Degree, and any other Qualifications required.</li>
 				<li>All attachments should be sent as one file in PDF format not exceeding 20 MBs.</li>
 				<li>The subject of the email should be “Application for the Position of Manager Human Resources”</li>
