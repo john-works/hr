@@ -1,7 +1,7 @@
 # Responsiveness Enhancement Plan
 
 ## Tasks
-- [x] Add responsive table styles (scrollable on small screens)
+- [x] Add m table styles (scrollable on small screens)
 - [x] Ensure images are responsive (max-width, height auto)
 - [x] Enhance form responsiveness (adjust layouts for mobile)
 - [x] Improve sidebar behavior (collapsible/hide on small screens)
