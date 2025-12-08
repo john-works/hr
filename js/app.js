@@ -541,8 +541,8 @@ function showHomePage() {
 
 				showToast('Email verified! You are now logged in.', 'success');
 
-				// Reload page to refresh state and show logged-in navigation
-				window.location.reload();
+				// Redirect to index.html to show logged-in navigation
+				window.location.href = 'index.html';
 			} catch (error) {
 				// Error is already handled by Axios interceptor for HTTP errors
 				console.error('OTP verification error:', error);
