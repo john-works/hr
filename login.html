@@ -600,11 +600,16 @@
         function showSection(sectionName) {
             document.getElementById('homePage').style.display = 'none';
             document.getElementById('applicationDashboard').style.display = 'block';
-            
+
             // Use the existing showStep function from app.js
             if (window.showStep) {
                 window.showStep(sectionName);
             }
+        }
+
+        // Redirect to index.html for desktop mode
+        if (window.innerWidth > 767) {
+            window.location.href = 'index.html';
         }
     </script>
 </body>
