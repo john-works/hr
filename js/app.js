@@ -1,8 +1,289 @@
 (() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.32.196:8041/api/v1';
-	let currentUser = getUser();
+	let apiUrl = 'http://192.168.1.68:8041/api/v1';
+	let currentUser; // Will be set after getUser() is defined
+
+	/* ========== Document Manager Module ========== */
+	const DocumentManager = {
+		/**
+		 * Get the API base URL based on current location
+		 * For applicant-side (port 5500, 3000, etc.), use localhost:8041
+		 * For HR side (port 8041), use current origin
+		 */
+		getApiBaseUrl() {
+			const origin = window.location.origin;
+			
+			// If running on a dev server (not on port 8041), point to the backend
+			if (!origin.includes(':8041')) {
+				// Applicant-side: running on dev server, point to Laravel backend
+				return 'http://localhost:8041';
+			}
+			
+			// HR-side: already on the correct server
+			return origin;
+		},
+
+		/**
+		 * Fetch document types from API
+		 * @returns {Promise<Object>} Document types grouped by section
+		 */
+		async fetchDocumentTypes() {
+			try {
+				const baseUrl = this.getApiBaseUrl();
+				const response = await fetch(`${baseUrl}/api/v1/document-types`);
+				
+				if (!response.ok) {
+					console.error(`API returned status ${response.status}: ${response.statusText}`);
+					return null;
+				}
+				
+				const result = await response.json();
+				
+				if (result.status === 'success') {
+					return result.data;
+				} else {
+					console.error('Error fetching document types:', result.message);
+					return null;
+				}
+			} catch (error) {
+				console.error('Failed to fetch document types:', error);
+				return null;
+			}
+		},
+
+		/**
+		 * Fetch document types for a specific section
+		 * @param {string} section - The recruitment section name
+		 * @returns {Promise<Array>} Array of document types for the section
+		 */
+		async fetchDocumentTypesBySection(section) {
+			try {
+				const baseUrl = this.getApiBaseUrl();
+				const response = await fetch(`${baseUrl}/api/v1/document-types/${encodeURIComponent(section)}`);
+				const result = await response.json();
+				
+				if (result.status === 'success') {
+					return result.data;
+				} else {
+					console.error('Error fetching document types for section:', result.message);
+					return [];
+				}
+			} catch (error) {
+				console.error('Failed to fetch document types for section:', error);
+				return [];
+			}
+		},
+
+		/**
+		 * Populate a dropdown with document types
+		 * @param {string|HTMLElement} selector - CSS selector or HTML element for the dropdown
+		 * @param {Array} documentTypes - Array of document type objects
+		 * @param {string} selectedValue - Optional: value to select by default
+		 */
+		populateDropdown(selector, documentTypes, selectedValue = null) {
+			const element = typeof selector === 'string' 
+				? document.querySelector(selector) 
+				: selector;
+
+			if (!element) {
+				console.warn('Dropdown element not found:', selector);
+				return;
+			}
+
+			// Clear existing options except the first placeholder
+			const placeholder = element.options[0];
+			element.innerHTML = '';
+			if (placeholder) {
+				element.appendChild(placeholder.cloneNode(true));
+			}
+
+			// Add document type options
+			documentTypes.forEach(docType => {
+				const option = document.createElement('option');
+				option.value = docType.id;
+				option.textContent = docType.name;
+				
+				if (selectedValue && docType.id == selectedValue) {
+					option.selected = true;
+				}
+				
+				element.appendChild(option);
+			});
+
+			// Trigger change event if Select2 or similar is initialized
+			if (typeof jQuery !== 'undefined' && element.classList.contains('select2-hidden-accessible')) {
+				jQuery(element).trigger('change');
+			}
+		},
+
+		/**
+		 * Populate a dropdown with document types from a specific section
+		 * @param {string|HTMLElement} selector - CSS selector or HTML element for the dropdown
+		 * @param {string} section - The recruitment section
+		 * @param {string} selectedValue - Optional: value to select by default
+		 */
+		async populateDropdownBySection(selector, section, selectedValue = null) {
+			const documentTypes = await this.fetchDocumentTypesBySection(section);
+			this.populateDropdown(selector, documentTypes, selectedValue);
+		},
+
+		/**
+		 * Initialize all document type dropdowns on the page
+		 * Looks for dropdowns with data-section attribute
+		 */
+		async initializeAllDropdowns() {
+			const dropdowns = document.querySelectorAll('[data-section]');
+			
+			for (const dropdown of dropdowns) {
+				const section = dropdown.getAttribute('data-section');
+				const selectedValue = dropdown.getAttribute('data-selected');
+				await this.populateDropdownBySection(dropdown, section, selectedValue);
+			}
+		},
+
+		/**
+		 * Initialize a single dropdown and populate it with document types
+		 * @param {string|HTMLElement} selector - CSS selector or HTML element for the dropdown
+		 */
+		async initializeDropdown(selector) {
+			const element = typeof selector === 'string' 
+				? document.querySelector(selector) 
+				: selector;
+
+			if (!element) {
+				console.warn('Dropdown element not found:', selector);
+				return;
+			}
+
+			const section = element.getAttribute('data-section');
+			const selectedValue = element.getAttribute('data-selected');
+
+			if (section) {
+				await this.populateDropdownBySection(selector, section, selectedValue);
+			} else {
+				// If no section specified, fetch all and populate
+				const documentTypes = await this.fetchDocumentTypes();
+				if (documentTypes) {
+					// Flatten the grouped data
+					const flatDocTypes = Object.values(documentTypes).flat();
+					this.populateDropdown(selector, flatDocTypes, selectedValue);
+				}
+			}
+		},
+
+		/**
+		 * Create and display a document type section selector
+		 * @param {string|HTMLElement} container - Container element for the selector
+		 * @param {Function} onSectionSelect - Callback function when section is selected
+		 */
+		async createSectionSelector(container, onSectionSelect) {
+			const containerEl = typeof container === 'string'
+				? document.querySelector(container)
+				: container;
+
+			if (!containerEl) {
+				console.warn('Container element not found:', container);
+				return;
+			}
+
+			const documentTypes = await this.fetchDocumentTypes();
+			
+			if (!documentTypes) {
+				containerEl.innerHTML = '<p class="text-danger">Failed to load document sections</p>';
+				return;
+			}
+
+			const sections = Object.keys(documentTypes).sort();
+			
+			let html = '<div class="mb-3">';
+			html += '<label class="form-label">Document Section</label>';
+			html += '<select class="form-select" id="docSectionSelector">';
+			html += '<option value="">-- Select a Section --</option>';
+			
+			sections.forEach(section => {
+				html += `<option value="${section}">${section}</option>`;
+			});
+			
+			html += '</select></div>';
+			
+			containerEl.innerHTML = html;
+			
+			const selector = containerEl.querySelector('#docSectionSelector');
+			selector.addEventListener('change', (e) => {
+				if (onSectionSelect && typeof onSectionSelect === 'function') {
+					onSectionSelect(e.target.value);
+				}
+			});
+		},
+
+		/**
+		 * Open document viewer modal with PDF viewer
+		 * @param {string} filePath - Path to document file
+		 * @param {string} fileName - Name of document
+		 */
+		openDocumentViewer(filePath, fileName) {
+			let modal = document.getElementById('documentViewerModal');
+			
+			// Create modal if it doesn't exist
+			if (!modal) {
+				const modalHTML = `
+					<div class="modal fade" id="documentViewerModal" tabindex="-1" aria-labelledby="documentViewerModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered modal-xl">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="documentViewerModalLabel">Document Viewer</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body" id="documentViewerBody" style="min-height: 500px; display: flex; align-items: center; justify-content: center;">
+									<div class="spinner-border text-primary" role="status">
+										<span class="visually-hidden">Loading...</span>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<a id="documentDownloadBtn" href="#" class="btn btn-primary" download target="_blank">
+										<i class="fas fa-download"></i> Download
+									</a>
+									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				`;
+				
+				document.body.insertAdjacentHTML('beforeend', modalHTML);
+				modal = document.getElementById('documentViewerModal');
+			}
+			
+			// Update title
+			const titleEl = modal.querySelector('#documentViewerModalLabel');
+			titleEl.textContent = fileName || 'Document Viewer';
+			
+			const bodyEl = modal.querySelector('#documentViewerBody');
+			const downloadBtn = modal.querySelector('#documentDownloadBtn');
+			
+			const baseUrl = this.getApiBaseUrl();
+			const fullPath = filePath.startsWith('http') ? filePath : `${baseUrl}/storage/${filePath}`;
+			
+			// Set download button
+			downloadBtn.href = fullPath;
+			downloadBtn.download = fileName || 'document.pdf';
+			
+			// Display PDF with embedded viewer
+			bodyEl.innerHTML = `
+				<iframe 
+					src="${fullPath}#toolbar=1&navpanes=0&scrollbar=1" 
+					style="width: 100%; height: 600px; border: none; border-radius: 4px;"
+					title="PDF Viewer">
+				</iframe>
+			`;
+			
+			// Show modal
+			const bsModal = new bootstrap.Modal(modal);
+			bsModal.show();
+		},
+	};
+
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
 	const mainContentArea = document.getElementById('mainContentArea');
@@ -78,6 +359,9 @@
 			return null;
 		}
 	}
+
+	// Now set currentUser after getUser is defined
+	currentUser = getUser();
 
 	function getToken() {
 		return localStorage.getItem('token');
@@ -668,6 +952,8 @@ const API = {
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
 	validateCode: `${apiUrl}/validate_code`,
+	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
+	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
 };
 
 
@@ -799,7 +1085,7 @@ function showStep(step) {
 		showStep(step);
 	});
 
-function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
+function renderTableRows(items, tbodyEl, columns, editCb, deleteCb, customActionsCb) {
     tbodyEl.innerHTML = '';
     if (!items.length) {
         const colSpan = columns.length + 1;
@@ -822,6 +1108,20 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb) {
         });
 
         const tdActions = document.createElement('td');
+        
+        // Add custom actions if callback provided
+        if (customActionsCb && typeof customActionsCb === 'function') {
+            const customAction = customActionsCb(item);
+            if (customAction) {
+                if (customAction instanceof HTMLElement) {
+                    tdActions.appendChild(customAction);
+                } else {
+                    tdActions.insertAdjacentHTML('beforeend', customAction);
+                }
+                tdActions.insertAdjacentHTML('beforeend', '&nbsp;');
+            }
+        }
+        
         const btnEdit = document.createElement('button');
         btnEdit.className = 'btn btn-sm btn-primary me-2';
         btnEdit.type = 'button';
@@ -1509,7 +1809,7 @@ const documentsTableBody = document.querySelector('#documentsTable tbody');
 
 document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentModal());
 
-function openDocumentModal(editItem = null) {
+async function openDocumentModal(editItem = null) {
 
     crudModalLabel.innerHTML = `
         <i class="fas fa-file me-2"></i>
@@ -1519,28 +1819,40 @@ function openDocumentModal(editItem = null) {
     // Set ID (used for update)
     crudItemIdInput.value = editItem ? editItem.id : '';
 
-    // Modal form body
+    // Fetch document types BEFORE showing modal
+    let documentTypes = {};
+    let documentTypeOptions = '<option value="">-- Select Document Type --</option>';
+    
+    try {
+        documentTypes = await DocumentManager.fetchDocumentTypes();
+        
+        if (documentTypes && Object.keys(documentTypes).length > 0) {
+            // Build options with optgroups for each section
+            Object.keys(documentTypes).sort().forEach(section => {
+                documentTypeOptions += `<optgroup label="${section}">`;
+                
+                documentTypes[section].forEach(docType => {
+                    const selected = editItem && editItem.document_type_id == docType.id ? 'selected' : '';
+                    documentTypeOptions += `<option value="${docType.id}" ${selected}>${docType.name}</option>`;
+                });
+                
+                documentTypeOptions += '</optgroup>';
+            });
+        }
+    } catch (error) {
+        console.error('Error loading document types:', error);
+        documentTypeOptions = '<option value="">Error loading document types. Please refresh.</option>';
+    }
+
+    // Modal form body with pre-populated dropdown
     crudModalBody.innerHTML = `
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
 		<div class="row">
         <div class="col-md-6 mb-3">
-          <label for="document_type" class="form-label fw-bold">Document Type</label>
-          <select type="text" class="form-control form-control" id="document_type" name="document_type"  required value="${editItem?.document_type|| ''}">
-            <option value="">Select type</option>
-            <option value="PhD">PhD</option>
-            <option value="Masters">Masters</option>
-            <option value="Bachelor">Bachelor</option>
-            <option value="Diploma" >Diploma</option>
-            <option value="Certificate">Certificate</option>
-			<option value="Professional Certification">Professional Certification</option>
-            <option value="NationId">National Id</option>
-			<option value="LC 1 Letter">LC 1 Letter</option>
-			<option value="University Refference Letter">University Reference Letter</option>
-			<option value="Reccommendation Letter">Recommendation Letter</option>
-            
-
-
+          <label for="document_type_id" class="form-label fw-bold">Document Type</label>
+          <select type="text" class="form-control form-control" id="document_type_id" name="document_type_id" required>
+            ${documentTypeOptions}
           </select>
           </div>
         <div class="col-md-6 mb-3">
@@ -1549,16 +1861,16 @@ function openDocumentModal(editItem = null) {
         </div>
       </div>
 
-
-
       <div class="mb-3">
         <label for="file_path" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
         <input type="file" class="form-control form-control" id="file_path" name="file_path" accept="application/pdf" ${editItem ? '' : 'required'}>
+        <small class="form-text text-muted">
+          <i class="fas fa-info-circle"></i> PDF files only, maximum 2MB
+        </small>
       </div>
-
-    
     `;
 
+    // Show modal with fully populated dropdown
     crudModal.show();
 }
 	async function loadDocuments() {
@@ -1585,12 +1897,29 @@ function openDocumentModal(editItem = null) {
 		renderTableRows(items, documentsTableBody, [
 		{ key: 'document_type' },
 		{ key: 'title' },
-		{ key: 'file_path', formatter: val => `<a href="${val}" target="_blank">View Document</a>` }
 		], openDocumentModal, async id => {
 		if (confirm('Delete this document record?')) {
 			const success = await deleteItem(API.documents, id, 'documents');
 			if (success) loadDocuments();
 		}
+		}, item => {
+			// Custom actions column for documents
+			const viewBtn = document.createElement('button');
+			viewBtn.className = 'btn btn-sm btn-primary me-2';
+			viewBtn.innerHTML = '<i class="fas fa-eye"></i> View';
+			viewBtn.title = 'View Document';
+			viewBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				if (!item.file_path) {
+					showToast('Document file path is not available', 'error');
+					console.error('Document item:', item);
+					return;
+				}
+				// Use DocumentManager viewer modal
+				DocumentManager.openDocumentViewer(item.file_path, item.title || 'Document');
+			});
+			return viewBtn;
 		});
 	}
 
@@ -1889,6 +2218,44 @@ function openDocumentModal(editItem = null) {
 
 	// Function to show job details modal
 	function showJobDetailsModal(job) {
+		// Store current position for screening
+		currentScreeningPosition = job;
+
+		// If user is logged in and not in browse mode, try to load screening questions
+		if (currentUser && !isBrowseMode) {
+			// Extract only numeric ID (in case job.id contains extra data like title)
+			const positionId = typeof job.id === 'string' && job.id.includes(':') 
+				? job.id.split(':')[0] 
+				: job.id;
+			
+			loadScreeningQuestions(positionId).then(questions => {
+				if (displayScreeningQuestions(questions)) {
+					// Screening questions were displayed
+					jobDetailsModal.show();
+					return;
+				}
+
+				// No screening questions, show job details as usual
+				showJobDetailsContent(job);
+				jobDetailsModal.show();
+			});
+		} else {
+			// Not logged in or in browse mode, show job details
+			showJobDetailsContent(job);
+			const applyBtn = document.getElementById('btnApplyFromModal');
+			if (isBrowseMode) {
+				applyBtn.style.display = 'none';
+			} else {
+				applyBtn.style.display = 'inline-block';
+			}
+			jobDetailsModal.show();
+		}
+	}
+
+	/**
+	 * Display job details content
+	 */
+	function showJobDetailsContent(job) {
 		document.getElementById('jobDetailsModalLabel').textContent = job.name || 'Job Details';
 		const body = document.getElementById('jobDetailsModalBody');
 		body.innerHTML = `
@@ -1947,7 +2314,6 @@ function openDocumentModal(editItem = null) {
 				jobDetailsModal.hide();
 			};
 		}
-		jobDetailsModal.show();
 	}
 
 	async function loadJobs() {
@@ -1995,6 +2361,318 @@ function openDocumentModal(editItem = null) {
 		}
 	}
 
+	/* ========== Screening Questions Module ========== */
+	let currentScreeningPosition = null;
+	let currentScreeningApplication = null;
+	let screeningQuestions = [];
+
+	/**
+	 * Load screening questions for a position
+	 */
+	async function loadScreeningQuestions(positionId) {
+		try {
+			const response = await axios.get(API.getScreeningQuestions(positionId));
+			// Handle response format: knockout_questions and weighted_questions
+			const knockoutQuestions = response.data.knockout_questions || [];
+			const weightedQuestions = response.data.weighted_questions || [];
+			
+			// Combine both types into a single array for rendering
+			const allQuestions = [...knockoutQuestions, ...weightedQuestions];
+			screeningQuestions = allQuestions;
+			return allQuestions;
+		} catch (error) {
+			console.error('Error loading screening questions:', error);
+			showToast('Failed to load screening questions.', 'error');
+			return [];
+		}
+	}
+
+	/**
+	 * Render question form based on question type
+	 */
+	function renderQuestionForm(question, index) {
+		// Handle nested question structure from API response
+		const questionData = question.question || question;
+		const questionId = question.question_id || question.id;
+		
+		const questionIdEl = `question_${questionId}`;
+		let questionHTML = `
+			<div class="mb-4 p-3 border rounded bg-light">
+				<label class="form-label fw-bold mb-3">
+					Q${index + 1}. ${questionData.question_text}
+					${questionData.is_required ? '<span class="text-danger">*</span>' : ''}
+				</label>
+		`;
+
+		// Handle different question format names
+		const questionFormat = questionData.question_format || questionData.format || 'text';
+
+		switch (questionFormat.toLowerCase()) {
+			case 'text':
+			case 'short_text':
+				questionHTML += `
+					<textarea 
+						id="${questionIdEl}" 
+						class="form-control screening-question" 
+						name="question_${questionId}"
+						rows="3"
+						data-question-id="${questionId}"
+						data-question-type="${questionFormat}"
+						${questionData.is_required ? 'required' : ''}
+					></textarea>
+				`;
+				break;
+
+			case 'multiple_choice':
+			case 'checkbox':
+				const options = questionData.options ? JSON.parse(questionData.options) : [];
+				questionHTML += `<div class="question-options">`;
+				options.forEach((option, idx) => {
+					questionHTML += `
+						<div class="form-check">
+							<input 
+								class="form-check-input screening-question" 
+								type="checkbox" 
+								id="${questionIdEl}_${idx}"
+								name="question_${questionId}"
+								value="${option}"
+								data-question-id="${questionId}"
+								data-question-type="${questionFormat}"
+							>
+							<label class="form-check-label" for="${questionIdEl}_${idx}">
+								${option}
+							</label>
+						</div>
+					`;
+				});
+				questionHTML += `</div>`;
+				break;
+
+			case 'dropdown':
+			case 'select':
+				const dropdownOptions = questionData.options ? JSON.parse(questionData.options) : [];
+				questionHTML += `
+					<select 
+						id="${questionIdEl}" 
+						class="form-select screening-question" 
+						name="question_${questionId}"
+						data-question-id="${questionId}"
+						data-question-type="${questionFormat}"
+						${questionData.is_required ? 'required' : ''}
+					>
+						<option value="">-- Please select --</option>
+				`;
+				dropdownOptions.forEach(option => {
+					questionHTML += `<option value="${option}">${option}</option>`;
+				});
+				questionHTML += `</select>`;
+				break;
+
+			case 'radio':
+				const radioOptions = questionData.options ? JSON.parse(questionData.options) : [];
+				questionHTML += `<div class="question-options">`;
+				radioOptions.forEach((option, idx) => {
+					questionHTML += `
+						<div class="form-check">
+							<input 
+								class="form-check-input screening-question" 
+								type="radio" 
+								id="${questionIdEl}_${idx}"
+								name="question_${questionId}"
+								value="${option}"
+								data-question-id="${questionId}"
+								data-question-type="${questionFormat}"
+								${questionData.is_required ? 'required' : ''}
+							>
+							<label class="form-check-label" for="${questionIdEl}_${idx}">
+								${option}
+							</label>
+						</div>
+					`;
+				});
+				questionHTML += `</div>`;
+				break;
+
+			default:
+				questionHTML += `
+					<input 
+						type="text" 
+						id="${questionIdEl}" 
+						class="form-control screening-question" 
+						name="question_${questionId}"
+						data-question-id="${questionId}"
+						data-question-type="${questionFormat}"
+						${questionData.is_required ? 'required' : ''}
+					>
+				`;
+		}
+
+		questionHTML += `</div>`;
+		return questionHTML;
+	}
+
+	/**
+	 * Display screening questions in modal
+	 */
+	function displayScreeningQuestions(questions) {
+		const body = document.getElementById('jobDetailsModalBody');
+		
+		if (!questions || questions.length === 0) {
+			// No questions, proceed with job details
+			return false;
+		}
+
+		let formHTML = `
+			<div id="screeningQuestionsForm">
+				<div class="alert alert-info" role="alert">
+					<i class="fa fa-info-circle me-2"></i>
+					Please answer the following screening questions to proceed with your application.
+				</div>
+				<form id="screeningAnswersForm">
+		`;
+
+		questions.forEach((question, index) => {
+			formHTML += renderQuestionForm(question, index);
+		});
+
+		formHTML += `
+					<div class="mt-4">
+						<button type="submit" class="btn btn-primary w-100">
+							<i class="fa fa-check me-2"></i> Submit Answers
+						</button>
+					</div>
+				</form>
+			</div>
+		`;
+
+		body.innerHTML = formHTML;
+		document.getElementById('jobDetailsModalLabel').textContent = currentScreeningPosition.name + ' - Screening Questions';
+
+		// Hide Apply button, add screening submit handler
+		const applyBtn = document.getElementById('btnApplyFromModal');
+		applyBtn.style.display = 'none';
+
+		// Attach form submit handler
+		const form = document.getElementById('screeningAnswersForm');
+		if (form) {
+			form.addEventListener('submit', handleScreeningSubmit);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Collect answers from form
+	 */
+	function collectScreeningAnswers() {
+		const answers = {};
+		const formElements = document.querySelectorAll('.screening-question');
+
+		formElements.forEach(element => {
+			const questionId = element.getAttribute('data-question-id');
+			const questionType = element.getAttribute('data-question-type');
+
+			if (!answers[questionId]) {
+				answers[questionId] = [];
+			}
+
+			if (element.type === 'checkbox' && element.checked) {
+				answers[questionId].push(element.value);
+			} else if (element.type === 'radio' && element.checked) {
+				answers[questionId] = element.value;
+			} else if (element.type !== 'checkbox' && element.type !== 'radio') {
+				if (element.value.trim()) {
+					answers[questionId] = element.value.trim();
+				}
+			}
+		});
+
+		return answers;
+	}
+
+	/**
+	 * Handle screening answers submission
+	 */
+	async function handleScreeningSubmit(e) {
+		e.preventDefault();
+
+		if (!currentUser || !currentUser.id) {
+			showToast('You must be logged in to submit answers.', 'warning');
+			return;
+		}
+
+		if (!currentScreeningPosition) {
+			showToast('Position not selected.', 'error');
+			return;
+		}
+
+		// Validate required fields
+		const form = e.target;
+		if (!form.checkValidity()) {
+			form.classList.add('was-validated');
+			showToast('Please answer all required questions.', 'warning');
+			return;
+		}
+
+		const answers = collectScreeningAnswers();
+		
+		try {
+			// Extract only numeric ID (in case it contains extra data)
+			const positionId = typeof currentScreeningPosition.id === 'string' && currentScreeningPosition.id.includes(':') 
+				? currentScreeningPosition.id.split(':')[0] 
+				: currentScreeningPosition.id;
+
+			// First, create application for this position
+			const appResponse = await axios.post(API.postApplication, {
+				position_id: positionId,
+				applicant_id: currentUser.id,
+			});
+
+			const applicationId = appResponse.data.data?.id;
+			if (!applicationId) {
+				showToast('Failed to create application.', 'error');
+				return;
+			}
+
+			currentScreeningApplication = applicationId;
+
+			// Submit screening answers
+			const answersPayload = Object.entries(answers).map(([questionId, answer]) => ({
+				question_id: questionId,
+				answer_text: Array.isArray(answer) ? answer.join(', ') : answer,
+			}));
+
+			await axios.post(API.submitScreeningAnswers(applicationId), {
+				answers: answersPayload,
+			});
+
+			showToast('Screening answers submitted successfully!', 'success');
+
+			// Wait a moment then proceed
+			setTimeout(() => {
+				selectedJob = currentScreeningPosition;
+				hasSelectedJob = true;
+				jobDetailsModal.hide();
+				showStep('previewApplication');
+			}, 1500);
+
+		} catch (error) {
+			console.error('Error submitting screening answers:', error);
+			const errorMsg = error.response?.data?.message || 'Failed to submit screening answers.';
+			
+			// Check if this is a knockout failure
+			if (errorMsg.toLowerCase().includes('knockout') || errorMsg.toLowerCase().includes('rejected')) {
+				showToast('Your application has been automatically rejected based on the screening results.', 'error');
+				setTimeout(() => {
+					jobDetailsModal.hide();
+					showStep('selectJob');
+				}, 2000);
+			} else {
+				showToast(errorMsg, 'error');
+			}
+		}
+	}
+
 	/* -------- Modal Submit Handler -------- */
 	crudForm.addEventListener('submit', async e => {
 		e.preventDefault();
@@ -2006,18 +2684,6 @@ function openDocumentModal(editItem = null) {
 		crudForm.classList.add('was-validated');
 		return;
 		}
-		const data = {};
-		data.applicant_id = crudForm.querySelector('input[name="applicant_id"]').value;
-		crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
-			if (input.type === 'file') {
-				data[input.name] = input.files.length > 0 ? input.files[0].name : '';
-			} else if (input.type === 'checkbox') {
-				data[input.name] = input.checked; // true or false
-			} else {
-				data[input.name] = input.value.trim();
-			}
-		});
-
 
 		const id = crudItemIdInput.value || null;
 		// Extract numeric ID if it contains a path (e.g., "educations/2001" -> "2001")
@@ -2027,30 +2693,147 @@ function openDocumentModal(editItem = null) {
 		}
 		
 		let key = '';
-		let stepApiUrl = ''; // Use local variable, not global apiUrl!
+		let stepApiUrl = '';
+		
 		switch (currentStep) {
-			case 'educationTraining': stepApiUrl = API.educationTraining; key = 'educationTraining'; break;
-			case 'professionalMembership': stepApiUrl = API.professionalMembership; key = 'professionalMembership'; break;
-			case 'employmentHistory': stepApiUrl = API.employmentHistory; key = 'employmentHistory'; break;
-			case 'documents': stepApiUrl = API.documents; key = 'documents'; if (!numericId) data.uploadedOn = new Date().toLocaleDateString(); break;
-			case 'referee': stepApiUrl = API.referee; key = 'referee'; break;
-			case 'dependants': stepApiUrl = API.dependants; key = 'dependants'; break;
-			default:
-			showToast('Unsupported step form.', 'error');
-			crudModal.hide();
-			return;
-		}
-		try {
-			if (numericId) {
-				await updateItem(stepApiUrl, numericId, data, key);
-				showToast('Record updated.', 'success');
-			} else {
-				await createItem(stepApiUrl, data, key);
-				showToast('Record created.', 'success');
+			case 'educationTraining': {
+				stepApiUrl = API.educationTraining;
+				key = 'educationTraining';
+				const data = {};
+				data.applicant_id = crudForm.querySelector('input[name="applicant_id"]').value;
+				crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
+					if (input.type === 'file') {
+						// Skip file inputs for non-document forms
+					} else if (input.type === 'checkbox') {
+						data[input.name] = input.checked;
+					} else {
+						data[input.name] = input.value.trim();
+					}
+				});
+				try {
+					if (numericId) {
+						await updateItem(stepApiUrl, numericId, data, key);
+						showToast('Record updated.', 'success');
+					} else {
+						await createItem(stepApiUrl, data, key);
+						showToast('Record created.', 'success');
+					}
+				} catch {}
+				break;
 			}
-			crudModal.hide();
-			await loadStepData(currentStep);
-		} catch {}
+			
+			case 'documents': {
+				stepApiUrl = API.documents;
+				key = 'documents';
+				
+				// For documents, use FormData to handle file uploads
+				const formData = new FormData();
+				formData.append('applicant_id', crudForm.querySelector('input[name="applicant_id"]').value);
+				
+				let hasFile = false;
+				crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
+					if (input.name === 'applicant_id') return; // Skip, already added
+					
+					if (input.type === 'file') {
+						if (input.files.length > 0) {
+							formData.append(input.name, input.files[0]);
+							hasFile = true;
+						}
+					} else if (input.type === 'checkbox') {
+						formData.append(input.name, input.checked);
+					} else {
+						formData.append(input.name, input.value.trim());
+					}
+				});
+				
+				if (!hasFile) {
+					showToast('Please select a file to upload.', 'warning');
+					return;
+				}
+				
+				try {
+					if (numericId) {
+						// For updates, use axios with FormData
+						const response = await axios.put(`${stepApiUrl}/${numericId}`, formData, {
+							headers: {
+								'Content-Type': 'multipart/form-data'
+							}
+						});
+						if (response.data.status === 'success') {
+							showToast('Document updated.', 'success');
+						} else {
+							showToast('Error: ' + response.data.message, 'error');
+							return;
+						}
+					} else {
+						// For new documents, use axios with FormData
+						const response = await axios.post(stepApiUrl, formData, {
+							headers: {
+								'Content-Type': 'multipart/form-data'
+							}
+						});
+						if (response.data.status === 'success') {
+							showToast('Document uploaded.', 'success');
+						} else {
+							showToast('Error: ' + response.data.message, 'error');
+							return;
+						}
+					}
+				} catch (error) {
+					console.error('Document upload error:', error);
+					const errorMsg = error.response?.data?.message || error.message;
+					showToast('Upload failed: ' + errorMsg, 'error');
+					return;
+				}
+				break;
+			}
+			
+			case 'professionalMembership':
+			case 'employmentHistory':
+			case 'referee':
+			case 'dependants': {
+				stepApiUrl = (() => {
+					switch(currentStep) {
+						case 'professionalMembership': return API.professionalMembership;
+						case 'employmentHistory': return API.employmentHistory;
+						case 'referee': return API.referee;
+						case 'dependants': return API.dependants;
+					}
+				})();
+				key = currentStep;
+				
+				const data = {};
+				data.applicant_id = crudForm.querySelector('input[name="applicant_id"]').value;
+				crudModalBody.querySelectorAll('input, select, textarea').forEach(input => {
+					if (input.type === 'file') {
+						// Skip file inputs
+					} else if (input.type === 'checkbox') {
+						data[input.name] = input.checked;
+					} else {
+						data[input.name] = input.value.trim();
+					}
+				});
+				
+				try {
+					if (numericId) {
+						await updateItem(stepApiUrl, numericId, data, key);
+						showToast('Record updated.', 'success');
+					} else {
+						await createItem(stepApiUrl, data, key);
+						showToast('Record created.', 'success');
+					}
+				} catch {}
+				break;
+			}
+			
+			default:
+				showToast('Unsupported step form.', 'error');
+				crudModal.hide();
+				return;
+		}
+		
+		crudModal.hide();
+		await loadStepData(currentStep);
 	});
 
 	/* -------- Load Data for step -------- */
