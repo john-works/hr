@@ -17,7 +17,7 @@
 			// If running on a dev server (not on port 8041), point to the backend
 			if (!origin.includes(':8041')) {
 				// Applicant-side: running on dev server, point to Laravel backend
-				return 'http://192.168.32.215:8041';
+				return 'http://localhost:8041';
 			}
 			
 			// HR-side: already on the correct server
