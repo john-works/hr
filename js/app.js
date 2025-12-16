@@ -1,7 +1,7 @@
 (() => {
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
-	let apiUrl = 'http://192.168.1.68:8041/api/v1';
+	let apiUrl = 'http://192.168.32.215:8041/api/v1';
 	let currentUser; // Will be set after getUser() is defined
 
 	/* ========== Document Manager Module ========== */
@@ -17,7 +17,7 @@
 			// If running on a dev server (not on port 8041), point to the backend
 			if (!origin.includes(':8041')) {
 				// Applicant-side: running on dev server, point to Laravel backend
-				return 'http://localhost:8041';
+				return 'http://192.168.32.215:8041';
 			}
 			
 			// HR-side: already on the correct server
