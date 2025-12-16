@@ -2977,7 +2977,7 @@ async function openDocumentModal(editItem = null) {
 						<strong>${job.name || ''}</strong><br>
 						<small class="text-muted">${job.location || ''} - Deadline: ${job.deadline || ''}</small>
 					</div>
-					<button class="btn btn-sm btn-primary" onclick="handleJobClick(${job.id})">Apply</button>
+					<button class="btn btn-sm btn-primary" onclick="handleJobClick('${job.id}')">Apply</button>
 				</li>`;
 			});
 			html += '</ul>';
