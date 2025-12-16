@@ -2967,7 +2967,7 @@ async function openDocumentModal(editItem = null) {
 			const jobs = response.data.data || [];
 			const jobListDiv = document.getElementById('homepageJobList');
 			if (!jobs.length) {
-				jobListDiv.innerHTML = '<p>No jobs available at the moment.</p>';
+				jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No jobs available at the moment.</p>';
 				return;
 			}
 			let html = '<ul class="list-group list-group-flush">';
@@ -2984,7 +2984,7 @@ async function openDocumentModal(editItem = null) {
 			jobListDiv.innerHTML = html;
 		} catch (error) {
 			console.error('Error loading homepage jobs:', error);
-			document.getElementById('homepageJobList').innerHTML = '<p>Failed to load jobs.</p>';
+			document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">Failed to load jobs.</p>';
 		}
 	}
 
