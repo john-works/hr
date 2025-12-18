@@ -1321,7 +1321,7 @@ async function fetchItems(apiUrl, key) {
 			<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
-					<select class="form-control" id="start_year" name="start_year" required>
+					<select class="form-select" id="start_year" name="start_year" required>
 						<option value="">Select Year</option>
 						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
 							.map(year => `<option value="${year}" ${editItem?.start_year == year ? 'selected' : ''}>${year}</option>`).join('')}
@@ -1330,7 +1330,7 @@ async function fetchItems(apiUrl, key) {
 
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">To Year</label>
-					<select class="form-control" id="end_year" name="end_year">
+					<select class="form-select" id="end_year" name="end_year">
 						<option value="">Select Year</option>
 						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
 							.map(year => `<option value="${year}" ${editItem?.end_year == year ? 'selected' : ''}>${year}</option>`).join('')}
@@ -1341,7 +1341,7 @@ async function fetchItems(apiUrl, key) {
 			<div class="row">
 			<div class="col-md-8 mb-3">
 					<label class="form-label fw-bold">Qualification</label>
-					<select class="form-control" id="qualification" name="qualification" required>
+					<select class="form-select" id="qualification" name="qualification" required>
 						<option value="">Select Qualification</option>
 						<option value="PhD" ${editItem?.qualification === 'PhD' ? 'selected' : ''}>PhD</option>
 						<option value="Masters" ${editItem?.qualification === 'Masters' ? 'selected' : ''}>Masters</option>
@@ -1485,7 +1485,7 @@ function openMembershipModal(editItem = null) {
 		<div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label fw-bold">Enrollment Year</label>
-                <select class="form-control" id="end_year" name="enrollment_year" required>
+                <select class="form-select" id="end_year" name="enrollment_year" required>
 						<option value="">Select Year</option>
 						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
 							.map(year => `<option value="${year}" ${editItem?.enrollment_year == year ? 'selected' : ''}>${year}</option>`).join('')}
@@ -1495,7 +1495,7 @@ function openMembershipModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 				<label class="form-label fw-bold">Year of Expiry</label>
-				<select class="form-control" id="expiry_year" name="expiry_year">
+				<select class="form-select" id="expiry_year" name="expiry_year">
 						<option value="">Select Year</option>
 						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
 							.map(year => `<option value="${year}" ${editItem?.expiry_year == year ? 'selected' : ''}>${year}</option>`).join('')}
@@ -1615,12 +1615,11 @@ function openEmploymentModal(editItem = null) {
 		<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
-					<input type="date" class="form-control calander" name="start_date" value="${editItem?.start_date || ''}"/>
+					<input type="date" class="form-select calander" name="start_date" value="${editItem?.start_date || ''}"/>
 				</div>
 				<div class="col-md-6 mb-3" id="end_date_container" ${editItem?.is_current ? 'style="display: none;"' : ''}>
 					<label class="form-label fw-bold">To Year</label>
-					<input type="date" class="form-control calander"  name="end_date" value="${editItem?.end_date || ''}" ${editItem?.is_current ? 'disabled' : ''}/>
-
+					<input type="date" class="form-select calander"  name="end_date" value="${editItem?.end_date || ''}" ${editItem?.is_current ? 'disabled' : ''}/>
 				</div>
 		</div>
 
@@ -1954,7 +1953,7 @@ async function openDocumentModal(editItem = null) {
 
 			<div class="col-md-6 mb-3">
 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<select type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
+			<select type="text" class="form-select" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
 				<option value="">Select Relationship</option>
 				<option value="Spouse">Spouse</option>
 				<option value="Child">Child</option>
@@ -2372,20 +2371,19 @@ async function openDocumentModal(editItem = null) {
 	async function loadScreeningQuestions(positionId) {
 		try {
 			const response = await axios.get(API.getScreeningQuestions(positionId));
-			// Handle response format: knockout_questions and weighted_questions
-			const knockoutQuestions = response.data.knockout_questions || [];
-			const weightedQuestions = response.data.weighted_questions || [];
-			
-			// Combine both types into a single array for rendering
-			const allQuestions = [...knockoutQuestions, ...weightedQuestions];
-			screeningQuestions = allQuestions;
-			return allQuestions;
+
+			const questions = response.data.questions ?? [];
+
+			screeningQuestions = questions;
+			return questions;
+
 		} catch (error) {
 			console.error('Error loading screening questions:', error);
 			showToast('Failed to load screening questions.', 'error');
 			return [];
 		}
 	}
+
 
 	/**
 	 * Render question form based on question type
@@ -2406,7 +2404,7 @@ async function openDocumentModal(editItem = null) {
 
 		// Handle different question format names
 		const questionFormat = questionData.question_format || questionData.format || 'text';
-
+		console.log('Rendering question format:', questionFormat);
 		switch (questionFormat.toLowerCase()) {
 			case 'text':
 			case 'short_text':
@@ -2493,6 +2491,42 @@ async function openDocumentModal(editItem = null) {
 				questionHTML += `</div>`;
 				break;
 
+		case 'boolean': {
+
+	// Default Yes / No options (source of truth)
+	const booleanOptions = [
+		{ label: 'Yes', value: 1 },
+		{ label: 'No', value: 0 }
+	];
+
+	questionHTML += `<div class="question-options">`;
+
+	booleanOptions.forEach((option, idx) => {
+		const inputId = `${questionIdEl}_${idx}`;
+
+		questionHTML += `
+			<div class="form-check">
+				<input 
+					class="form-check-input screening-question"
+					type="radio"
+					id="${inputId}"
+					name="question_${questionId}"
+					value="${option.value}"
+					data-question-id="${questionId}"
+					data-question-format="boolean"
+					${questionData.is_required ? 'required' : ''}
+				>
+				<label class="form-check-label" for="${inputId}">
+					${option.label}
+				</label>
+			</div>
+		`;
+	});
+
+	questionHTML += `</div>`;
+	break;
+}
+
 			default:
 				questionHTML += `
 					<input 
@@ -2537,7 +2571,7 @@ async function openDocumentModal(editItem = null) {
 
 		formHTML += `
 					<div class="mt-4">
-						<button type="submit" class="btn btn-primary w-100">
+						<button type="submit" class="btn btn-primary">
 							<i class="fa fa-check me-2"></i> Submit Answers
 						</button>
 					</div>
