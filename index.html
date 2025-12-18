@@ -39,7 +39,7 @@
                     <button type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu" style="cursor: pointer; color: white; background: none; border: none;"><i class="fas fa-user"></i> User <i class="fas fa-caret-down"></i></button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" id="userDropdownMenu">
                         <li><h6 class="dropdown-header" id="navbarUserName"><i class="fas fa-user me-2"></i>User</h6><span class="dropdown-item-text text-muted" id="navbarUserRole"><i class="fas fa-id-badge me-2"></i>Applicant</span></li>
-                        
+
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="#" onclick="showSection('personalDetails')"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li><button class="dropdown-item" id="btnLogout" type="button"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
@@ -49,10 +49,10 @@
         </div>
     </nav>
 
-   
+
                 <!-- Authentication Area -->
 
-                <div class="col-lg-5 mb-4 text-center" >
+                <div class="d-flex justify-content-center align-items-center vh-100">
                     <div id="authArea" style="display:none;">
                         <div class="auth-container">
                             <!-- Login Form -->
@@ -71,7 +71,7 @@
                                     <input type="email" class="form-control" id="loginEmail" required autocomplete="username" placeholder="Enter Valid Email" />
                                 </div>
 
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label for="loginPassword" class="form-label">Password</label>
                                     <input type="password" class="form-control" id="loginPassword" required placeholder="Enter Valid Password" />
                                 </div>
