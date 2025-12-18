@@ -48,12 +48,7 @@
         </div>
     </nav>
 
-    <!-- Home Page -->
-    <div id="homePage" style="display:none;">
-        <div class="d-flex justify-content-center align-items-center min-vh-100">
-            <div class="text-center">
-                <h1>Welcome to PPDA E-Recruitment Portal</h1>
-                <p>Please login or register to access the application.</p>
+                <!-- Authentication Area -->
 
                 <div class="d-flex justify-content-center align-items-center min-vh-100" id="authSection">
                     <div id="authArea" style="display:none;">
@@ -688,12 +683,20 @@
     <script>
         // Global functions for navigation
         function showHomePage() {
-            document.getElementById('homePage').style.display = 'block';
-            document.getElementById('applicationDashboard').style.display = 'none';
+            const isLoggedIn = document.getElementById('userDropdownContainer').style.display !== 'none';
+            if (isLoggedIn) {
+                // For logged-in users, show the application dashboard
+                document.getElementById('applicationDashboard').style.display = 'block';
+                if (window.showStep) {
+                    window.showStep('selectJob');
+                }
+            } else {
+                // For non-logged-in users, scroll to auth section
+                document.getElementById('authSection').scrollIntoView();
+            }
         }
 
         function showSection(sectionName) {
-            document.getElementById('homePage').style.display = 'none';
             document.getElementById('applicationDashboard').style.display = 'block';
 
             // Use the existing showStep function from app.js

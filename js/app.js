@@ -497,16 +497,17 @@ function showHomePage() {
 		// Hide all other areas
 		applicationDashboard.style.display = 'none';
 
-		// Show home page and navbar
+		// Show/hide home page and navbar based on login status
 		const homePage = document.getElementById('homePage');
 
-		// On mobile, prioritize auth area if not logged in
-		if (window.innerWidth <= 767 && !currentUser) {
+		if (currentUser) {
+			if (homePage) homePage.style.display = 'block';
+			authArea.style.display = 'none';
+			mainNavbar.style.display = 'flex';
+		} else {
 			if (homePage) homePage.style.display = 'none';
 			authArea.style.display = 'block';
-		} else {
-			if (homePage) homePage.style.display = 'block';
-			authArea.style.display = currentUser ? 'none' : 'block';
+			mainNavbar.style.display = 'none';
 		}
 
 		// Show/hide navigation items based on login status
