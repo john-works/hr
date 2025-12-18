@@ -924,14 +924,14 @@ main {
 }
 
 /* Job Selection Styles */
-#jobTable {
+#positionsTable {
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: var(--box-shadow);
   background: white;
 }
 
-#jobTable thead th {
+#positionsTable thead th {
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   color: white;
   font-weight: 600;
@@ -939,23 +939,23 @@ main {
   border: none;
 }
 
-#jobTable tbody tr {
+#positionsTable tbody tr {
   transition: var(--transition);
   border-bottom: 1px solid #e9ecef;
 }
 
-#jobTable tbody tr:hover {
+#positionsTable tbody tr:hover {
   background-color: rgba(10, 74, 122, 0.05);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-#jobTable tbody td {
+#positionsTable tbody td {
   padding: 1.2rem 1rem;
   vertical-align: middle;
 }
 
-#jobTable .btn-info {
+#positionsTable .btn-info {
   background: linear-gradient(135deg, #17a2b8, #138496);
   border: none;
   border-radius: 6px;
@@ -965,13 +965,13 @@ main {
   box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
 }
 
-#jobTable .btn-info:hover {
+#positionsTable .btn-info:hover {
   background: linear-gradient(135deg, #138496, #117a8b);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
 }
 
-#jobTable .btn-success {
+#positionsTable .btn-success {
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border: none;
   border-radius: 6px;
@@ -981,7 +981,7 @@ main {
   box-shadow: 0 2px 8px rgba(10, 74, 122, 0.3);
 }
 
-#jobTable .btn-success:hover {
+#positionsTable .btn-success:hover {
   background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(10, 74, 122, 0.4);
@@ -1310,14 +1310,14 @@ main {
   }
 
   /* Job table */
-  #jobTable thead th,
-  #jobTable tbody td {
+  #positionsTable thead th,
+  #positionsTable tbody td {
     padding: 0.5rem 0.25rem;
     font-size: 0.8rem;
   }
 
-  #jobTable .btn-info,
-  #jobTable .btn-success {
+  #positionsTable .btn-info,
+  #positionsTable .btn-success {
     padding: 0.3rem 0.6rem;
     font-size: 0.75rem;
   }
@@ -1455,14 +1455,14 @@ main {
   }
 
   /* Job table */
-  #jobTable thead th,
-  #jobTable tbody td {
+  #positionsTable thead th,
+  #positionsTable tbody td {
     padding: 0.75rem 0.5rem;
     font-size: 0.9rem;
   }
 
-  #jobTable .btn-info,
-  #jobTable .btn-success {
+  #positionsTable .btn-info,
+  #positionsTable .btn-success {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
   }
@@ -1595,14 +1595,14 @@ main {
   }
 
   /* Job table */
-  #jobTable thead th,
-  #jobTable tbody td {
+  #positionsTable thead th,
+  #positionsTable tbody td {
     padding: 1rem;
     font-size: 1rem;
   }
 
-  #jobTable .btn-info,
-  #jobTable .btn-success {
+  #positionsTable .btn-info,
+  #positionsTable .btn-success {
     padding: 0.5rem 1rem;
     font-size: 1rem;
   }

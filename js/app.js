@@ -296,7 +296,7 @@
 	const showRegisterBtn = document.getElementById('showRegister');
 
 	// Current step in app
-	let currentStep = 'selectJob';
+	let currentStep = 'viewPositions';
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
@@ -927,17 +927,18 @@ const API = {
 	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
 	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
 	getMyApplications: (id) => `${apiUrl}/myapplication/${id}`,
-	
+	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
+	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
+	selectPosition: (positionId) => `${apiUrl}/positions/${positionId}`,
 
 	// === JOB/APPLICATION RELATED ===
-	selectJob: `${apiUrl}/positions`,
+	viewPositions: `${apiUrl}/positions`,
 	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
 	verifyEmail: `${apiUrl}/verify_email`,
-	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
-	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
+
 };
 
 
@@ -1031,23 +1032,18 @@ function showStep(step) {
 		sidebarNav.querySelectorAll('a.nav-link').forEach(a => {
 			const stepAttr = a.getAttribute('data-step');
 			a.classList.toggle('active', stepAttr === step);
-			// if (step === 'selectJob' && stepAttr !== 'selectJob') {
-			// 	a.classList.add('disabled');
-			// } else {
-			// 	a.classList.remove('disabled');
-			// }
 		});
 		mainPanel.querySelectorAll('section[data-step-content]').forEach(sec => {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
 		});
 
-	// Show sidebar for selectJob and previewApplication to allow navigation, hide for other steps on desktop
+	// Show sidebar for viewPositions and previewApplication to allow navigation, hide for other steps on desktop
 	// On phone (width <= 767px), always show sidebar
 	const sidebar = document.querySelector('aside.sidebar');
 	if (window.innerWidth <= 767) {
 		sidebar.classList.remove('d-none');
 	} else {
-		if (step === 'selectJob' || step === 'previewApplication') {
+		if (step === 'viewPositions' || step === 'previewApplication') {
 			sidebar.classList.remove('d-none');
 		} else {
 			sidebar.classList.add('d-none');
@@ -1062,7 +1058,7 @@ function showStep(step) {
 		if (!a) return;
 		e.preventDefault();
 		const step = a.getAttribute('data-step');
-		if (isBrowseMode && step !== 'selectJob') {
+		if (isBrowseMode && step !== 'viewPositions') {
 		showToast('You can only browse jobs in this mode. Please click View to Continue', 'warning');
 		return;
 		}
@@ -2197,42 +2193,21 @@ async function openDocumentModal(editItem = null) {
 	}
 
 	// Select Job
-	const jobTableBody = document.querySelector('#jobTable tbody');
+	const positionsTableBody = document.querySelector('#positionsTable tbody');
 
 	// Function to show job details modal
-	function showJobDetailsModal(job) {
-		// Store current position for screening
-		currentScreeningPosition = job;
-
-		// If user is logged in and not in browse mode, try to load screening questions
-		if (currentUser && !isBrowseMode) {
-			// Extract only numeric ID (in case job.id contains extra data like title)
-			const positionId = typeof job.id === 'string' && job.id.includes(':') 
-				? job.id.split(':')[0] 
-				: job.id;
-			
-			loadScreeningQuestions(positionId).then(questions => {
-				if (displayScreeningQuestions(questions)) {
-					// Screening questions were displayed
-					jobDetailsModal.show();
-					return;
-				}
-
-				// No screening questions, show job details as usual
-				showJobDetailsContent(job);
-				jobDetailsModal.show();
-			});
+	async function showJobDetailsModal(jobId) {
+		let job = {};
+		const response = await axios.get(API.selectPosition(jobId));
+		job = response.data.data;
+		showJobDetailsContent(job);
+		const applyBtn = document.getElementById('btnApplyFromModal');
+		if (isBrowseMode) {
+			applyBtn.style.display = 'none';
 		} else {
-			// Not logged in or in browse mode, show job details
-			showJobDetailsContent(job);
-			const applyBtn = document.getElementById('btnApplyFromModal');
-			if (isBrowseMode) {
-				applyBtn.style.display = 'none';
-			} else {
-				applyBtn.style.display = 'inline-block';
-			}
-			jobDetailsModal.show();
+			applyBtn.style.display = 'inline-block';
 		}
+		jobDetailsModal.show();
 	}
 
 	/**
@@ -2241,24 +2216,57 @@ async function openDocumentModal(editItem = null) {
 	function showJobDetailsContent(job) {
 		document.getElementById('jobDetailsModalLabel').textContent = job.name || 'Job Details';
 		const body = document.getElementById('jobDetailsModalBody');
+		let dutiesList = '';
+		if (job.duties && Array.isArray(job.duties)) {
+			dutiesList = '<ul>' + job.duties.map(duty => `<li>${duty}</li>`).join('') + '</ul>';
+		} else {
+			dutiesList = '<p>N/A</p>';
+		}
+		let skillsList = '';
+		if (job.skills && Array.isArray(job.skills)) {
+			skillsList = '<ul>' + job.skills.map(skill => `<li>${skill}</li>`).join('') + '</ul>';
+		} else {
+			skillsList = '<p>N/A</p>';
+		}
+let qualificationsList = '';
+if (Array.isArray(job.qualifications) && job.qualifications.length) {
+    qualificationsList = `
+        <ul>
+            ${job.qualifications.map(q => `
+                <li>
+                    ${q.details}
+                    ${q.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
+                </li>
+            `).join('')}
+        </ul>
+    `;
+} else {
+    qualificationsList = '<p>N/A</p>';
+}
+
+	let experienceList = '';
+
+if (Array.isArray(job.experiences) && job.experiences.length) {
+    experienceList = `
+        <ul>
+            ${job.experiences.map(e => `
+                <li>
+                    ${e.details}
+                    ${e.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
+                </li>
+            `).join('')}
+        </ul>
+    `;
+} else {
+    experienceList = '<p>N/A</p>';
+}
+
+
 		body.innerHTML = `
-		
-			<h5 class="mb-3">EXTERNAL VACANCY ANNOUNCEMENT</h5>
-			<p>The Public Procurement and Disposal of Public Assets Authority (PPDA) is 
-			established under the PPDA Act No.1 of 2003 to develop standards and regulate
-			 procurement and disposal practices in respect of all Procuring and Disposing Entities 
-			 which include Central Government Ministries and Departments, Local Governments, State 
-			 Enterprises, Constitutional and Statutory 
-			Bodies and post primary training institutions.</p>
-			
-			<p>The PPDA is seeking to recruit a qualified, competent and highly motivated Ugandan to fill the Position.
-			</p>
-
-
 			<div class="row">
-				<div class="col-md-6">
-					<p><strong>Position:	${job.name || 'N/A'}</strong></p>
-					<p><strong>Vacancy:	${job.vacancy_number || 'N/A'}</strong></p>
+				<div class="col-md-10">
+					<p><strong>Position:${job.position_title || 'N/A'}</strong></p>
+					<p><strong>Vacancy:	${job.available_vacancies || 'N/A'}</strong></p>
 					<p><strong>Reports to:	${job.reports_to || 'N/A'}</strong></p> 
 					<p><strong>Department: ${job.department || 'N/A'}</strong></p>
 					<p><strong>Department Head:	${job.department_head || 'N/A'}</strong></p> 
@@ -2266,24 +2274,16 @@ async function openDocumentModal(editItem = null) {
 				
 			</div>
 			<hr/>
-
-			<p><strong>Job Purpose:</strong> ${job.purpose || 'N/A'}</p>
-
-			<p><strong>Duties and Responsibilities:</strong> ${job.duties || 'N/A'}</p>
-
-			<p><strong>Person Specifications:</strong> ${job.specifications || 'N/A'}</p>
-
-			<p><strong>CONDITIONS OF SERVICE:</strong> ${job.conditions || 'N/A'}</p>
-
-		<div class="mb-3 alert alert-info">
-			<p><strong>APPLICATION GUIDELINES:</strong></p>
-			<ol>
-				<li>All qualified candidates should submit completed application forms downloaded from www.ppda.go.ug (Look for Careers, Jobs, positions and application form) and relevant academic documents via Email to; recruitment@ppda.go.ug with the job position applied for as the subject.</li>
-				<li>The attachments should be limited to the following documents; a duly filled application form, National ID, O-level and A-level Certificates, Honours Degree, Master’s Degree, and any other Qualifications required.</li>
-				<li>All attachments should be sent as one file in PDF format not exceeding 20 MBs.</li>
-				<li>The subject of the email should be “Application for the Position of Manager Human Resources”</li>
-			</ol>
-		</div>
+			<p><strong>Job Purpose:</strong> ${job.job_purpose || 'N/A'}</p>
+			<p><strong>Duties and Responsibilities:</strong></p>
+			${dutiesList}
+			<p><strong>Person Specifications:</strong></p>
+			<p><strong>Education:</strong></p>
+			${qualificationsList}
+			<p><strong>Experience:</strong></p>
+			${experienceList}
+			<p><strong>Skills:</strong></p>
+			${skillsList}
 		`;
 		const applyBtn = document.getElementById('btnApplyFromModal');
 		if (isBrowseMode) {
@@ -2299,48 +2299,47 @@ async function openDocumentModal(editItem = null) {
 		}
 	}
 
-	async function loadJobs() {
+	async function loadPositions() {
 		try {
-		const response = await axios.get(API.selectJob);
-		const jobs = response.data.data || [];
-		// console.log(jobs);
-		if (!jobs.length) {
-			jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
-			return;
-		}
-		jobTableBody.innerHTML = '';
-		jobs.forEach(job => {
-			const tr = document.createElement('tr');
-			tr.insertAdjacentHTML('beforeend', `<td>${job.name || ''}</td>`);
-			tr.insertAdjacentHTML('beforeend', `<td>${job.location || ''}</td>`);
-			tr.insertAdjacentHTML('beforeend', `<td>${job.deadline || ''}</td>`);
-
-			const tdActions = document.createElement('td');
-			const btnView = document.createElement('button');
-			btnView.className = 'btn btn-sm btn-info me-2';
-			btnView.type = 'button';
-			btnView.innerHTML = '<i class="fa fa-eye"></i> View';
-			btnView.addEventListener('click', () => {
-				showJobDetailsModal(job);
-			});
-			tdActions.appendChild(btnView);
-
-			if (!isBrowseMode) {
-			const btnApply = document.createElement('button');
-			btnApply.className = 'btn btn-sm btn-success';
-			btnApply.type = 'button';
-			btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
-			btnApply.addEventListener('click', () => {
-				showJobDetailsModal(job);
-			});
-			tdActions.appendChild(btnApply);
+			const response = await axios.get(API.viewPositions);
+			const jobs = response.data.data || [];
+			if (!jobs.length) {
+				positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
+				return;
 			}
-			tr.appendChild(tdActions);
+			positionsTableBody.innerHTML = '';
+			jobs.forEach(job => {
+				const tr = document.createElement('tr');
+				tr.insertAdjacentHTML('beforeend', `<td>${job.name || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${job.location || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${job.deadline || ''}</td>`);
 
-			jobTableBody.appendChild(tr);
-		});
+				const tdActions = document.createElement('td');
+				const btnView = document.createElement('button');
+				btnView.className = 'btn btn-sm btn-info me-2';
+				btnView.type = 'button';
+				btnView.innerHTML = '<i class="fa fa-eye"></i> View';
+				btnView.addEventListener('click', () => {
+					showJobDetailsModal(job.id);
+				});
+				tdActions.appendChild(btnView);
+
+				if (!isBrowseMode) {
+				const btnApply = document.createElement('button');
+				btnApply.className = 'btn btn-sm btn-success';
+				btnApply.type = 'button';
+				btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
+				btnApply.addEventListener('click', () => {
+					showJobDetailsModal(job.id);
+				});
+				tdActions.appendChild(btnApply);
+				}
+				tr.appendChild(tdActions);
+
+				positionsTableBody.appendChild(tr);
+			});
 		} catch {
-		jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
+			positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
 		}
 	}
 
@@ -2683,7 +2682,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Your application has been automatically rejected based on the screening results.', 'error');
 				setTimeout(() => {
 					jobDetailsModal.hide();
-					showStep('selectJob');
+					showStep('viewPositions');
 				}, 2000);
 			} else {
 				showToast(errorMsg, 'error');
@@ -2865,7 +2864,7 @@ async function openDocumentModal(editItem = null) {
 		case 'referee': await loadReferee(); break;
 		case 'dependants': await loadDependants(); break;
 		case 'previewApplication': await loadPreview(); break;
-		case 'selectJob': await loadJobs(); break;
+		case 'viewPositions': await loadPositions(); break;
 		}
 	}
 
@@ -2974,37 +2973,9 @@ async function openDocumentModal(editItem = null) {
 		if (!currentUser) {
 			document.getElementById('authArea').scrollIntoView({behavior: 'smooth'});
 		} else {
-			showSection('selectJob');
+			showSection('viewPositions');
 		}
 	};
-
-	// Function to load jobs into homepage alert
-	// async function loadHomepageJobs() {
-	// 	try {
-	// 		const response = await axios.get(API.selectJob);
-	// 		const jobs = response.data.data || [];
-	// 		// const jobListDiv = document.getElementById('homepageJobList');
-	// 		if (!jobs.length) {
-	// 			jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No jobs available at the moment.</p>';
-	// 			return;
-	// 		}
-	// 		let html = '<ul class="list-group list-group-flush">';
-	// 		jobs.forEach(job => {
-	// 			html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-	// 				<div>
-	// 					<strong>${job.name || ''}</strong><br>
-	// 					<small class="text-muted">${job.location || ''} - Deadline: ${job.deadline || ''}</small>
-	// 				</div>
-	// 				<button class="btn btn-sm btn-primary" onclick="handleJobClick('${job.id}')">Apply</button>
-	// 			</li>`;
-	// 		});
-	// 		html += '</ul>';
-	// 		jobListDiv.innerHTML = html;
-	// 	} catch (error) {
-	// 		console.error('Error loading homepage jobs:', error);
-	// 		document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">Failed to load jobs.</p>';
-	// 	}
-	// }
 
 	/* -------- Token Validation -------- */
 	/**
