@@ -15,8 +15,188 @@
 <body>
     <!-- Toast Container -->
     <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
+    <!-- Authentication Area -->
+    <div id="authSection" class="d-flex justify-content-center align-items-center min-vh-90">
+        <div id="authArea">
+            <div class="auth-container">
+                <!-- Login Form -->
+                <form id="loginForm">
+                    <div class="text-center mb-4">
+                        <img src="img/logo.png" alt="Recruitment Portal Logo" class="img-fluid" style="max-width: 150px; border-radius: 10%;">
+                    </div>
+                    <h3 class="auth-form-title text-center" style="color: var(--psc-blue);">Recruitment Portal</h3>
+                    <div class="security-notice">
+                        <p>Please enter your E-mail and Password to proceed...</p>
+                    </div>
+                    <br>
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="loginEmail" required autocomplete="username" placeholder="Enter Valid Email" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" required placeholder="Enter Valid Password" />
+                    </div>
+
+                    <div class="text-center">
+                    <button type="submit" class="btn btn-primary mb-3">Login</button>
+                    </div>
+                    <div class="auth-form-divider">
+                        Don't have an account yet? <span class="auth-toggle" id="showRegister">Register</span>
+                    </div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" style="display:none;">
+                    <h3 class="auth-form-title">Create Account</h3>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="middle_name" class="form-label">Middle Name</label>
+                            <input type="text" class="form-control" id="middle_name" name="middle_name" />
+                            </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required />
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                    
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" name="email" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">Contact</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" required />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="dob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="dob" name="dob" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="marital_status" class="form-label">Marital Status</label>
+                            <select class="form-select" id="marital_status" name="marital_status" required>
+                                <option value="">Select Status</option>
+                                <option value="single">Single</option>
+                                <option value="married">Married</option>
+                                <option value="divorced">Divorced</option>
+                                <option value="widowed">Widowed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="nin" class="form-label">National ID</label>
+                            <input type="text" class="form-control" id="nin" name="nin" maxlength="15" required />
+                        </div>
+                        
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required autocomplete="new-password" />
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="password_confirmation" class="form-label">Confirm Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required />
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                    <i class="fas fa-eye" id="eyeIcon2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary mb-2">Register</button>
+                </div>  
+                    <div class="auth-form-divider">
+                        Already have an account? <span class="auth-toggle" id="showLogin">Login</span>
+                    </div>
+                </form>
+
+                <!-- Email Verification with OTP -->
+                <div id="verifyEmailForm" style="display:none;" class="verification-container">
+                    <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Enter Verification Code</h4>
+                    <div class="card-body">
+                        <div class="steps-container">
+                            <div class="step done">
+                                <div class="step-circle"><i class="fas fa-check"></i></div>
+                                <div class="step-label">Email Entered</div>
+                            </div>
+                            <div class="step active">
+                                <div class="step-circle">2</div>
+                                <div class="step-label">Verify Code</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-circle">3</div>
+                                <div class="step-label">Portal</div>
+                            </div>
+                        </div>
+                        <p class="text-muted text-center mb-4">We've sent a 6-digit code to <span id="verifyEmailText" class="fw-bold">user@example.com</span></p>
+
+                        <form id="otpForm">
+                            <div class="mb-4">
+                                <div class="otp-container">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="0" autocomplete="off">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="1" autocomplete="off">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="2" autocomplete="off">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="3" autocomplete="off">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="4" autocomplete="off">
+                                    <input type="text" class="otp-input" maxlength="1" data-index="5" autocomplete="off">
+                                </div>
+                                <input type="hidden" id="otpCode" name="otp">
+                            </div>
+
+                            <button class="btn btn-primary mb-4" type="submit" id="verifyBtn" disabled>
+                                <span id="btnText">Verify Code</span>
+                                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
+                            </button>
+                        </form>
+
+                        <div class="resend-container">
+                            <p class="mb-2">Didn't receive the code? <a id="resendLink" class="resend-link disabled">Resend code <span id="countdown" class="countdown">(60s)</span></a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Application Area -->
+    <div id="applicationDashboard" class="container-xxl py-4" style="display:none;" class="min-vh-80">
     <!-- Main Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" id="mainNavbar">
+    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" id="mainNavbar">
         <div class="container-fluid">
             <img src="img/logo.png" alt="PPDA Logo" style="display: block; margin: 0; max-width: 60px; height: auto; border-radius: 2px; box-shadow: 0 8px 20px rgba(0,0,0,0.1);" class="navbar-brand">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarCollapse" aria-controls="mainNavbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,229 +204,30 @@
             </button>
             <div class="collapse navbar-collapse" id="mainNavbarCollapse">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item" id="homeNavItem"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
-                    <div id="loggedInNav" style="display:none;">
+                    <div id="loggedInNav">
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li> -->
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li>
+                        <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li> -->
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('documents')">Documents</a></li> -->
-                    </div>
+                    <!-- </div>
                 </ul>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="dropdown" id="userDropdownContainer" style="display:none;">
-                    <button type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu" style="cursor: pointer; color: white; background: none; border: none;"><i class="fas fa-user"></i> User <i class="fas fa-caret-down"></i></button>
+                    <button type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu" style="cursor: pointer; color: white; background: none; border: none;">
+                        <i class="fas fa-user"></i> User <i class="fas fa-caret-down"></i></button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" id="userDropdownMenu">
                         <li><h6 class="dropdown-header" id="navbarUserName"><i class="fas fa-user me-2"></i>User</h6><span class="dropdown-item-text text-muted" id="navbarUserRole"><i class="fas fa-id-badge me-2"></i>Applicant</span></li>
 
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" onclick="showSection('personalDetails')"><i class="fas fa-user me-2"></i>Profile</a></li>
-                        <li><button class="dropdown-item" id="btnLogout" type="button"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
-                    </ul>
+                        <li><a class="dropdown-item" href="#" onclick="showSection('personalDetails')"><i class="fas fa-user me-2"></i>Profile</a></li> -->
+                        <!-- <li><button class="dropdown-item" id="btnLogout" type="button"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li> -->
+                    <!-- </ul>
                 </div>
             </div>
         </div>
-    </nav>
-
-                <!-- Authentication Area -->
-
-                <div class="d-flex justify-content-center align-items-center min-vh-100" id="authSection">
-                    <div id="authArea" style="display:none;">
-                        <div class="auth-container">
-                            <!-- Login Form -->
-                            <form id="loginForm" style="display:block;">
-                                <div class="text-center mb-4">
-                                    <img src="img/logo.png" alt="Recruitment Portal Logo" class="img-fluid" style="max-width: 150px; border-radius: 10%;">
-                                </div>
-                                <h3 class="auth-form-title text-center" style="color: var(--psc-blue);">Recruitment Portal</h3>
-
-                                <div class="security-notice">
-                                    <p>Please enter your E-mail and Password to proceed...</p>
-                                </div>
-                                <br>
-                                <div class="mb-3">
-                                    <label for="loginEmail" class="form-label">Email address</label>
-                                    <input type="email" class="form-control" id="loginEmail" required autocomplete="username" placeholder="Enter Valid Email" />
-                                </div>
-
-                                <div class="mb-4">
-                                    <label for="loginPassword" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="loginPassword" required placeholder="Enter Valid Password" />
-                                </div>
-
-                                <div class="text-center">
-                                <button type="submit" class="btn btn-primary mb-3">Login</button>
-                                </div>
-                                <div class="auth-form-divider">
-                                    Don't have an account yet? <span class="auth-toggle" id="showRegister">Register</span>
-                                </div>
-                            </form>
-
-                            <!-- Register Form -->
-                            <form id="registerForm" style="display:none;">
-                                <h3 class="auth-form-title">Create Account</h3>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="first_name" class="form-label">First Name</label>
-                                        <input type="text" class="form-control" id="first_name" name="first_name" required />
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label for="middle_name" class="form-label">Middle Name</label>
-                                        <input type="text" class="form-control" id="middle_name" name="middle_name" />
-                                     </div>
-    
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="last_name" class="form-label">Last Name</label>
-                                        <input type="text" class="form-control" id="last_name" name="last_name" required />
-                                    </div>
-
-
-                                    <div class="col-md-6 mb-3">
-                                        <label for="gender" class="form-label">Gender</label>
-                                        <select class="form-select" id="gender" name="gender" required>
-                                            <option value="">Select Gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
-                                        </select>
-                                    </div>
-                                
-                                </div>
-  
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="email" class="form-label">Email address</label>
-                                        <input type="email" class="form-control" id="email" name="email" required />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="phone_number" class="form-label">Contact</label>
-                                        <input type="text" class="form-control" id="phone_number" name="phone_number" required />
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="dob" class="form-label">Date of Birth</label>
-                                        <input type="date" class="form-control" id="dob" name="dob" required />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="marital_status" class="form-label">Marital Status</label>
-                                        <select class="form-select" id="marital_status" name="marital_status" required>
-                                            <option value="">Select Status</option>
-                                            <option value="single">Single</option>
-                                            <option value="married">Married</option>
-                                            <option value="divorced">Divorced</option>
-                                            <option value="widowed">Widowed</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="nin" class="form-label">National ID</label>
-                                        <input type="text" class="form-control" id="nin" name="nin" maxlength="15" required />
-                                    </div>
-                                    
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password" class="form-label">Password</label>
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" id="password" name="password" required autocomplete="new-password" />
-                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                                <i class="fas fa-eye" id="eyeIcon"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="password_confirmation" class="form-label">Confirm Password</label>
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required />
-                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
-                                                <i class="fas fa-eye" id="eyeIcon2"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <div class="text-center">
-                                <button type="submit" class="btn btn-primary mb-2">Register</button>
-                            </div>  
-                                <div class="auth-form-divider">
-                                    Already have an account? <span class="auth-toggle" id="showLogin">Login</span>
-                                </div>
-                            </form>
-
-                            <!-- Email Verification with OTP -->
-                            <div id="verifyEmailForm" style="display:none;" class="verification-container">
-                                <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Enter Verification Code</h4>
-                                <div class="card-body">
-                                    <div class="steps-container">
-                                        <div class="step done">
-                                            <div class="step-circle"><i class="fas fa-check"></i></div>
-                                            <div class="step-label">Email Entered</div>
-                                        </div>
-                                        <div class="step active">
-                                            <div class="step-circle">2</div>
-                                            <div class="step-label">Verify Code</div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-circle">3</div>
-                                            <div class="step-label">Portal</div>
-                                        </div>
-                                    </div>
-                                    <p class="text-muted text-center mb-4">We've sent a 6-digit code to <span id="verifyEmailText" class="fw-bold">user@example.com</span></p>
-
-                                    <form id="otpForm">
-                                        <div class="mb-4">
-                                            <div class="otp-container">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="0" autocomplete="off">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="1" autocomplete="off">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="2" autocomplete="off">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="3" autocomplete="off">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="4" autocomplete="off">
-                                                <input type="text" class="otp-input" maxlength="1" data-index="5" autocomplete="off">
-                                            </div>
-                                            <input type="hidden" id="otpCode" name="otp">
-                                        </div>
-
-                                        <button class="btn btn-primary mb-4" type="submit" id="verifyBtn" disabled>
-                                            <span id="btnText">Verify Code</span>
-                                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
-                                        </button>
-                                    </form>
-
-                                    <div class="resend-container">
-                                        <p class="mb-2">Didn't receive the code? <a id="resendLink" class="resend-link disabled">Resend code <span id="countdown" class="countdown">(60s)</span></a></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Home Page for logged-in users -->
-    <!-- <div id="homePage" style="display:none;" class="container mt-5">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="text-center mb-4">Available Job Opportunities</h2>
-                <div id="homepageJobList" class="alert alert-info">
-                    <p>Loading jobs...</p>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-    <!-- Application Area -->
-    <div class="container-xxl py-4" id="applicationDashboard" style="display:none;">
+    </nav> -->
         <div class="row">
             <!-- Sidebar -->
             <aside class="col-md-3 sidebar d-none d-md-block">
@@ -261,11 +242,12 @@
                     <a href="#" class="nav-link" data-step="referee"><i class="fa fa-eye"></i> Referee</a>
                     <a href="#" class="nav-link" data-step="dependants"><i class="fa fa-users"></i> Dependants</a>
                     <a href="#" class="nav-link" data-step="previewApplication"><i class="fa fa-id-card"></i> Preview Application</a>
-                    <a href="#" class="nav-link active" data-step="selectJob"><i class="fa fa-tasks"></i> Select a Job</a>
+                    <a href="#" class="nav-link" data-step="selectJob"><i class="fa fa-tasks"></i> Select a Job</a>
+                    <a href="#" class="nav-link" data-step="myApplication"><i class="fa fa-tasks"></i> My Applications</a>
+                    <a href="#" class="nav-link" data-step="logout" id="btnLogout"><i class="fa fa-tasks"></i> Logout</a>
                
                 </nav>
             </aside>
-
             <!-- Main Panel -->
             <main class="col-md-9 col-12" id="mainPanel">
                 <!-- Personal Details -->
@@ -512,7 +494,6 @@
             </main>
         </div>
     </div>
-
     <!-- Footer -->
     <footer class="text-white py-5 px-4" style="background: linear-gradient(135deg, var(--psc-blue) 0%, var(--psc-dark) 100%);">
         <div class="container-fluid">
@@ -602,12 +583,6 @@
             </div>
         </div>
     </footer>
-
-    <script>
-        // Set current year in footer
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
-
     <!-- Modal Template (reuse for all forms) -->
     <div class="modal fade" id="crudModal" tabindex="-1" aria-labelledby="crudModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -648,82 +623,31 @@
             </div>
         </div>
     </div>
-
-    <!-- Login Modal -->
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loginModalLabel">Login to Apply</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="modalLoginForm">
-                        <div class="text-center mb-4">
-                            <img src="img/logo.png" alt="Recruitment Portal Logo" class="img-fluid" style="max-width: 150px; border-radius: 10%;">
-                        </div>
-                        <h3 class="auth-form-title text-center" style="color: var(--psc-blue);">Recruitment Portal</h3>
-
-                        <div class="security-notice">
-                            <p>Please enter your E-mail and Password to proceed...</p>
-                        </div>
-                        <br>
-                        <div class="mb-3">
-                            <label for="modalLoginEmail" class="form-label">Email address</label>
-                            <input type="email" class="form-control" id="modalLoginEmail" required autocomplete="username" placeholder="Enter Valid Email" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="modalLoginPassword" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="modalLoginPassword" required placeholder="Enter Valid Password" />
-                        </div>
-
-                        <button type="submit" class="btn btn-primary mb-2">Login</button>
-                        <div class="auth-form-divider">
-                            Don't have an account yet? <span class="auth-toggle" id="showRegisterFromModal">Register</span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Bootstrap 5 Bundle + Axios -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!-- Custom App Script -->
     <script src="js/app.js"></script>
-
     <script>
         // Global functions for navigation
-        function showHomePage() {
-            const isLoggedIn = document.getElementById('userDropdownContainer').style.display !== 'none';
-            if (isLoggedIn) {
-                // For logged-in users, show the application dashboard
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('applicationDashboard').style.display = 'block';
-                if (window.showStep) {
-                    window.showStep('selectJob');
-                }
-                // Scroll to the dashboard to display it properly
-                document.getElementById('applicationDashboard').scrollIntoView();
-            } else {
-                // For non-logged-in users, scroll to auth section
-                document.getElementById('authSection').style.display = 'block';
-                document.getElementById('authSection').scrollIntoView();
-            }
-        }
-
-        function showSection(sectionName) {
-            document.getElementById('applicationDashboard').style.display = 'block';
-
-            // Use the existing showStep function from app.js
-            if (window.showStep) {
-                window.showStep(sectionName);
-            }
-        }
-
-        
+        // function showHomePage() {
+        //     const isLoggedIn = document.getElementById('userDropdownContainer').style.display !== 'none';
+        //     if (isLoggedIn) {
+        //         // For logged-in users, show the application dashboard
+        //         document.getElementById('authSection').style.display = 'none';
+        //         document.getElementById('applicationDashboard').style.display = 'block';
+        //         // if (window.showStep) {
+        //         //     window.showStep('selectJob');
+        //         // }
+        //         // Scroll to the dashboard to display it properly
+        //         document.getElementById('applicationDashboard').scrollIntoView();
+        //     } else {
+        //         console.log('Not logged in - showing auth section');
+        //         // For non-logged-in users, scroll to auth section
+        //         document.getElementById('authSection').style.display = 'block';
+        //         document.getElementById('authSection').scrollIntoView();
+        //     }
+        // }
     </script>
 </body>
 </html>

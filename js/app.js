@@ -283,9 +283,8 @@
 
 	/* ----- Elements ----- */
 	const authArea = document.getElementById('authArea');
-	const mainContentArea = document.getElementById('mainContentArea');
 	const applicationDashboard = document.getElementById('applicationDashboard');
-	const mainNavbar = document.getElementById('mainNavbar');
+	// const mainNavbar = document.getElementById('mainNavbar');
 	const userDropdown = document.getElementById('userDropdown');
 	const navbarUserName = document.getElementById('navbarUserName');
 	const loggedInNav = document.getElementById('loggedInNav');
@@ -318,10 +317,6 @@
 	const jobDetailsModalEl = document.getElementById('jobDetailsModal');
 	const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
 
-	// Bootstrap modal for Login
-	const loginModalEl = document.getElementById('loginModal');
-	const loginModal = new bootstrap.Modal(loginModalEl);
-
 	// Sidebar nav
 	const sidebarNav = document.getElementById('sidebarNav');
 	const mainPanel = document.getElementById('mainPanel');
@@ -331,9 +326,9 @@
 		const sessionStr = localStorage.getItem('userSession');
 		if (!sessionStr) return null;
 		try {
-		return JSON.parse(sessionStr);
+			return JSON.parse(sessionStr);
 		} catch {
-		return null;
+			return null;
 		}
 	}
 
@@ -377,26 +372,17 @@
 		}
 	}
 
-function autoLogout() {
-	clearSession();
-	currentUser = null;
-	showToast('You have been automatically logged out due to inactivity.', 'warning');
-	showHomePage();
-	// Hide logged in navigation
-	const loggedInNav = document.getElementById('loggedInNav');
-	const userDropdownContainer = document.getElementById('userDropdownContainer');
-	if (loggedInNav) loggedInNav.style.display = 'none';
-	if (userDropdownContainer) userDropdownContainer.style.display = 'none';
-	stopInactivityTracking();
-}
-
-	function startInactivityTracking() {
-		// List of events to track for activity
-		const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-		events.forEach(event => {
-			document.addEventListener(event, resetInactivityTimer, true);
-		});
-		resetInactivityTimer();
+	function autoLogout() {
+		clearSession();
+		currentUser = null;
+		showToast('You have been automatically logged out due to inactivity.', 'warning');
+		showLoginForm();
+		// Hide logged in navigation
+		const loggedInNav = document.getElementById('loggedInNav');
+		const userDropdownContainer = document.getElementById('userDropdownContainer');
+		if (loggedInNav) loggedInNav.style.display = 'none';
+		if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+		stopInactivityTracking();
 	}
 
 	function stopInactivityTracking() {
@@ -466,14 +452,11 @@ function autoLogout() {
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'none';
 
-		// Hide auth section
-		authSection.style.display = 'none';
-
 		// Show application dashboard
 		applicationDashboard.style.display = 'block';
 
 		// Show navbar
-		mainNavbar.style.display = 'flex';
+		// mainNavbar.style.display = 'flex';
 		document.body.classList.remove('auth-view');
 
 		// Update navigation items for logged-in user
@@ -487,7 +470,7 @@ function autoLogout() {
 	function showAuth() {
 		// Hide all other areas
 		applicationDashboard.style.display = 'none';
-		mainNavbar.style.display = 'none';
+		// mainNavbar.style.display = 'none';
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'block';
 
@@ -496,41 +479,41 @@ function autoLogout() {
 		document.body.classList.add('auth-view');
 	}
 
-function showHomePage() {
-		// Hide all other areas
-		applicationDashboard.style.display = 'none';
+// function showHomePage() {
+// 		// Hide all other areas
+// 		applicationDashboard.style.display = 'none';
 
-		// Show/hide home page and navbar based on login status
-		const homePage = document.getElementById('homePage');
+// 		// Show home page and navbar
+// 		const homePage = document.getElementById('homePage');
+// 		// mainNavbar.style.display = 'flex';
 
-		if (currentUser) {
-			if (homePage) homePage.style.display = 'block';
-			authArea.style.display = 'none';
-			mainNavbar.style.display = 'flex';
-		} else {
-			if (homePage) homePage.style.display = 'none';
-			authArea.style.display = 'block';
-			mainNavbar.style.display = 'none';
-		}
+// 		// On mobile, prioritize auth area if not logged in
+// 		if (window.innerWidth <= 767 && !currentUser) {
+// 			if (homePage) homePage.style.display = 'none';
+// 			authArea.style.display = 'block';
+// 		} else {
+// 			if (homePage) homePage.style.display = 'block';
+// 			authArea.style.display = currentUser ? 'none' : 'block';
+// 		}
 
-		// Show/hide navigation items based on login status
-		const userDropdownContainer = document.getElementById('userDropdownContainer');
-		const homeNavItem = document.getElementById('homeNavItem');
-		if (currentUser) {
-			if (loggedInNav) loggedInNav.style.display = 'flex';
-			if (userDropdownContainer) userDropdownContainer.style.display = 'block';
-			if (homeNavItem) homeNavItem.style.display = 'none';
-		} else {
-			if (loggedInNav) loggedInNav.style.display = 'none';
-			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
-			if (homeNavItem) homeNavItem.style.display = 'block';
-		}
+// 		// Show/hide navigation items based on login status
+// 		const userDropdownContainer = document.getElementById('userDropdownContainer');
+// 		const homeNavItem = document.getElementById('homeNavItem');
+// 		if (currentUser) {
+// 			if (loggedInNav) loggedInNav.style.display = 'flex';
+// 			if (userDropdownContainer) userDropdownContainer.style.display = 'block';
+// 			if (homeNavItem) homeNavItem.style.display = 'none';
+// 		} else {
+// 			if (loggedInNav) loggedInNav.style.display = 'none';
+// 			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+// 			if (homeNavItem) homeNavItem.style.display = 'block';
+// 		}
 
-		document.body.classList.remove('auth-view');
+// 		document.body.classList.remove('auth-view');
 
-		// Load jobs into homepage alert
-		loadHomepageJobs();
-	}
+// 		// Load jobs into homepage alert
+// 		loadHomepageJobs();
+// 	}
 
 	/* ----- Event Listeners for Auth Toggle ----- */
 	if (showRegisterBtn) {
@@ -784,7 +767,7 @@ function showHomePage() {
 
 			try {
 				// Verify OTP via API
-				const response = await axios.post(API.validateCode, { code, email: pendingUser.email });
+				const response = await axios.post(API.verifyEmail, { code, email: pendingUser.email });
 
 				// Check if the API indicates failure (even with 200 status)
 				// Handle various error message patterns
@@ -910,11 +893,12 @@ function showHomePage() {
 			currentUser = null; // Clear currentUser
 			showToast('Logged out successfully', 'success');
 			// Hide logged in navigation and user dropdown
-			const userDropdownContainer = document.getElementById('userDropdownContainer');
-			if (loggedInNav) loggedInNav.style.display = 'none';
-			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
+			// const userDropdownContainer = document.getElementById('userDropdownContainer');
+			// if (loggedInNav) loggedInNav.style.display = 'none';
+			// if (userDropdownContainer) userDropdownContainer.style.display = 'none';
 			// Redirect to homepage with login form and auto refresh
-			window.location.reload();
+			window.location.href = 'index.html';
+			showLoginForm();
 		});
 	}
 
@@ -951,7 +935,7 @@ const API = {
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
-	validateCode: `${apiUrl}/validate_code`,
+	verifyEmail: `${apiUrl}/verify_email`,
 	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
 	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
 };
@@ -1045,13 +1029,13 @@ const API = {
 function showStep(step) {
 		currentStep = step;
 		sidebarNav.querySelectorAll('a.nav-link').forEach(a => {
-		const stepAttr = a.getAttribute('data-step');
-		a.classList.toggle('active', stepAttr === step);
-		if (step === 'selectJob' && stepAttr !== 'selectJob') {
-			a.classList.add('disabled');
-		} else {
-			a.classList.remove('disabled');
-		}
+			const stepAttr = a.getAttribute('data-step');
+			a.classList.toggle('active', stepAttr === step);
+			// if (step === 'selectJob' && stepAttr !== 'selectJob') {
+			// 	a.classList.add('disabled');
+			// } else {
+			// 	a.classList.remove('disabled');
+			// }
 		});
 		mainPanel.querySelectorAll('section[data-step-content]').forEach(sec => {
 		sec.classList.toggle('d-none', sec.getAttribute('data-step-content') !== step);
@@ -2356,7 +2340,7 @@ async function openDocumentModal(editItem = null) {
 			jobTableBody.appendChild(tr);
 		});
 		} catch {
-		jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">No job available at a moment.</td></tr>`;
+		jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
 		}
 	}
 
@@ -2961,7 +2945,7 @@ async function openDocumentModal(editItem = null) {
 
 	/* -------- Global functions for navigation -------- */
 	window.showStep = showStep;
-	window.showHomePage = showHomePage;
+	// window.showHomePage = showHomePage;
 	window.showSection = function(sectionName) {
 		const user = getSession();
 		if (!user) {
@@ -2995,39 +2979,32 @@ async function openDocumentModal(editItem = null) {
 	};
 
 	// Function to load jobs into homepage alert
-	async function loadHomepageJobs() {
-		try {
-			const response = await axios.get(API.selectJob);
-			const jobs = response.data.data || [];
-			const jobListDiv = document.getElementById('homepageJobList');
-			if (!jobListDiv) {
-				console.error('homepageJobList element not found');
-				return;
-			}
-			if (!jobs.length) {
-				jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No jobs available at the moment.</p>';
-				return;
-			}
-			let html = '<ul class="list-group list-group-flush">';
-			jobs.forEach(job => {
-				html += `<li class="list-group-item d-flex justify-content-between align-items-center">
-					<div>
-						<strong>${job.name || ''}</strong><br>
-						<small class="text-muted">${job.location || ''} - Deadline: ${job.deadline || ''}</small>
-					</div>
-					<button class="btn btn-sm btn-primary" onclick="handleJobClick('${job.id}')">Apply</button>
-				</li>`;
-			});
-			html += '</ul>';
-			jobListDiv.innerHTML = html;
-		} catch (error) {
-			console.error('Error loading homepage jobs:', error);
-			const jobListDiv = document.getElementById('homepageJobList');
-			if (jobListDiv) {
-				jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No job available at a moment.</p>';
-			}
-		}
-	}
+	// async function loadHomepageJobs() {
+	// 	try {
+	// 		const response = await axios.get(API.selectJob);
+	// 		const jobs = response.data.data || [];
+	// 		// const jobListDiv = document.getElementById('homepageJobList');
+	// 		if (!jobs.length) {
+	// 			jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No jobs available at the moment.</p>';
+	// 			return;
+	// 		}
+	// 		let html = '<ul class="list-group list-group-flush">';
+	// 		jobs.forEach(job => {
+	// 			html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+	// 				<div>
+	// 					<strong>${job.name || ''}</strong><br>
+	// 					<small class="text-muted">${job.location || ''} - Deadline: ${job.deadline || ''}</small>
+	// 				</div>
+	// 				<button class="btn btn-sm btn-primary" onclick="handleJobClick('${job.id}')">Apply</button>
+	// 			</li>`;
+	// 		});
+	// 		html += '</ul>';
+	// 		jobListDiv.innerHTML = html;
+	// 	} catch (error) {
+	// 		console.error('Error loading homepage jobs:', error);
+	// 		document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">Failed to load jobs.</p>';
+	// 	}
+	// }
 
 	/* -------- Token Validation -------- */
 	/**
@@ -3036,7 +3013,8 @@ async function openDocumentModal(editItem = null) {
 	 */
 	async function validateTokenWithBackend() {
 		const token = getToken();
-
+		console.log('Validating token with backend...');
+		console.log('token:', token);
 		if (!token || !currentUser || !currentUser.id) {
 			return false;
 		}
@@ -3074,28 +3052,30 @@ async function openDocumentModal(editItem = null) {
 		if (user) {
 			// User has session - validate token with backend
 			try {
-			const isValid = await validateTokenWithBackend();
+				const isValid = await validateTokenWithBackend();
 				if (isValid) {
-					// Token valid and user exists in DB
-					showHomePage();
+					console.log('Token valid and user exists in DB:', currentUser);
+					showDashboard();
 					initAppAfterLogin();
 				} else {
+					console.log('User exists without valid token');
 					// User no longer exists or token invalid
 					// showToast('Your session is no longer valid. Please log in again.', 'warning');
 					//hide loggedInNav
 					loggedInNav.style.display = 'none';
-					showHomePage();
+					// showHomePage();
 					showLoginForm();
 				}
 			} catch (error) {
 				// Network error - show home page but allow user to try again
-				console.error('Error validating token:', error);
-				showHomePage();
-				initAppAfterLogin();
+				// console.error('Error validating token:', error);
+				showLoginForm();
+				// showHomePage();
+				// initAppAfterLogin();
 			}
 		} else {
 			// Not logged in, show home page with login cards
-			showHomePage();
+			showLoginForm();
 			const urlParams = new URLSearchParams(window.location.search);
 			if (urlParams.get('register') === 'true') {
 				showAuth();
