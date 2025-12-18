@@ -499,7 +499,6 @@ function showHomePage() {
 
 		// Show home page and navbar
 		const homePage = document.getElementById('homePage');
-		mainNavbar.style.display = currentUser ? 'flex' : 'none';
 
 		// On mobile, prioritize auth area if not logged in
 		if (window.innerWidth <= 767 && !currentUser) {
