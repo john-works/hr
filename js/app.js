@@ -2,22 +2,19 @@
 	/* ========== Configuration ========== */
 	// Set your API base URL here - change this to point to your backend
 	let apiUrl = 'http://192.168.32.215:8041/api/v1';
+	let documentUrl = 'http://192.168.32.215:8041';
 	let currentUser; // Will be set after getUser() is defined
 
 	/* ========== Document Manager Module ========== */
 	const DocumentManager = {
-		/**
-		 * Get the API base URL based on current location
-		 * For applicant-side (port 5500, 3000, etc.), use localhost:8041
-		 * For HR side (port 8041), use current origin
-		 */
 		getApiBaseUrl() {
 			const origin = window.location.origin;
+			console.log('Current origin:', origin);
 			
 			// If running on a dev server (not on port 8041), point to the backend
 			if (!origin.includes(':8041')) {
 				// Applicant-side: running on dev server, point to Laravel backend
-				return 'http://localhost:8041';
+				return documentUrl;
 			}
 			
 			// HR-side: already on the correct server
