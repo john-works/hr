@@ -26,6 +26,7 @@
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <li class="nav-item" id="homeNavItem"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
                     <div id="loggedInNav" style="display:none;">
+                        <li class="nav-item"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li>
@@ -686,12 +687,14 @@
             const isLoggedIn = document.getElementById('userDropdownContainer').style.display !== 'none';
             if (isLoggedIn) {
                 // For logged-in users, show the application dashboard
+                document.getElementById('authSection').style.display = 'none';
                 document.getElementById('applicationDashboard').style.display = 'block';
                 if (window.showStep) {
                     window.showStep('selectJob');
                 }
             } else {
                 // For non-logged-in users, scroll to auth section
+                document.getElementById('authSection').style.display = 'block';
                 document.getElementById('authSection').scrollIntoView();
             }
         }
