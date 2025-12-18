@@ -1,3 +1,423 @@
+  /* --- Migrated from index.html <style> block --- */
+  :root {
+    --psc-blue: #0a4a7a;
+    --psc-light-blue: #e6f0f9;
+    --psc-accent: #ffcc00;
+    --psc-dark: #083a5f;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+  }
+
+  .psc-header {
+    background: linear-gradient(135deg, var(--psc-blue) 0%, var(--psc-dark) 100%);
+    color: white;
+    padding: 18px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .psc-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    transform: skewX(-20deg);
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .logo-icon {
+    background-color: white;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .logo-icon i {
+    font-size: 28px;
+    color: var(--psc-blue);
+  }
+
+  .header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .header-title p {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin: 0;
+  }
+
+  .notification-banner {
+    background: linear-gradient(to right, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 5px solid var(--psc-accent);
+    padding: 18px;
+    margin: 25px 0;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .notification-title {
+    color: #856404;
+    font-weight: 700;
+    font-size: 1.2rem;
+  }
+
+  .main-content {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .section-title {
+    color: var(--psc-blue);
+    font-weight: 700;
+    border-bottom: 2px solid var(--psc-light-blue);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .section-title::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background-color: var(--psc-blue);
+  }
+
+  .alert-custom {
+    background-color: #e6f0f9;
+    border-left: 4px solid var(--psc-blue);
+    border-radius: 0 8px 8px 0;
+    padding: 18px;
+  }
+
+  .important-dates {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 22px;
+    margin-top: 25px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .date-item {
+    padding: 14px 0;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .date-item:last-child {
+    border-bottom: none;
+  }
+
+  .date-label {
+    font-weight: 600;
+    color: var(--psc-dark);
+  }
+
+  .date-value {
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+
+  .date-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+
+  .date-success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .date-primary {
+    background-color: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .auth-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    padding: 25px;
+    margin-bottom: 20px;
+    border-top: 4px solid var(--psc-blue);
+  }
+
+  .auth-title {
+    color: var(--psc-blue);
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .form-control-custom {
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 12px 15px;
+    transition: all 0.3s;
+  }
+
+  .form-control-custom:focus {
+    border-color: var(--psc-blue);
+    box-shadow: 0 0 0 0.25rem rgba(10, 74, 122, 0.15);
+  }
+
+  .btn-psc {
+    background: linear-gradient(to right, var(--psc-blue) 0%, var(--psc-dark) 100%);
+    color: white;
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 6px;
+    border: none;
+    transition: all 0.3s;
+    width: 100%;
+  }
+
+  .btn-psc:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(10, 74, 122, 0.2);
+  }
+
+  .btn-psc-secondary {
+    background: white;
+    color: var(--psc-blue);
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 6px;
+    border: 2px solid var(--psc-blue);
+    transition: all 0.3s;
+    width: 100%;
+  }
+
+  .btn-psc-secondary:hover {
+    background-color: var(--psc-light-blue);
+    color: var(--psc-dark);
+  }
+
+  .forgot-link {
+    color: var(--psc-blue);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .forgot-link:hover {
+    text-decoration: underline;
+  }
+
+  footer {
+    background: linear-gradient(135deg, var(--psc-blue) 0%, var(--psc-dark) 100%);
+    color: white;
+    padding: 25px 0;
+    margin-top: 50px;
+  }
+
+  .footer-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+  }
+
+  .copyright {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+
+  .screenshot-info {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+    border-left: 3px solid #ddd;
+    padding-left: 12px;
+    margin-top: 20px;
+    padding-top: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .header-title h1 {
+      font-size: 1.2rem;
+    }
+
+    .main-content, .auth-section {
+      padding: 10px;
+    }
+
+    .date-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .date-value {
+      align-self: flex-start;
+    }
+
+    .container {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+
+    .notification-banner {
+      padding: 12px;
+      margin: 15px 0;
+    }
+
+    .important-dates {
+      padding: 15px;
+    }
+
+    .footer-title {
+      font-size: 1rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .header-title h1 {
+      font-size: 1rem;
+    }
+
+    .header-title p {
+      font-size: 0.75rem;
+    }
+
+    .main-content, .auth-section {
+      padding: 8px;
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      padding-bottom: 8px;
+    }
+
+    .alert-custom {
+      padding: 12px;
+    }
+
+    .date-item {
+      padding: 10px 0;
+    }
+
+    .btn-psc, .btn-psc-secondary {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+
+    .logo-container {
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 50px;
+      height: 50px;
+    }
+
+    .logo-icon i {
+      font-size: 24px;
+    }
+
+    .notification-title {
+      font-size: 1rem;
+    }
+
+    .footer-title {
+      font-size: 0.9rem;
+    }
+
+    .copyright {
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .header-title h1 {
+      font-size: 0.9rem;
+    }
+
+    .main-content, .auth-section {
+      padding: 6px;
+      border-radius: 8px;
+    }
+
+    .section-title {
+      font-size: 1rem;
+    }
+
+    .alert-custom {
+      padding: 10px;
+    }
+
+    .important-dates {
+      padding: 12px;
+      margin-top: 15px;
+    }
+
+    .date-label, .date-value {
+      font-size: 0.85rem;
+    }
+
+    .btn-psc, .btn-psc-secondary {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    .form-control-custom {
+      padding: 10px 12px;
+      font-size: 0.9rem;
+    }
+
+    .notification-banner {
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    .footer-title {
+      font-size: 0.85rem;
+    }
+
+    .copyright {
+      font-size: 0.7rem;
+    }
+  }
+  /* --- End migrated CSS --- */
 	
 	:root {
   --primary-color: #0a4a7a;
@@ -274,6 +694,7 @@ main {
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   border: 1px solid #f0f0f0;
+  text-align: center;
 }
 
 .auth-form-title {

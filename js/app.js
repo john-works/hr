@@ -2353,7 +2353,7 @@ async function openDocumentModal(editItem = null) {
 			jobTableBody.appendChild(tr);
 		});
 		} catch {
-		jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
+		jobTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">No job available at a moment.</td></tr>`;
 		}
 	}
 
@@ -3015,7 +3015,7 @@ async function openDocumentModal(editItem = null) {
 			jobListDiv.innerHTML = html;
 		} catch (error) {
 			console.error('Error loading homepage jobs:', error);
-			document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">Failed to load jobs.</p>';
+			document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">No job available at a moment.</p>';
 		}
 	}
 
