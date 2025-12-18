@@ -1685,11 +1685,17 @@ const refereeTableBody = document.querySelector('#refereeTable tbody');
 document.getElementById('btnAddReferee').addEventListener('click', () => openRefereeModal());
 
 function openRefereeModal(editItem = null) {
-
+	const refereesCount = refereeTableBody.querySelectorAll('tr').length;
+	const addRefereeBtn = document.getElementById('btnAddReferee');
+	if (refereesCount==5) {
+		addRefereeBtn.disabled = true;
+		showToast('You have reached the maximum number of referees.', 'warning');
+		return;
+	}
     crudModalLabel.innerHTML = `
         <i class="fas fa-briefcase me-2"></i>
         ${editItem ? 'Edit Referee' : 'Add Referee'}
-    `;
+    `;	
 
     // Set ID (used for update)
     crudItemIdInput.value = editItem ? editItem.id : '';
@@ -2106,7 +2112,6 @@ async function openDocumentModal(editItem = null) {
 		previewSection.innerHTML = `
 			<h4 class="mb-4"><i class="fas fa-eye me-2"></i>Preview Application</h4>
 			${html}
-
 			<div class="form-check mt-3 font-weight-bold">
 				<input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
 				<label class="form-check-label" for="termsCheckbox">
@@ -2120,21 +2125,17 @@ async function openDocumentModal(editItem = null) {
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
-
-
-
-
 		`;
 
 		// Handle terms checkbox
 		const termsCheckbox = document.getElementById('termsCheckbox');
-		const submitBtn = document.getElementById('btnSubmitApplication');
+		const submitApplicationBtn = document.getElementById('btnSubmitApplication');
 
 		termsCheckbox.addEventListener('change', () => {
-			submitBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
+			submitApplicationBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
 		});
 
-		submitBtn.addEventListener('click', async () => {
+		submitApplicationBtn.addEventListener('click', async () => {
 			if (!termsCheckbox.checked) {
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
 				return;
@@ -2165,9 +2166,9 @@ async function openDocumentModal(editItem = null) {
 					submission_date: new Date().toISOString(),
 					status: 'submitted'
 				};
-// console.log('Submitting application data:', applicationData);
-// //log vacancy id
-// console.log('Vacancy ID:', selectedJob.id);
+				// console.log('Submitting application data:', applicationData);
+				// //log vacancy id
+				// console.log('Vacancy ID:', selectedJob.id);
 				// Submit application to API
 				const response = await axios.post(API.postApplication, applicationData);
 
@@ -2185,12 +2186,12 @@ async function openDocumentModal(editItem = null) {
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
-			} catch (error) {
-				console.error('Error submitting application:', error);
-				showToast('Failed to submit application. Please try again.', 'error');
-			}
-		});
-	}
+				} catch (error) {
+					console.error('Error submitting application:', error);
+					showToast('Failed to submit application. Please try again.', 'error');
+				}
+			});
+		}
 
 	// Select Job
 	const positionsTableBody = document.querySelector('#positionsTable tbody');
@@ -2272,8 +2273,9 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 					<p><strong>Department Head:	${job.department_head || 'N/A'}</strong></p> 
 					<p><strong>Deadline:	${job.deadline || 'N/A'}</strong></p>
 				
-			</div>
-			<hr/>
+				</div>
+				<hr/>
+				<div class="col-md-12">
 			<p><strong>Job Purpose:</strong> ${job.job_purpose || 'N/A'}</p>
 			<p><strong>Duties and Responsibilities:</strong></p>
 			${dutiesList}
@@ -2284,6 +2286,8 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 			${experienceList}
 			<p><strong>Skills:</strong></p>
 			${skillsList}
+			</div>
+			</div>
 		`;
 		const applyBtn = document.getElementById('btnApplyFromModal');
 		if (isBrowseMode) {
