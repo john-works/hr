@@ -466,6 +466,9 @@ function autoLogout() {
 		const homePage = document.getElementById('homePage');
 		if (homePage) homePage.style.display = 'none';
 
+		// Hide auth section
+		authSection.style.display = 'none';
+
 		// Show application dashboard
 		applicationDashboard.style.display = 'block';
 
@@ -2987,7 +2990,7 @@ async function openDocumentModal(editItem = null) {
 		if (!currentUser) {
 			document.getElementById('authArea').scrollIntoView({behavior: 'smooth'});
 		} else {
-			showHomePage();
+			showSection('selectJob');
 		}
 	};
 
