@@ -2987,7 +2987,7 @@ async function openDocumentModal(editItem = null) {
 		if (!currentUser) {
 			document.getElementById('authArea').scrollIntoView({behavior: 'smooth'});
 		} else {
-			showSection('selectJob');
+			showHomePage();
 		}
 	};
 
@@ -2997,6 +2997,10 @@ async function openDocumentModal(editItem = null) {
 			const response = await axios.get(API.selectJob);
 			const jobs = response.data.data || [];
 			const jobListDiv = document.getElementById('homepageJobList');
+			if (!jobListDiv) {
+				console.error('homepageJobList element not found');
+				return;
+			}
 			if (!jobs.length) {
 				jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No jobs available at the moment.</p>';
 				return;
@@ -3015,7 +3019,10 @@ async function openDocumentModal(editItem = null) {
 			jobListDiv.innerHTML = html;
 		} catch (error) {
 			console.error('Error loading homepage jobs:', error);
-			document.getElementById('homepageJobList').innerHTML = '<p style="color: var(--psc-red)">No job available at a moment.</p>';
+			const jobListDiv = document.getElementById('homepageJobList');
+			if (jobListDiv) {
+				jobListDiv.innerHTML = '<p style="color: var(--psc-red)">No job available at a moment.</p>';
+			}
 		}
 	}
 
@@ -3064,10 +3071,10 @@ async function openDocumentModal(editItem = null) {
 		if (user) {
 			// User has session - validate token with backend
 			try {
-				const isValid = await validateTokenWithBackend();
+			const isValid = await validateTokenWithBackend();
 				if (isValid) {
 					// Token valid and user exists in DB
-					showDashboard();
+					showHomePage();
 					initAppAfterLogin();
 				} else {
 					// User no longer exists or token invalid

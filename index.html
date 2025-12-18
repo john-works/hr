@@ -27,7 +27,7 @@
                     <li class="nav-item" id="homeNavItem"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
                     <div id="loggedInNav" style="display:none;">
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li>
+                        <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li> -->
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li>
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('documents')">Documents</a></li> -->
@@ -232,6 +232,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Home Page for logged-in users -->
+    <!-- <div id="homePage" style="display:none;" class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">Available Job Opportunities</h2>
+                <div id="homepageJobList" class="alert alert-info">
+                    <p>Loading jobs...</p>
+                </div>
+            </div>
+        </div>
+    </div> -->
+
     <!-- Application Area -->
     <div class="container-xxl py-4" id="applicationDashboard" style="display:none;">
         <div class="row">
@@ -692,6 +705,8 @@
                 if (window.showStep) {
                     window.showStep('selectJob');
                 }
+                // Scroll to the dashboard to display it properly
+                document.getElementById('applicationDashboard').scrollIntoView();
             } else {
                 // For non-logged-in users, scroll to auth section
                 document.getElementById('authSection').style.display = 'block';
@@ -708,10 +723,7 @@
             }
         }
 
-        // Redirect to login.html for phone models
-        if (window.innerWidth <= 767) {
-            window.location.href = 'login.html';
-        }
+        
     </script>
 </body>
 </html>
