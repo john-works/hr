@@ -2135,7 +2135,8 @@ async function openDocumentModal(editItem = null) {
 			submitApplicationBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
 		});
 
-		submitApplicationBtn.addEventListener('click', async () => {
+		submitApplicationBtn.addEventListener('click', async (e) => {
+			e.preventDefault();
 			if (!termsCheckbox.checked) {
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
 				return;
@@ -2147,6 +2148,7 @@ async function openDocumentModal(editItem = null) {
 			}
 
 			if (!selectedJob || !selectedJob.id) {
+				console.log('No job selected:', selectedJob);
 				showToast('Please select a job to apply for.', 'warning');
 				return;
 			}
@@ -2157,14 +2159,6 @@ async function openDocumentModal(editItem = null) {
 					applicant_id: parseInt(currentUser.id),
 					position_id: parseInt(selectedJob.id),
 					personal_details: dataCache.personalDetails ? dataCache.personalDetails[0] : {},
-					education_training: dataCache.educationTraining || [],
-					professional_membership: dataCache.professionalMembership || [],
-					employment_history: dataCache.employmentHistory || [],
-					documents: dataCache.documents || [],
-					referees: dataCache.referee || [],
-					dependants: dataCache.dependants || [],
-					submission_date: new Date().toISOString(),
-					status: 'submitted'
 				};
 				// console.log('Submitting application data:', applicationData);
 				// //log vacancy id
@@ -2172,26 +2166,34 @@ async function openDocumentModal(editItem = null) {
 				// Submit application to API
 				const response = await axios.post(API.postApplication, applicationData);
 
+				// if (response.data && response.data.success) {
 				if (response.data && response.data.success) {
 					showToast('Application submitted successfully!', 'success');
 
 					// Reset application state
 					hasSelectedJob = false;
-					selectedJob = null;
+					// selectedJob = null;
 					dataCache = {};
-
+					const POSTION_ID = response.data.data.position_id;
+					await loadScreeningQuestions(POSTION_ID).then(questions => {
+					if (displayScreeningQuestions(questions,selectedJob)) {
+						// Screening questions were displayed
+						jobDetailsModal.show()
+						return;
+					}
+				});
 					// Navigate to My Applications section
-					showStep('myApplication');
-					loadSubmittedApplications();
+					// showStep('myApplication');
+					// loadSubmittedApplications();
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
-				} catch (error) {
-					console.error('Error submitting application:', error);
-					showToast('Failed to submit application. Please try again.', 'error');
-				}
-			});
-		}
+			} catch (error) {
+				console.error('Error submitting application:', error);
+				showToast('Failed to submit application. Please try again.', 'error');
+			}
+		});
+	}
 
 	// Select Job
 	const positionsTableBody = document.querySelector('#positionsTable tbody');
@@ -2229,40 +2231,38 @@ async function openDocumentModal(editItem = null) {
 		} else {
 			skillsList = '<p>N/A</p>';
 		}
-let qualificationsList = '';
-if (Array.isArray(job.qualifications) && job.qualifications.length) {
-    qualificationsList = `
-        <ul>
-            ${job.qualifications.map(q => `
-                <li>
-                    ${q.details}
-                    ${q.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
-                </li>
-            `).join('')}
-        </ul>
-    `;
-} else {
-    qualificationsList = '<p>N/A</p>';
-}
+		let qualificationsList = '';
+		if (Array.isArray(job.qualifications) && job.qualifications.length) {
+			qualificationsList = `
+				<ul>
+					${job.qualifications.map(q => `
+						<li>
+							${q.details}
+							${q.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
+						</li>
+					`).join('')}
+				</ul>
+			`;
+		} else {
+			qualificationsList = '<p>N/A</p>';
+		}
 
-	let experienceList = '';
+		let experienceList = '';
 
-if (Array.isArray(job.experiences) && job.experiences.length) {
-    experienceList = `
-        <ul>
-            ${job.experiences.map(e => `
-                <li>
-                    ${e.details}
-                    ${e.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
-                </li>
-            `).join('')}
-        </ul>
-    `;
-} else {
-    experienceList = '<p>N/A</p>';
-}
-
-
+		if (Array.isArray(job.experiences) && job.experiences.length) {
+			experienceList = `
+				<ul>
+					${job.experiences.map(e => `
+						<li>
+							${e.details}
+							${e.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
+						</li>
+					`).join('')}
+				</ul>
+			`;
+		} else {
+			experienceList = '<p>N/A</p>';
+		}
 		body.innerHTML = `
 			<div class="row">
 				<div class="col-md-10">
@@ -2272,10 +2272,9 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 					<p><strong>Department: ${job.department || 'N/A'}</strong></p>
 					<p><strong>Department Head:	${job.department_head || 'N/A'}</strong></p> 
 					<p><strong>Deadline:	${job.deadline || 'N/A'}</strong></p>
-				
 				</div>
 				<hr/>
-				<div class="col-md-12">
+			<div class="col-md-12">
 			<p><strong>Job Purpose:</strong> ${job.job_purpose || 'N/A'}</p>
 			<p><strong>Duties and Responsibilities:</strong></p>
 			${dutiesList}
@@ -2358,12 +2357,10 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 	async function loadScreeningQuestions(positionId) {
 		try {
 			const response = await axios.get(API.getScreeningQuestions(positionId));
-
 			const questions = response.data.questions ?? [];
-
 			screeningQuestions = questions;
+			console.log('Loaded screening questions:', questions);
 			return questions;
-
 		} catch (error) {
 			console.error('Error loading screening questions:', error);
 			showToast('Failed to load screening questions.', 'error');
@@ -2535,7 +2532,9 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 	/**
 	 * Display screening questions in modal
 	 */
-	function displayScreeningQuestions(questions) {
+	function displayScreeningQuestions(questions, selectedJob) {
+		currentScreeningPosition = selectedJob;
+		console.log('Displaying screening questions for position:', currentScreeningPosition);
 		const body = document.getElementById('jobDetailsModalBody');
 		
 		if (!questions || questions.length === 0) {
@@ -2567,7 +2566,7 @@ if (Array.isArray(job.experiences) && job.experiences.length) {
 		`;
 
 		body.innerHTML = formHTML;
-		document.getElementById('jobDetailsModalLabel').textContent = currentScreeningPosition.name + ' - Screening Questions';
+		document.getElementById('jobDetailsModalLabel').textContent = currentScreeningPosition.position_title + ' - Screening Questions';
 
 		// Hide Apply button, add screening submit handler
 		const applyBtn = document.getElementById('btnApplyFromModal');
