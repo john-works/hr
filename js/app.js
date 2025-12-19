@@ -2148,7 +2148,6 @@ async function openDocumentModal(editItem = null) {
 			}
 
 			if (!selectedJob || !selectedJob.id) {
-				console.log('No job selected:', selectedJob);
 				showToast('Please select a job to apply for.', 'warning');
 				return;
 			}
@@ -2160,10 +2159,6 @@ async function openDocumentModal(editItem = null) {
 					position_id: parseInt(selectedJob.id),
 					personal_details: dataCache.personalDetails ? dataCache.personalDetails[0] : {},
 				};
-				// console.log('Submitting application data:', applicationData);
-				// //log vacancy id
-				// console.log('Vacancy ID:', selectedJob.id);
-				// Submit application to API
 				const response = await axios.post(API.postApplication, applicationData);
 
 				// if (response.data && response.data.success) {
@@ -2174,9 +2169,10 @@ async function openDocumentModal(editItem = null) {
 					hasSelectedJob = false;
 					// selectedJob = null;
 					dataCache = {};
-					const POSTION_ID = response.data.data.position_id;
-					await loadScreeningQuestions(POSTION_ID).then(questions => {
-					if (displayScreeningQuestions(questions,selectedJob)) {
+					const APPLICATION_ID = response.data.data.id;
+					const POSITION_ID = response.data.data.position_id;
+					await loadScreeningQuestions(POSITION_ID, APPLICATION_ID).then(questions => {
+					if (displayScreeningQuestions(questions,selectedJob,APPLICATION_ID)) {
 						// Screening questions were displayed
 						jobDetailsModal.show()
 						return;
@@ -2532,9 +2528,10 @@ async function openDocumentModal(editItem = null) {
 	/**
 	 * Display screening questions in modal
 	 */
-	function displayScreeningQuestions(questions, selectedJob) {
+	function displayScreeningQuestions(questions, selectedJob, applicationId) {
 		currentScreeningPosition = selectedJob;
-		console.log('Displaying screening questions for position:', currentScreeningPosition);
+    	currentApplicationId = applicationId;
+		console.log('Here id the Application ID:', currentApplicationId);
 		const body = document.getElementById('jobDetailsModalBody');
 		
 		if (!questions || questions.length === 0) {
@@ -2641,28 +2638,15 @@ async function openDocumentModal(editItem = null) {
 			const positionId = typeof currentScreeningPosition.id === 'string' && currentScreeningPosition.id.includes(':') 
 				? currentScreeningPosition.id.split(':')[0] 
 				: currentScreeningPosition.id;
-
-			// First, create application for this position
-			const appResponse = await axios.post(API.postApplication, {
-				position_id: positionId,
-				applicant_id: currentUser.id,
-			});
-
-			const applicationId = appResponse.data.data?.id;
-			if (!applicationId) {
-				showToast('Failed to create application.', 'error');
-				return;
-			}
-
-			currentScreeningApplication = applicationId;
-
+			console.log('Submitting screening answers for position ID:', positionId);
+			currentScreeningApplication = positionId;
 			// Submit screening answers
 			const answersPayload = Object.entries(answers).map(([questionId, answer]) => ({
 				question_id: questionId,
 				answer_text: Array.isArray(answer) ? answer.join(', ') : answer,
 			}));
 
-			await axios.post(API.submitScreeningAnswers(applicationId), {
+			await axios.post(API.submitScreeningAnswers(currentApplicationId), {
 				answers: answersPayload,
 			});
 
