@@ -1,16 +1,22 @@
 (() => {
-	/* ========== Configuration ========== */
-	// Set your API base URL here - change this to point to your backend
 	let apiUrl = 'http://192.168.32.215:8041/api/v1';
 	let documentUrl = 'http://192.168.32.215:8041';
-	let currentUser; // Will be set after getUser() is defined
-
-	/* ========== Document Manager Module ========== */
+    axios.interceptors.response.use(
+        response => response,
+        async error => {
+            if (!error.response) {
+                const alive = await checkServerStatus();
+                if (!alive) {
+                    console.error("Server is offline. Try again later.");
+                }
+            }
+            return Promise.reject(error);
+        }
+    );
+	/* =============== Document Management Module =============== */
 	const DocumentManager = {
 		getApiBaseUrl() {
 			const origin = window.location.origin;
-			console.log('Current origin:', origin);
-			
 			// If running on a dev server (not on port 8041), point to the backend
 			if (!origin.includes(':8041')) {
 				// Applicant-side: running on dev server, point to Laravel backend
@@ -294,6 +300,8 @@
 	const verifyEmailForm = document.getElementById('verifyEmailForm');
 	const showLoginBtn = document.getElementById('showLogin');
 	const showRegisterBtn = document.getElementById('showRegister');
+	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+	const showForgotPasswordBtn = document.getElementById('showForgotPassword');
 
 	// Current step in app
 	let currentStep = 'viewPositions';
@@ -440,7 +448,11 @@
 		registerForm.style.display = 'block';
 		verifyEmailForm.style.display = 'none';
 	}
-
+	function showForgotPasswordForm() {
+		loginForm.style.display = 'none';
+		registerForm.style.display = 'none';
+		forgotPasswordForm.style.display = 'block';
+	}
 
 
 	/* ----- Display logic based on session ----- */
@@ -528,6 +540,12 @@
 			showLoginForm();
 		});
 	}
+	if (showForgotPasswordBtn) {
+		showForgotPasswordBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			showForgotPasswordForm();
+		});
+	}
 
 	function showVerifyEmailForm(email) {
 		const loginForm = document.getElementById('loginForm');
@@ -538,6 +556,9 @@
 		if (registerForm) registerForm.style.display = 'none';
 		if (verifyForm) verifyForm.style.display = 'block';
 		if (emailText) emailText.textContent = email;
+		if (otpInputs[0]) otpInputs[0].focus();
+		if (countdownEl) countdownEl.textContent = '(60s)';
+		startCountdown();
 	}
 
 	/* ---- Register form submit -> register user and send OTP ---- */
@@ -659,10 +680,24 @@
 			console.error('Login error:', error);
 		}
 	}
+	async function handleForgotPasswordSubmit(e, emailId, formElement) {
+		e.preventDefault();
+		const emailInput = document.getElementById(emailId);
+		if (!emailInput.value) {
+			showToast('Please enter your email address.', 'warning');
+			return;
+		}
+	}
 
 	if (loginForm) {
 		loginForm.addEventListener('submit', async e => {
 			await handleLoginSubmit(e, 'loginEmail', 'loginPassword', loginForm);
+		});
+	}
+	/* ---- Forgot Password form submit -> send OTP and show verify email form ---- */
+	if (forgotPasswordForm) {
+		forgotPasswordForm.addEventListener('submit', async e => {
+			await handleForgotPasswordSubmit(e, 'forgotEmail', forgotPasswordForm);
 		});
 	}
 
@@ -901,13 +936,9 @@
 			showLoginForm();
 		});
 	}
-
-	/* =============== Application Logic =============== */
-	// API endpoints - dynamically built with the apiUrl
 const API = {
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
-	// === CRUD BASE ENDPOINTS (NO ID INSIDE) ===
 	educationTraining: `${apiUrl}/educations`,
 	professionalMembership: `${apiUrl}/memberships`,
 	employmentHistory: `${apiUrl}/employments`,
@@ -915,7 +946,7 @@ const API = {
 	referee: `${apiUrl}/referees`,
 	dependants: `${apiUrl}/dependants`,
 	myApplications: `${apiUrl}/myapplication`,
-
+	health: `${apiUrl}/health`,
 	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
 	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
 	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
@@ -1151,15 +1182,7 @@ async function fetchItems(apiUrl, key) {
 	async function updateItem(apiUrl, id, item, key) {
 		try {
 			const fullUrl = `${apiUrl}/${id}`;
-			console.log('updateItem called:');
-			console.log('  Base URL:', apiUrl);
-			console.log('  ID:', id);
-			console.log('  Full URL:', fullUrl);
-			console.log('  Data:', item);
-
 			const response = await axios.put(fullUrl, item);
-			console.log('updateItem response:', response.data);
-
 			const index = dataCache[key].findIndex(i => i.id === id);
 			if (index > -1) dataCache[key][index] = response.data;
 			return response.data;
@@ -2355,10 +2378,8 @@ async function openDocumentModal(editItem = null) {
 			const response = await axios.get(API.getScreeningQuestions(positionId));
 			const questions = response.data.questions ?? [];
 			screeningQuestions = questions;
-			console.log('Loaded screening questions:', questions);
 			return questions;
 		} catch (error) {
-			console.error('Error loading screening questions:', error);
 			showToast('Failed to load screening questions.', 'error');
 			return [];
 		}
@@ -2384,7 +2405,6 @@ async function openDocumentModal(editItem = null) {
 
 		// Handle different question format names
 		const questionFormat = questionData.question_format || questionData.format || 'text';
-		console.log('Rendering question format:', questionFormat);
 		switch (questionFormat.toLowerCase()) {
 			case 'text':
 			case 'short_text':
@@ -2531,7 +2551,6 @@ async function openDocumentModal(editItem = null) {
 	function displayScreeningQuestions(questions, selectedJob, applicationId) {
 		currentScreeningPosition = selectedJob;
     	currentApplicationId = applicationId;
-		console.log('Here id the Application ID:', currentApplicationId);
 		const body = document.getElementById('jobDetailsModalBody');
 		
 		if (!questions || questions.length === 0) {
@@ -2638,7 +2657,6 @@ async function openDocumentModal(editItem = null) {
 			const positionId = typeof currentScreeningPosition.id === 'string' && currentScreeningPosition.id.includes(':') 
 				? currentScreeningPosition.id.split(':')[0] 
 				: currentScreeningPosition.id;
-			console.log('Submitting screening answers for position ID:', positionId);
 			currentScreeningApplication = positionId;
 			// Submit screening answers
 			const answersPayload = Object.entries(answers).map(([questionId, answer]) => ({
@@ -2971,8 +2989,6 @@ async function openDocumentModal(editItem = null) {
 	 */
 	async function validateTokenWithBackend() {
 		const token = getToken();
-		console.log('Validating token with backend...');
-		console.log('token:', token);
 		if (!token || !currentUser || !currentUser.id) {
 			return false;
 		}
@@ -3006,42 +3022,53 @@ async function openDocumentModal(editItem = null) {
 
 	/* -------- Init -------- */
 	async function init() {
-		const user = getSession();
-		if (user) {
-			// User has session - validate token with backend
-			try {
-				const isValid = await validateTokenWithBackend();
-				if (isValid) {
-					console.log('Token valid and user exists in DB:', currentUser);
-					showDashboard();
-					initAppAfterLogin();
-				} else {
-					console.log('User exists without valid token');
-					// User no longer exists or token invalid
-					// showToast('Your session is no longer valid. Please log in again.', 'warning');
-					//hide loggedInNav
-					loggedInNav.style.display = 'none';
-					// showHomePage();
-					showLoginForm();
-				}
-			} catch (error) {
-				// Network error - show home page but allow user to try again
-				// console.error('Error validating token:', error);
+
+	// 1️⃣ health check runs FIRST
+	const serverOk = await checkServerStatus();
+	if (!serverOk) {
+		console.clear();
+		console.warn('⚠️ Server is offline');
+		showToast('Server is currently unavailable. Please try again later.', 'error');
+
+		// Optional UI handling:
+		showLoginForm(); // Or show maintenance page
+		return; // STOP init – no more backend calls
+	}
+	console.log('✔ Server online');
+
+	// 2️⃣ now continue with your current logic
+	const user = getSession();
+	if (user) {
+		try {
+			const isValid = await validateTokenWithBackend();
+			if (isValid) {
+				showDashboard();
+				initAppAfterLogin();
+			} else {
+				loggedInNav.style.display = 'none';
 				showLoginForm();
-				// showHomePage();
-				// initAppAfterLogin();
 			}
-		} else {
-			// Not logged in, show home page with login cards
+		} catch (error) {
 			showLoginForm();
-			const urlParams = new URLSearchParams(window.location.search);
-			if (urlParams.get('register') === 'true') {
-				showAuth();
-				showRegisterForm();
-			} else if (urlParams.get('login') === 'true') {
-				showAuth();
-				showLoginForm();
-			}
+		}
+	} else {
+		showLoginForm();
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.get('register') === 'true') {
+			showAuth();
+			showRegisterForm();
+		} else if (urlParams.get('login') === 'true') {
+			showAuth();
+			showLoginForm();
+		}
+	}
+}
+	async function checkServerStatus() {
+		try {
+			const response = await fetch(API.health);
+			return response.ok;
+		} catch (error) {
+			return false;
 		}
 	}
 	document.addEventListener('DOMContentLoaded', init);

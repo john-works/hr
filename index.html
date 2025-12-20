@@ -40,37 +40,33 @@
                     </div>
 
                     <div class="text-center">
-                    <button type="submit" class="btn btn-primary mb-3">Login</button>
+                    <button type="submit" class="btn btn-primary">Login</button>
                     </div>
                     <div class="auth-form-divider">
                         Don't have an account yet? <span class="auth-toggle" id="showRegister">Register</span>
+                        <br>
+                        Forgot your password? <span class="auth-toggle" id="showForgotPassword">Reset Password</span>
                     </div>
                 </form>
 
                 <!-- Register Form -->
                 <form id="registerForm" style="display:none;">
                     <h3 class="auth-form-title">Create Account</h3>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="first_name" class="form-label">First Name</label>
                             <input type="text" class="form-control" id="first_name" name="first_name" required />
                         </div>
-
                         <div class="col-md-6 mb-3">
                             <label for="middle_name" class="form-label">Middle Name</label>
                             <input type="text" class="form-control" id="middle_name" name="middle_name" />
-                            </div>
-
+                        </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="last_name" class="form-label">Last Name</label>
                             <input type="text" class="form-control" id="last_name" name="last_name" required />
                         </div>
-
-
                         <div class="col-md-6 mb-3">
                             <label for="gender" class="form-label">Gender</label>
                             <select class="form-select" id="gender" name="gender" required>
@@ -79,9 +75,7 @@
                                 <option value="female">Female</option>
                             </select>
                         </div>
-                    
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">Email address</label>
@@ -92,7 +86,6 @@
                             <input type="text" class="form-control" id="phone_number" name="phone_number" required />
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="dob" class="form-label">Date of Birth</label>
@@ -109,15 +102,12 @@
                             </select>
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-12 mb-3">
                             <label for="nin" class="form-label">National ID</label>
                             <input type="text" class="form-control" id="nin" name="nin" maxlength="15" required />
                         </div>
-                        
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">Password</label>
@@ -188,6 +178,26 @@
                         <div class="resend-container">
                             <p class="mb-2">Didn't receive the code? <a id="resendLink" class="resend-link disabled">Resend code <span id="countdown" class="countdown">(60s)</span></a></p>
                         </div>
+                    </div>
+                </div>
+                <!-- Forgot Password Form -->
+                <div id="forgotPasswordForm" style="display:none;" class="verification-container">
+                    <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Reset Password</h4>
+                    <div class="card-body">
+                        <!-- Forgot Password form content here -->
+                        <form id="resetPasswordForm">
+                            <div class="mb-3">
+                                <label for="resetEmail" class="form-label">Enter your registered email address</label>
+                                <input type="email" class="form-control" id="resetEmail" required placeholder="Enter your email" />
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary mb-2">Send Reset Link</button>
+                            </div>
+                        </form>
+                        Remembered your password? <span class="auth-toggle" id="showLogin">Login</span>
+                        <br>
+                        Haven't registered yet? <span class="auth-toggle" id="showRegister">Register</span>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -627,27 +637,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!-- Custom App Script -->
-    <script src="js/app.js"></script>
     <script>
-        // Global functions for navigation
-        // function showHomePage() {
-        //     const isLoggedIn = document.getElementById('userDropdownContainer').style.display !== 'none';
-        //     if (isLoggedIn) {
-        //         // For logged-in users, show the application dashboard
-        //         document.getElementById('authSection').style.display = 'none';
-        //         document.getElementById('applicationDashboard').style.display = 'block';
-        //         // if (window.showStep) {
-        //         //     window.showStep('selectJob');
-        //         // }
-        //         // Scroll to the dashboard to display it properly
-        //         document.getElementById('applicationDashboard').scrollIntoView();
-        //     } else {
-        //         console.log('Not logged in - showing auth section');
-        //         // For non-logged-in users, scroll to auth section
-        //         document.getElementById('authSection').style.display = 'block';
-        //         document.getElementById('authSection').scrollIntoView();
-        //     }
-        // }
+
     </script>
+    <script src="js/app.js"></script>
 </body>
 </html>
