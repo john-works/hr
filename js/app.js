@@ -300,16 +300,17 @@
 	const verifyEmailForm = document.getElementById('verifyEmailForm');
 	const showLoginBtn = document.getElementById('showLogin');
 	const showRegisterBtn = document.getElementById('showRegister');
-	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+	const forgotPassword = document.getElementById('forgotPassword');
 	const showForgotPasswordBtn = document.getElementById('showForgotPassword');
 	const passwordResetForm = document.getElementById('passwordResetForm');
+	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
 	// Current step in app
 	let currentStep = 'viewPositions';
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
-	// Track if user has selected a job to apply
+	// Track if user has selected a position to apply
 	let hasSelectedJob = false;
 	let selectedJob = null;
 
@@ -322,7 +323,7 @@
 	const crudItemIdInput = document.getElementById('crudItemId');
 	const crudSaveBtn = document.getElementById('crudSaveBtn');
 
-	// Bootstrap modal for Job Details
+	// Bootstrap modal for position Details
 	const jobDetailsModalEl = document.getElementById('jobDetailsModal');
 	const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
 
@@ -442,6 +443,8 @@
 		loginForm.style.display = 'block';
 		registerForm.style.display = 'none';
 		verifyEmailForm.style.display = 'none';
+		forgotPassword.style.display = 'none';
+		passwordResetForm.style.display = 'none';
 	}
 
 	function showRegisterForm() {
@@ -452,13 +455,13 @@
 	function showForgotPasswordForm() {
 		loginForm.style.display = 'none';
 		registerForm.style.display = 'none';
-		forgotPasswordForm.style.display = 'block';
+		forgotPassword.style.display = 'block';
 	}
 
 	function showPasswordResetForm() {
 		loginForm.style.display = 'none';
 		registerForm.style.display = 'none';
-		forgotPasswordForm.style.display = 'none';
+		forgotPassword.style.display = 'none';
 		passwordResetForm.style.display = 'block';
 	}
 
@@ -531,7 +534,7 @@
 
 // 		document.body.classList.remove('auth-view');
 
-// 		// Load jobs into homepage alert
+// 		// Load positions into homepage alert
 // 		loadHomepageJobs();
 // 	}
 
@@ -556,7 +559,7 @@
 	}
 
 	// Event listeners for auth toggles in forgot password form
-	const forgotPasswordShowLogin = document.querySelector('#forgotPasswordForm #showLogin');
+	const forgotPasswordShowLogin = document.querySelector('#forgotPassword #showLogin');
 	if (forgotPasswordShowLogin) {
 		forgotPasswordShowLogin.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -564,7 +567,7 @@
 		});
 	}
 
-	const forgotPasswordShowRegister = document.querySelector('#forgotPasswordForm #showRegister');
+	const forgotPasswordShowRegister = document.querySelector('#forgotPassword #showRegister');
 	if (forgotPasswordShowRegister) {
 		forgotPasswordShowRegister.addEventListener('click', (e) => {
 			e.preventDefault();
@@ -714,6 +717,7 @@
 			console.error('Login error:', error);
 		}
 	}
+
 	async function handleForgotPasswordSubmit(e, emailId, formElement) {
 		e.preventDefault();
 		const emailInput = document.getElementById(emailId);
@@ -724,12 +728,20 @@
 
 		const email = emailInput.value.toLowerCase().trim();
 
-		// Save email for password reset
-		localStorage.setItem('resetEmail', email);
-
-		// Show password reset form directly
-		showPasswordResetForm();
-		formElement.reset();
+		try {
+			//remove user from localStorage
+			localStorage.removeItem('user');
+			// Send forgot password request
+			let response = await axios.post(API.forgotPassword, { email });
+			if (response.data.status !== 'success') {
+				localStorage.setItem('user', JSON.stringify(response.data.data));
+				showPasswordResetForm();
+				formElement.reset();
+			}else{
+				showToast('Email not found in our records.', 'error');
+			}
+		} catch (error) {
+		}
 	}
 
 	async function handlePasswordResetSubmit(e, formElement) {
@@ -747,27 +759,26 @@
 			return;
 		}
 
-		const email = localStorage.getItem('resetEmail');
-		if (!email) {
-			showToast('No reset email found. Please try forgot password again.', 'error');
+		const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+		if (!user) {
+			showToast('No user details found. Please try forgot password again.', 'error');
 			showLoginForm();
 			return;
 		}
-
+		const userId = user.id;
+		const userEmail = user.email;
 		const newPassword = newPasswordInput.value;
+		const confirmNewPassword = confirmNewPasswordInput.value;
 
 		try {
-			// Send reset password request
-			await axios.post(API.resetPassword, { email, password: newPassword });
+			await axios.post(API.resetPassword, { user_id:userId,user_email:userEmail, new_password: newPassword, new_password_confirmation: confirmNewPassword });
 			showToast('Password reset successfully! Please log in with your new password.', 'success');
-
 			// Clear reset email
-			localStorage.removeItem('resetEmail');
-
+			localStorage.removeItem('user');
 			// Show login form
 			showLoginForm();
-			formElement.reset();
 		} catch (error) {
+			console.error('Password reset error:', error);
 			showToast('Failed to reset password. Please try again.', 'error');
 		}
 	}
@@ -777,10 +788,15 @@
 			await handleLoginSubmit(e, 'loginEmail', 'loginPassword', loginForm);
 		});
 	}
-	/* ---- Forgot Password form submit -> send OTP and show verify email form ---- */
-	if (forgotPasswordForm) {
-		forgotPasswordForm.addEventListener('submit', async e => {
-			await handleForgotPasswordSubmit(e, 'forgotEmail', forgotPasswordForm);
+
+	if (forgotPassword) {
+		forgotPassword.addEventListener('submit', async e => {
+			await handleForgotPasswordSubmit(e, 'forgotEmail', forgotPassword);
+		});
+	}
+	if (passwordResetForm) {
+		passwordResetForm.addEventListener('submit', async e => {
+			await handlePasswordResetSubmit(e, passwordResetForm);
 		});
 	}
 
@@ -1047,8 +1063,8 @@ const API = {
 	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
 	selectPosition: (positionId) => `${apiUrl}/positions/${positionId}`,
 
-	// === JOB/APPLICATION RELATED ===
-	viewPositions: `${apiUrl}/positions`,
+	// === position/APPLICATION RELATED ===
+	viewPositions: `${apiUrl}/positions/${currentUser ? currentUser.id : ''}`,
 	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
@@ -1175,7 +1191,7 @@ function showStep(step) {
 		e.preventDefault();
 		const step = a.getAttribute('data-step');
 		if (isBrowseMode && step !== 'viewPositions') {
-		showToast('You can only browse jobs in this mode. Please click View to Continue', 'warning');
+		showToast('You can only browse positions in this mode. Please click View to Continue', 'warning');
 		return;
 		}
 		showStep(step);
@@ -2307,7 +2323,7 @@ async function openDocumentModal(editItem = null) {
 			}
 
 			if (!selectedJob || !selectedJob.id) {
-				showToast('Please select a job to apply for.', 'warning');
+				showToast('Please select a position to apply for.', 'warning');
 				return;
 			}
 
@@ -2350,15 +2366,15 @@ async function openDocumentModal(editItem = null) {
 		});
 	}
 
-	// Select Job
+	// Select position
 	const positionsTableBody = document.querySelector('#positionsTable tbody');
 
-	// Function to show job details modal
+	// Function to show position details modal
 	async function showJobDetailsModal(jobId) {
-		let job = {};
+		let position = {};
 		const response = await axios.get(API.selectPosition(jobId));
-		job = response.data.data;
-		showJobDetailsContent(job);
+		position = response.data.data;
+		showJobDetailsContent(position);
 		const applyBtn = document.getElementById('btnApplyFromModal');
 		if (isBrowseMode) {
 			applyBtn.style.display = 'none';
@@ -2369,28 +2385,28 @@ async function openDocumentModal(editItem = null) {
 	}
 
 	/**
-	 * Display job details content
+	 * Display position details content
 	 */
-	function showJobDetailsContent(job) {
-		document.getElementById('jobDetailsModalLabel').textContent = job.name || 'Job Details';
+	function showJobDetailsContent(position) {
+		document.getElementById('jobDetailsModalLabel').textContent = position.name || 'position Details';
 		const body = document.getElementById('jobDetailsModalBody');
 		let dutiesList = '';
-		if (job.duties && Array.isArray(job.duties)) {
-			dutiesList = '<ul>' + job.duties.map(duty => `<li>${duty}</li>`).join('') + '</ul>';
+		if (position.duties && Array.isArray(position.duties)) {
+			dutiesList = '<ul>' + position.duties.map(duty => `<li>${duty}</li>`).join('') + '</ul>';
 		} else {
 			dutiesList = '<p>N/A</p>';
 		}
 		let skillsList = '';
-		if (job.skills && Array.isArray(job.skills)) {
-			skillsList = '<ul>' + job.skills.map(skill => `<li>${skill}</li>`).join('') + '</ul>';
+		if (position.skills && Array.isArray(position.skills)) {
+			skillsList = '<ul>' + position.skills.map(skill => `<li>${skill}</li>`).join('') + '</ul>';
 		} else {
 			skillsList = '<p>N/A</p>';
 		}
 		let qualificationsList = '';
-		if (Array.isArray(job.qualifications) && job.qualifications.length) {
+		if (Array.isArray(position.qualifications) && position.qualifications.length) {
 			qualificationsList = `
 				<ul>
-					${job.qualifications.map(q => `
+					${position.qualifications.map(q => `
 						<li>
 							${q.details}
 							${q.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
@@ -2404,10 +2420,10 @@ async function openDocumentModal(editItem = null) {
 
 		let experienceList = '';
 
-		if (Array.isArray(job.experiences) && job.experiences.length) {
+		if (Array.isArray(position.experiences) && position.experiences.length) {
 			experienceList = `
 				<ul>
-					${job.experiences.map(e => `
+					${position.experiences.map(e => `
 						<li>
 							${e.details}
 							${e.is_mandatory ? '<strong> (Mandatory)</strong>' : ''}
@@ -2421,16 +2437,16 @@ async function openDocumentModal(editItem = null) {
 		body.innerHTML = `
 			<div class="row">
 				<div class="col-md-10">
-					<p><strong>Position:${job.position_title || 'N/A'}</strong></p>
-					<p><strong>Vacancy:	${job.available_vacancies || 'N/A'}</strong></p>
-					<p><strong>Reports to:	${job.reports_to || 'N/A'}</strong></p> 
-					<p><strong>Department: ${job.department || 'N/A'}</strong></p>
-					<p><strong>Department Head:	${job.department_head || 'N/A'}</strong></p> 
-					<p><strong>Deadline:	${job.deadline || 'N/A'}</strong></p>
+					<p><strong>Position:${position.position_title || 'N/A'}</strong></p>
+					<p><strong>Vacancy:	${position.available_vacancies || 'N/A'}</strong></p>
+					<p><strong>Reports to:	${position.reports_to || 'N/A'}</strong></p> 
+					<p><strong>Department: ${position.department || 'N/A'}</strong></p>
+					<p><strong>Department Head:	${position.department_head || 'N/A'}</strong></p> 
+					<p><strong>Deadline:	${position.deadline || 'N/A'}</strong></p>
 				</div>
 				<hr/>
 			<div class="col-md-12">
-			<p><strong>Job Purpose:</strong> ${job.job_purpose || 'N/A'}</p>
+			<p><strong>position Purpose:</strong> ${position.job_purpose || 'N/A'}</p>
 			<p><strong>Duties and Responsibilities:</strong></p>
 			${dutiesList}
 			<p><strong>Person Specifications:</strong></p>
@@ -2449,7 +2465,7 @@ async function openDocumentModal(editItem = null) {
 		} else {
 			applyBtn.style.display = 'inline-block';
 			applyBtn.onclick = () => {
-				selectedJob = job;
+				selectedJob = position;
 				hasSelectedJob = true;
 				showStep('previewApplication');
 				jobDetailsModal.hide();
@@ -2457,20 +2473,22 @@ async function openDocumentModal(editItem = null) {
 		}
 	}
 
-	async function loadPositions() {
+	async function loadPositions(user) {
 		try {
-			const response = await axios.get(API.viewPositions);
-			const jobs = response.data.data || [];
-			if (!jobs.length) {
-				positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>`;
+			//check if user ends with @external.com
+			const isInternalUser = user && user.email && user.email.endsWith('@ppda.go.ug');
+			const response = await axios.get(isInternalUser ? API.viewPositions : API.viewExternalPositions);
+			const positions = response.data.data || [];
+			if (!positions.length) {
+				positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No positions listed currently.</td></tr>`;
 				return;
 			}
 			positionsTableBody.innerHTML = '';
-			jobs.forEach(job => {
+			positions.forEach(position => {
 				const tr = document.createElement('tr');
-				tr.insertAdjacentHTML('beforeend', `<td>${job.name || ''}</td>`);
-				tr.insertAdjacentHTML('beforeend', `<td>${job.location || ''}</td>`);
-				tr.insertAdjacentHTML('beforeend', `<td>${job.deadline || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${position.name || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${position.location || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${position.deadline || ''}</td>`);
 
 				const tdActions = document.createElement('td');
 				const btnView = document.createElement('button');
@@ -2478,7 +2496,7 @@ async function openDocumentModal(editItem = null) {
 				btnView.type = 'button';
 				btnView.innerHTML = '<i class="fa fa-eye"></i> View';
 				btnView.addEventListener('click', () => {
-					showJobDetailsModal(job.id);
+					showJobDetailsModal(position.id);
 				});
 				tdActions.appendChild(btnView);
 
@@ -2488,7 +2506,7 @@ async function openDocumentModal(editItem = null) {
 				btnApply.type = 'button';
 				btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
 				btnApply.addEventListener('click', () => {
-					showJobDetailsModal(job.id);
+					showJobDetailsModal(position.id);
 				});
 				tdActions.appendChild(btnApply);
 				}
@@ -2497,7 +2515,7 @@ async function openDocumentModal(editItem = null) {
 				positionsTableBody.appendChild(tr);
 			});
 		} catch {
-			positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load jobs.</td></tr>`;
+			positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load positions.</td></tr>`;
 		}
 	}
 
@@ -2690,7 +2708,7 @@ async function openDocumentModal(editItem = null) {
 		const body = document.getElementById('jobDetailsModalBody');
 		
 		if (!questions || questions.length === 0) {
-			// No questions, proceed with job details
+			// No questions, proceed with position details
 			return false;
 		}
 
@@ -3005,7 +3023,7 @@ async function openDocumentModal(editItem = null) {
 		case 'referee': await loadReferee(); break;
 		case 'dependants': await loadDependants(); break;
 		case 'previewApplication': await loadPreview(); break;
-		case 'viewPositions': await loadPositions(); break;
+		case 'viewPositions': await loadPositions(currentUser.email); break;
 		}
 	}
 
@@ -3109,7 +3127,7 @@ async function openDocumentModal(editItem = null) {
 		showRegisterForm();
 	};
 
-	// Function to handle job click from homepage
+	// Function to handle position click from homepage
 	window.handleJobClick = function(jobId) {
 		if (!currentUser) {
 			document.getElementById('authArea').scrollIntoView({behavior: 'smooth'});

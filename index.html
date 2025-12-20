@@ -183,17 +183,17 @@
                     </div>
                 </div>
                 <!-- Forgot Password Form -->
-                <div id="forgotPasswordForm" style="display:none;" class="verification-container">
+                <div id="forgotPassword" style="display:none;" class="verification-container">
                     <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Reset Password</h4>
                     <div class="card-body">
                         <!-- Forgot Password form content here -->
-                        <form id="forgotPasswordFormInner">
+                        <form id="forgotPasswordForm">
                             <div class="mb-3">
                                 <label for="forgotEmail" class="form-label">Enter your registered email address</label>
                                 <input type="email" class="form-control" id="forgotEmail" required placeholder="Enter your email" />
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-primary mb-2">Send Reset Link</button>
+                                <button type="submit" class="btn btn-primary mb-2">Verify Email</button>
                             </div>
                         </form>
                     </div>
@@ -247,7 +247,7 @@
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <div id="loggedInNav">
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
-                        < <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li> -->
+                        < <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">positions</a></li> -->
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li> -->
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('documents')">Documents</a></li> -->
@@ -495,7 +495,7 @@
                 
                 </section>
 
-                <!-- Select a Job -->
+                <!-- Select a position -->
                 <section data-step-content="viewPositions">
                     <h4 class="main-section-title">View Positions</h4>
                     <table class="table data-table mt-3" id="positionsTable">
@@ -508,7 +508,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td colspan="4" class="text-center text-muted">No jobs listed currently.</td></tr>
+                            <tr><td colspan="4" class="text-center text-muted">No positions listed currently.</td></tr>
                         </tbody>
                     </table>
                 </section>
@@ -646,20 +646,20 @@
         </div>
     </div>
 
-    <!-- Job Details Modal -->
+    <!-- position Details Modal -->
     <div class="modal fade" id="jobDetailsModal" tabindex="-1" aria-labelledby="jobDetailsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="jobDetailsModalLabel">Job Details</h5>
+                    <h5 class="modal-title" id="jobDetailsModalLabel">position Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="jobDetailsModalBody">
-                    <!-- Job details will be populated here -->
+                    <!-- position details will be populated here -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" id="btnApplyFromModal" style="display:none;">Apply for Job</button>
+                    <button type="button" class="btn btn-success" id="btnApplyFromModal" style="display:none;">Apply for position</button>
                 </div>
             </div>
         </div>
