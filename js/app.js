@@ -302,6 +302,7 @@
 	const showRegisterBtn = document.getElementById('showRegister');
 	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 	const showForgotPasswordBtn = document.getElementById('showForgotPassword');
+	const passwordResetForm = document.getElementById('passwordResetForm');
 
 	// Current step in app
 	let currentStep = 'viewPositions';
@@ -454,6 +455,13 @@
 		forgotPasswordForm.style.display = 'block';
 	}
 
+	function showPasswordResetForm() {
+		loginForm.style.display = 'none';
+		registerForm.style.display = 'none';
+		forgotPasswordForm.style.display = 'none';
+		passwordResetForm.style.display = 'block';
+	}
+
 
 	/* ----- Display logic based on session ----- */
 	function showDashboard() {
@@ -544,6 +552,32 @@
 		showForgotPasswordBtn.addEventListener('click', (e) => {
 			e.preventDefault();
 			showForgotPasswordForm();
+		});
+	}
+
+	// Event listeners for auth toggles in forgot password form
+	const forgotPasswordShowLogin = document.querySelector('#forgotPasswordForm #showLogin');
+	if (forgotPasswordShowLogin) {
+		forgotPasswordShowLogin.addEventListener('click', (e) => {
+			e.preventDefault();
+			showLoginForm();
+		});
+	}
+
+	const forgotPasswordShowRegister = document.querySelector('#forgotPasswordForm #showRegister');
+	if (forgotPasswordShowRegister) {
+		forgotPasswordShowRegister.addEventListener('click', (e) => {
+			e.preventDefault();
+			showRegisterForm();
+		});
+	}
+
+	// Event listener for back to login in password reset form
+	const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+	if (backToLoginFromReset) {
+		backToLoginFromReset.addEventListener('click', (e) => {
+			e.preventDefault();
+			showLoginForm();
 		});
 	}
 
@@ -686,6 +720,55 @@
 		if (!emailInput.value) {
 			showToast('Please enter your email address.', 'warning');
 			return;
+		}
+
+		const email = emailInput.value.toLowerCase().trim();
+
+		// Save email for password reset
+		localStorage.setItem('resetEmail', email);
+
+		// Show password reset form directly
+		showPasswordResetForm();
+		formElement.reset();
+	}
+
+	async function handlePasswordResetSubmit(e, formElement) {
+		e.preventDefault();
+		const newPasswordInput = document.getElementById('newPassword');
+		const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+
+		if (!newPasswordInput.value || !confirmNewPasswordInput.value) {
+			showToast('Please fill in all password fields.', 'warning');
+			return;
+		}
+
+		if (newPasswordInput.value !== confirmNewPasswordInput.value) {
+			showToast('Passwords do not match.', 'warning');
+			return;
+		}
+
+		const email = localStorage.getItem('resetEmail');
+		if (!email) {
+			showToast('No reset email found. Please try forgot password again.', 'error');
+			showLoginForm();
+			return;
+		}
+
+		const newPassword = newPasswordInput.value;
+
+		try {
+			// Send reset password request
+			await axios.post(API.resetPassword, { email, password: newPassword });
+			showToast('Password reset successfully! Please log in with your new password.', 'success');
+
+			// Clear reset email
+			localStorage.removeItem('resetEmail');
+
+			// Show login form
+			showLoginForm();
+			formElement.reset();
+		} catch (error) {
+			showToast('Failed to reset password. Please try again.', 'error');
 		}
 	}
 
@@ -939,6 +1022,8 @@
 const API = {
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
+	forgotPassword: `${apiUrl}/forgot-password`,
+	resetPassword: `${apiUrl}/reset-password`,
 	educationTraining: `${apiUrl}/educations`,
 	professionalMembership: `${apiUrl}/memberships`,
 	employmentHistory: `${apiUrl}/employments`,

@@ -185,10 +185,10 @@
                     <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Reset Password</h4>
                     <div class="card-body">
                         <!-- Forgot Password form content here -->
-                        <form id="resetPasswordForm">
+                        <form id="forgotPasswordFormInner">
                             <div class="mb-3">
-                                <label for="resetEmail" class="form-label">Enter your registered email address</label>
-                                <input type="email" class="form-control" id="resetEmail" required placeholder="Enter your email" />
+                                <label for="forgotEmail" class="form-label">Enter your registered email address</label>
+                                <input type="email" class="form-control" id="forgotEmail" required placeholder="Enter your email" />
                             </div>
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary mb-2">Send Reset Link</button>
@@ -198,6 +198,28 @@
                         <br>
                         Haven't registered yet? <span class="auth-toggle" id="showRegister">Register</span>
                     </div>
+                </div>
+
+                <!-- Password Reset Form -->
+                <div id="passwordResetForm" style="display:none;" class="verification-container">
+                    <h4 class="text-center mb-3" style="color: var(--psc-blue); font-size: 30px; font-weight: 900;">Set New Password</h4>
+                    <div class="card-body">
+                        <form id="passwordResetFormInner">
+                            <div class="mb-3">
+                                <label for="newPassword" class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required placeholder="Enter new password" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmNewPassword" class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmNewPassword" required placeholder="Confirm new password" />
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary mb-2">Reset Password</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-3">
+                            <span class="auth-toggle" id="backToLoginFromReset">Back to Login</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,7 +238,7 @@
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
                     <div id="loggedInNav">
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showHomePage()">Home</a></li>
-                        <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li> -->
+                        < <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('selectJob')">Jobs</a></li> -->
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('personalDetails')">My Profile</a></li>
                         <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('myApplication')">My Applications</a></li> -->
                         <!-- <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('documents')">Documents</a></li> -->
