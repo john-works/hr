@@ -1795,7 +1795,7 @@ document.getElementById('btnAddReferee').addEventListener('click', () => openRef
 function openRefereeModal(editItem = null) {
 	const refereesCount = refereeTableBody.querySelectorAll('tr').length;
 	const addRefereeBtn = document.getElementById('btnAddReferee');
-	if (refereesCount==5) {
+	if (refereesCount==3) {
 		addRefereeBtn.disabled = true;
 		showToast('You have reached the maximum number of referees.', 'warning');
 		return;
