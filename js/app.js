@@ -1062,9 +1062,9 @@ const API = {
 	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
 	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
 	selectPosition: (positionId) => `${apiUrl}/positions/${positionId}`,
-
+	viewPositions: (applicant_type) =>`${apiUrl}/positions_by/${applicant_type}`,
 	// === position/APPLICATION RELATED ===
-	viewPositions: `${apiUrl}/positions/${currentUser ? currentUser.id : ''}`,
+
 	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
@@ -2473,11 +2473,9 @@ async function openDocumentModal(editItem = null) {
 		}
 	}
 
-	async function loadPositions(user) {
+	async function loadPositions(applicant_type) {
 		try {
-			//check if user ends with @external.com
-			const isInternalUser = user && user.email && user.email.endsWith('@ppda.go.ug');
-			const response = await axios.get(isInternalUser ? API.viewPositions : API.viewExternalPositions);
+			const response = await axios.get(API.viewPositions(applicant_type));
 			const positions = response.data.data || [];
 			if (!positions.length) {
 				positionsTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No positions listed currently.</td></tr>`;
@@ -3023,7 +3021,7 @@ async function openDocumentModal(editItem = null) {
 		case 'referee': await loadReferee(); break;
 		case 'dependants': await loadDependants(); break;
 		case 'previewApplication': await loadPreview(); break;
-		case 'viewPositions': await loadPositions(currentUser.email); break;
+		case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
 		}
 	}
 
