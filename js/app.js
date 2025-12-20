@@ -1413,21 +1413,22 @@ async function fetchItems(apiUrl, key) {
 		formPersonalDetails.addEventListener('submit', async e => {
 			e.preventDefault();
 			const data = {
-			firstName: document.getElementById('firstName').value.trim(),
-			middleName: document.getElementById('middleName').value.trim(),
-			lastName: document.getElementById('lastName').value.trim(),
+			first_name: document.getElementById('firstName').value.trim(),
+			middle_name: document.getElementById('middleName').value.trim(),
+			last_name: document.getElementById('lastName').value.trim(),
 			email: document.getElementById('emailDetail').value.trim(),
 			contact: document.getElementById('contact').value.trim(),
 			nin: document.getElementById('ninDetail').value.trim(),
 			gender: document.getElementById('genderDetail').value,
 			dob: document.getElementById('dobDetail').value,
-			status: document.getElementById('statusDetail').value,
+			marital_status: document.getElementById('statusDetail').value,
 			};
+			
 			try {
 			await axios.put(API.personalDetails(currentUser.id), data);
-			showToast('Personal details saved.', 'success');
+			showToast('Personal details updated.', 'success');
 			} catch {
-			showToast('Failed to save personal details.', 'error');
+			showToast('Failed to update personal details.', 'error');
 			}
 		});
 	}
