@@ -1304,18 +1304,29 @@ async function fetchItems(apiUrl, key) {
 		const session = getSession();
 		let pd = response.data || {};
 		
-		// If no saved data, prefill from user object in localStorage first, then session
-		if (!pd.email && currentUser) {
-			pd.email = currentUser.email || '';
+		// Normalize property names - handle both camelCase and snake_case from API
+		pd.firstName = pd.firstName || pd.first_name || '';
+		pd.middleName = pd.middleName || pd.middle_name || '';
+		pd.lastName = pd.lastName || pd.last_name || '';
+		pd.email = pd.email || '';
+		pd.contact = pd.contact || pd.phone_number || '';
+		pd.nin = pd.nin || '';
+		pd.gender = pd.gender || '';
+		pd.dob = pd.dob || '';
+		pd.status = pd.status || pd.marital_status || '';
+		
+		// If no saved data, prefill from user object in localStorage
+		if (!pd.firstName && currentUser) {
 			pd.firstName = currentUser.first_name || '';
 			pd.middleName = currentUser.middle_name || '';
 			pd.lastName = currentUser.last_name || '';
+			pd.email = currentUser.email || '';
 			pd.contact = currentUser.phone_number || '';
 			pd.nin = currentUser.nin || '';
 			pd.gender = currentUser.gender || '';
 			pd.dob = currentUser.dob || '';
 			pd.status = currentUser.marital_status || '';
-		} else if (!pd.email && session) {
+		} else if (!pd.firstName && session) {
 			pd.email = session.email;
 		}
 		
@@ -1330,10 +1341,22 @@ async function fetchItems(apiUrl, key) {
 		document.getElementById('dobDetail').value = pd.dob || '';
 		document.getElementById('statusDetail').value = pd.status || '';
 
-		// Store in dataCache for preview
-		dataCache['personalDetails'] = [pd];
-		} catch {
+		// Store in dataCache for preview - only normalized fields
+		const cleanPd = {
+			firstName: pd.firstName,
+			middleName: pd.middleName,
+			lastName: pd.lastName,
+			email: pd.email,
+			contact: pd.contact,
+			nin: pd.nin,
+			gender: pd.gender,
+			dob: pd.dob,
+			status: pd.status
+		};
+		dataCache['personalDetails'] = [cleanPd];
+		} catch (error) {
 		// show fallback - try to populate from user object if available
+		console.error('Error loading personal details:', error);
 		const session = getSession();
 		
 		if (currentUser) {
@@ -1406,6 +1429,14 @@ async function fetchItems(apiUrl, key) {
 
 		crudModalBody.innerHTML = `
 			<input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
+			
+			<div class="form-check mb-3">
+				<input class="form-check-input" type="checkbox" value="" id="ongoing" name="ongoing" ${editItem?.ongoing ? 'checked' : ''}>
+				<label class="form-check-label fw-bold" for="ongoing">
+					Ongoing
+				</label>
+			</div>
+			
 			<div class="row">
 				<div class="col-md-6 mb-3">
 					<label class="form-label fw-bold">From Year</label>
@@ -1464,12 +1495,7 @@ async function fetchItems(apiUrl, key) {
 						required value="${editItem?.institution || ''}">
 				</div>
 			</div>
-			<div class="form-check mb-3">
-				<input class="form-check-input" type="checkbox" value="" id="ongoing" name="ongoing" ${editItem?.ongoing ? 'checked' : ''}>
-				<label class="form-check-label fw-bold" for="ongoing">
-					Ongoing
-				</label>
-			</div>
+			
 		`;
 
 		crudModal.show();
@@ -1490,6 +1516,30 @@ async function fetchItems(apiUrl, key) {
 
 		// Initial toggle for edit mode
 		toggleClassOfDegree();
+
+		// Toggle end_year when ongoing checkbox is checked
+		(function setupOngoingToggle() {
+			const ongoingCheckbox = document.getElementById('ongoing');
+			const endYearSelect = document.getElementById('end_year');
+			const endYearContainer = endYearSelect ? endYearSelect.parentElement : null;
+
+			function toggleEndYear() {
+				if (!ongoingCheckbox) return;
+				if (ongoingCheckbox.checked) {
+					if (endYearContainer) endYearContainer.style.display = 'none';
+					if (endYearSelect) { endYearSelect.disabled = true; endYearSelect.value = ''; }
+				} else {
+					if (endYearContainer) endYearContainer.style.display = '';
+					if (endYearSelect) endYearSelect.disabled = false;
+				}
+			}
+
+			if (ongoingCheckbox) {
+				ongoingCheckbox.addEventListener('change', toggleEndYear);
+				// set initial state based on checkbox (useful for edit mode)
+				toggleEndYear();
+			}
+		})();
 	}
 
 	async function loadEducation() {
@@ -1989,6 +2039,7 @@ async function openDocumentModal(editItem = null) {
 		}
 		renderTableRows(items, documentsTableBody, [
 		{ key: 'document_type' },
+		{key: 'file_path', formatter: val => val ? 'Uploaded' : 'Not Uploaded' },
 		{ key: 'title' },
 		], openDocumentModal, async id => {
 		if (confirm('Delete this document record?')) {
@@ -2172,7 +2223,7 @@ async function openDocumentModal(editItem = null) {
 			const items = dataCache[key];
 			let keys = Object.keys(items[0]).filter(k => !excludedFields.includes(k));
 			if (key === 'personalDetails') {
-				keys = keys.filter(k => k !== 'password' && k !== 'email_verified' && k !== 'nin_verified' && k !== 'id' && k !== 'employee_id' && k !== 'nin' && k !== 'email');
+				keys = keys.filter(k => ['firstName', 'middleName', 'lastName', 'gender', 'dob', 'contact', 'status'].includes(k));
 			}
 			html += `
 				<div class="col-md-12 mb-4">
