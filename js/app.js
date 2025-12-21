@@ -2297,24 +2297,46 @@ async function openDocumentModal(editItem = null) {
 			</div>
 
 			<div class="text-center mt-4">
-				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''} disabled>
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication" disabled>
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
 		`;
 
-		// Handle terms checkbox
+		// Handle terms checkbox and validate all sections filled
 		const termsCheckbox = document.getElementById('termsCheckbox');
 		const submitApplicationBtn = document.getElementById('btnSubmitApplication');
 
+		// Function to validate all required sections have data
+		function validateAllSectionsFilled() {
+			const requiredSections = [
+				dataCache.personalDetails && dataCache.personalDetails.length > 0,
+				dataCache.educationTraining && dataCache.educationTraining.length > 0,
+				dataCache.professionalMembership && dataCache.professionalMembership.length > 0,
+				dataCache.employmentHistory && dataCache.employmentHistory.length > 0,
+				dataCache.documents && dataCache.documents.length > 0,
+				dataCache.referee && dataCache.referee.length > 0,
+				dataCache.dependants && dataCache.dependants.length > 0,
+				hasSelectedJob
+			];
+			return requiredSections.every(section => section === true);
+		}
+
 		termsCheckbox.addEventListener('change', () => {
-			submitApplicationBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
+			const allSectionsFilled = validateAllSectionsFilled();
+			submitApplicationBtn.disabled = !termsCheckbox.checked || !allSectionsFilled;
 		});
 
 		submitApplicationBtn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			if (!termsCheckbox.checked) {
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
+				return;
+			}
+
+			// Validate all sections are filled
+			if (!validateAllSectionsFilled()) {
+				showToast('Please complete all required sections before submitting your application.', 'warning');
 				return;
 			}
 
