@@ -306,7 +306,7 @@
 	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
 	// Current step in app
-	let currentStep = 'viewPositions';
+	let currentStep = 'personalInfo';
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
@@ -1382,7 +1382,7 @@ async function fetchItems(apiUrl, key) {
 			middle_name: document.getElementById('middleName').value.trim(),
 			last_name: document.getElementById('lastName').value.trim(),
 			email: document.getElementById('emailDetail').value.trim(),
-			contact: document.getElementById('contact').value.trim(),
+			phone_number: document.getElementById('contact').value.trim(),
 			nin: document.getElementById('ninDetail').value.trim(),
 			gender: document.getElementById('genderDetail').value,
 			dob: document.getElementById('dobDetail').value,
