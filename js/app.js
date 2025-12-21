@@ -502,41 +502,6 @@
 		document.body.classList.add('auth-view');
 	}
 
-// function showHomePage() {
-// 		// Hide all other areas
-// 		applicationDashboard.style.display = 'none';
-
-// 		// Show home page and navbar
-// 		const homePage = document.getElementById('homePage');
-// 		// mainNavbar.style.display = 'flex';
-
-// 		// On mobile, prioritize auth area if not logged in
-// 		if (window.innerWidth <= 767 && !currentUser) {
-// 			if (homePage) homePage.style.display = 'none';
-// 			authArea.style.display = 'block';
-// 		} else {
-// 			if (homePage) homePage.style.display = 'block';
-// 			authArea.style.display = currentUser ? 'none' : 'block';
-// 		}
-
-// 		// Show/hide navigation items based on login status
-// 		const userDropdownContainer = document.getElementById('userDropdownContainer');
-// 		const homeNavItem = document.getElementById('homeNavItem');
-// 		if (currentUser) {
-// 			if (loggedInNav) loggedInNav.style.display = 'flex';
-// 			if (userDropdownContainer) userDropdownContainer.style.display = 'block';
-// 			if (homeNavItem) homeNavItem.style.display = 'none';
-// 		} else {
-// 			if (loggedInNav) loggedInNav.style.display = 'none';
-// 			if (userDropdownContainer) userDropdownContainer.style.display = 'none';
-// 			if (homeNavItem) homeNavItem.style.display = 'block';
-// 		}
-
-// 		document.body.classList.remove('auth-view');
-
-// 		// Load positions into homepage alert
-// 		loadHomepageJobs();
-// 	}
 
 	/* ----- Event Listeners for Auth Toggle ----- */
 	if (showRegisterBtn) {
@@ -1046,7 +1011,7 @@ const API = {
 	documents: `${apiUrl}/documents`,
 	referee: `${apiUrl}/referees`,
 	dependants: `${apiUrl}/dependants`,
-	myApplications: `${apiUrl}/myapplication`,
+	myApplication: `${apiUrl}/myapplication`,
 	health: `${apiUrl}/health`,
 	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
 	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
@@ -2200,7 +2165,7 @@ async function openDocumentModal(editItem = null) {
 				items,
 				myApplicationsTableBody,
 				[
-					{ key: 'interview_id' },
+					{ key: 'id' },
 					{ key: 'post' },
 					{ key: 'department' },
 					{ key: 'application_date', formatter: val => val ? new Date(val).toLocaleDateString() : '' },
