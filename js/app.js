@@ -306,7 +306,7 @@
 	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
 	// Current step in app
-	let currentStep = 'personalInfo';
+	let currentStep = 'personalDetails';
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
