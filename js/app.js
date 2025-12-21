@@ -2181,9 +2181,18 @@ async function openDocumentModal(editItem = null) {
 		}
 		try {
 			let items = [];
-			// Fetch submitted applications for the current user
-			const response = await axios.get(API.getMyApplications(currentUser.id));
-			items = response.data || [];
+			// Fetch submitted applications for the current user using fetchItems
+			items = await fetchItems(API.getMyApplications(currentUser.id), 'submittedApplications');
+
+			// Fallback if no API data
+			if (!items || items.length === 0) {
+				if (dataCache.submittedApplications && Array.isArray(dataCache.submittedApplications)) {
+					items = dataCache.submittedApplications;
+				} else {
+					items = [];
+				}
+			}
+
 			dataCache['submittedApplications'] = items;
 
 			// Render table
@@ -2376,9 +2385,8 @@ async function openDocumentModal(editItem = null) {
 						return;
 					}
 				});
-					// Navigate to My Applications section
-					// showStep('myApplication');
-					// loadSubmittedApplications();
+					// Fetch and display submitted applications
+					await loadSubmittedApplications();
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
