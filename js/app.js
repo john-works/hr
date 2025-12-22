@@ -349,6 +349,7 @@
 
 	function getUser() {
 		const userSession = JSON.parse(localStorage.getItem('userSession'));
+		if (!userSession) return null;
 		const userStr = userSession.user;
 		if (!userStr) return null;
 		try {
