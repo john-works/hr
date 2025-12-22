@@ -1,6 +1,6 @@
 (() => {
-	let apiUrl = 'http://192.168.32.215:8041/api/v1';
-	let documentUrl = 'http://192.168.32.215:8041';
+	let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
+	let documentUrl = 'https://hrmis.ppda.go.ug';
     axios.interceptors.response.use(
         response => response,
         async error => {
