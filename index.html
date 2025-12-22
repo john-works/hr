@@ -253,7 +253,7 @@
                     <a href="#" class="nav-link" data-step="dependants"><i class="fa fa-users"></i> Dependants</a>
                     <a href="#" class="nav-link" data-step="viewPositions"><i class="fa fa-tasks"></i> View Positions</a>
                     <a href="#" class="nav-link" data-step="previewApplication"><i class="fa fa-id-card"></i> Preview Application</a>
-                    <a href="#" class="nav-link" data-step="myApplication"><i class="fa fa-tasks"></i> My Applications</a>
+                    <a href="#" class="nav-link" data-step="myApplications"><i class="fa fa-tasks"></i> My Applications</a>
                     <a href="#" class="nav-link" data-step="logout" id="btnLogout"><i class="fa fa-tasks"></i> Logout</a>
                
                 </nav>
@@ -399,9 +399,9 @@
                     <table class="table data-table" id="documentsTable">
                         <thead>
                             <tr>
+                                <th>Section</th>
+                                <th>Document Type</th>
                                 <th>Document Name</th>
-                                <th>Type</th>
-                                <th>Uploaded On</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -483,17 +483,17 @@
                 </section>
 
                 <!-- Submitted Applications -->
-                <section data-step-content="myApplication" class="d-none">
+                <section data-step-content="myApplications" class="d-none">
                     <h4 class="main-section-title">My Applications</h4>
-                    <p>Here you can view your submitted applications.</p>
                     <table class="table data-table mt-3" id="myApplicationsTable">
                         <thead>
                             <tr>
-                                <th>Interview ID</th>
-                                <th>Post</th>
-                                <th>Department</th>
-                                <th>Application Date (EAT) AM</th>
+                                <th>Title</th>
+                                <th>Application ID</th>
                                 <th>Status</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -621,7 +621,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="jobDetailsModalLabel">position Details</h5>
+                    <h5 class="modal-title" id="jobDetailsModalLabel">Position Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="jobDetailsModalBody">
@@ -629,7 +629,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" id="btnApplyFromModal" style="display:none;">Apply for position</button>
+                    <button type="button" class="btn btn-success" id="btnPreviewDetails" style="display:none;">Verify Details</button>
                 </div>
             </div>
         </div>

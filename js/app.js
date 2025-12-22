@@ -22,8 +22,6 @@
 				// Applicant-side: running on dev server, point to Laravel backend
 				return documentUrl;
 			}
-			
-			// HR-side: already on the correct server
 			return origin;
 		},
 
@@ -292,8 +290,6 @@
 	const applicationDashboard = document.getElementById('applicationDashboard');
 	// const mainNavbar = document.getElementById('mainNavbar');
 	const userDropdown = document.getElementById('userDropdown');
-	const navbarUserName = document.getElementById('navbarUserName');
-	const loggedInNav = document.getElementById('loggedInNav');
 	const btnLogout = document.getElementById('btnLogout');
 	const loginForm = document.getElementById('loginForm');
 	const registerForm = document.getElementById('registerForm');
@@ -306,7 +302,7 @@
 	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
 	// Current step in app
-	let currentStep = 'personalDetails';
+	let currentStep = 'viewPositions';
 	// Check if in browse mode
 	const urlParams = new URLSearchParams(window.location.search);
 	const isBrowseMode = urlParams.get('mode') === 'browse';
@@ -332,11 +328,11 @@
 	const mainPanel = document.getElementById('mainPanel');
 
 	/* ----- Session Management ---- */
-	function getSession() {
-		const sessionStr = localStorage.getItem('userSession');
-		if (!sessionStr) return null;
+	function getSession(){
+		const existingUser = localStorage.getItem('userSession');
+		if (!existingUser) return null;
 		try {
-			return JSON.parse(sessionStr);
+			return JSON.parse(existingUser);
 		} catch {
 			return null;
 		}
@@ -348,15 +344,15 @@
 
 	function clearSession() {
 		localStorage.removeItem('userSession');
-		localStorage.removeItem('user');
 		localStorage.removeItem('token');
 	}
 
 	function getUser() {
-		const userStr = localStorage.getItem('user');
+		const userSession = JSON.parse(localStorage.getItem('userSession'));
+		const userStr = userSession.user;
 		if (!userStr) return null;
 		try {
-			return JSON.parse(userStr);
+			return userStr;
 		} catch {
 			return null;
 		}
@@ -366,11 +362,13 @@
 	currentUser = getUser();
 
 	function getToken() {
-		return localStorage.getItem('token');
+		let userSession = getSession();
+		let token = userSession ? userSession.token : null;
+		return token;
 	}
 
 	/* ----- Auto-Logout for Inactivity ---- */
-	const INACTIVITY_TIMEOUT = 10 * 1000; // 10 seconds for testing (originally 5 minutes)
+	const INACTIVITY_TIMEOUT = 30 * 1000; // 30 seconds for testing (change to 15 * 60 * 1000 for 15 minutes in production)
 	let inactivityTimer;
 
 	function resetInactivityTimer() {
@@ -387,10 +385,7 @@
 		currentUser = null;
 		showToast('You have been automatically logged out due to inactivity.', 'warning');
 		showLoginForm();
-		// Hide logged in navigation
-		const loggedInNav = document.getElementById('loggedInNav');
 		const userDropdownContainer = document.getElementById('userDropdownContainer');
-		if (loggedInNav) loggedInNav.style.display = 'none';
 		if (userDropdownContainer) userDropdownContainer.style.display = 'none';
 		stopInactivityTracking();
 	}
@@ -485,9 +480,9 @@
 		// Update navigation items for logged-in user
 		const userDropdownContainer = document.getElementById('userDropdownContainer');
 		const homeNavItem = document.getElementById('homeNavItem');
-		if (loggedInNav) loggedInNav.style.display = 'flex';
 		if (userDropdownContainer) userDropdownContainer.style.display = 'block';
 		if (homeNavItem) homeNavItem.style.display = 'none';
+		loadPersonalDetails();
 	}
 
 	function showAuth() {
@@ -501,7 +496,6 @@
 		authArea.style.display = 'block';
 		document.body.classList.add('auth-view');
 	}
-
 
 	/* ----- Event Listeners for Auth Toggle ----- */
 	if (showRegisterBtn) {
@@ -724,12 +718,13 @@
 			return;
 		}
 
-		const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
-		if (!user) {
+		const userSession = localStorage.getItem('userSession') ? JSON.parse(localStorage.getItem('userSession')) : null;
+		if (!userSession) {
 			showToast('No user details found. Please try forgot password again.', 'error');
 			showLoginForm();
 			return;
 		}
+		const user = userSession.user;
 		const userId = user.id;
 		const userEmail = user.email;
 		const newPassword = newPasswordInput.value;
@@ -739,7 +734,7 @@
 			await axios.post(API.resetPassword, { user_id:userId,user_email:userEmail, new_password: newPassword, new_password_confirmation: confirmNewPassword });
 			showToast('Password reset successfully! Please log in with your new password.', 'success');
 			// Clear reset email
-			localStorage.removeItem('user');
+			localStorage.removeItem('userSession');
 			// Show login form
 			showLoginForm();
 		} catch (error) {
@@ -886,19 +881,8 @@
 					return;
 				}
 
-				// Save user and token objects to localStorage
-				if (response.data.user) {
-					localStorage.setItem('user', JSON.stringify(response.data.user));
-					currentUser = response.data.user; // Update currentUser
-				}
-				if (response.data.token) {
-					localStorage.setItem('token', response.data.token);
-				}
-
-				// Save session
+				// Save session to localStorage
 				setSession({
-					email: pendingUser.email,
-					name: pendingUser.email.split('@')[0].replace('.', ' ').replace(/^\w/, c => c.toUpperCase()),
 					role: 'Applicant',
 					user: response.data.user || null,
 					token: response.data.token || null
@@ -916,10 +900,6 @@
 		});
 	}
 	
-
-
-
-
 	// Resend code functionality
 	resendLink.addEventListener('click', async () => {
 		if (resendLink.classList.contains('disabled')) return;
@@ -993,7 +973,6 @@
 			showToast('Logged out successfully', 'success');
 			// Hide logged in navigation and user dropdown
 			// const userDropdownContainer = document.getElementById('userDropdownContainer');
-			// if (loggedInNav) loggedInNav.style.display = 'none';
 			// if (userDropdownContainer) userDropdownContainer.style.display = 'none';
 			// Redirect to homepage with login form and auto refresh
 			window.location.href = 'index.html';
@@ -1001,6 +980,7 @@
 		});
 	}
 const API = {
+	health: `${apiUrl}/health`,
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
 	forgotPassword: `${apiUrl}/forgot-password`,
@@ -1011,35 +991,29 @@ const API = {
 	documents: `${apiUrl}/documents`,
 	referee: `${apiUrl}/referees`,
 	dependants: `${apiUrl}/dependants`,
-	myApplication: `${apiUrl}/myapplication`,
-	health: `${apiUrl}/health`,
-	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
-	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
-	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
-	getApplication: (id) => `${apiUrl}/applications/${id}`,
-	getReferees: (id) => `${apiUrl}/referees/${id}`,
-	getDependants: (id) => `${apiUrl}/dependants/${id}`,
-	getDocuments: (id) => `${apiUrl}/documents/${id}`,
-	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
-	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
-	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
-	getMyApplications: (id) => `${apiUrl}/myapplication/${id}`,
-	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
-	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
-	selectPosition: (positionId) => `${apiUrl}/positions/${positionId}`,
-	viewPositions: (applicant_type) =>`${apiUrl}/positions_by/${applicant_type}`,
-	// === position/APPLICATION RELATED ===
-
 	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
 	retrieveApplication: `${apiUrl}/retrieve_application`,
 	verifyEmail: `${apiUrl}/verify_email`,
 
+	// === ENDPOINTS FOR FRONTEND RETRIEVAL (DYNAMIC) ===
+	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
+	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
+	getApplications: (id) => `${apiUrl}/applications/${id}`,
+	getReferees: (id) => `${apiUrl}/referees/${id}`,
+	getDependants: (id) => `${apiUrl}/dependants/${id}`,
+	getDocuments: (id) => `${apiUrl}/documents/${id}`,
+	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
+	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
+	getProfessionalMemberships: (id) => `${apiUrl}/memberships/${id}`,
+	getScreeningQuestions: (positionId) => `${apiUrl}/positions/${positionId}/questions`,
+	submitScreeningAnswers: (applicationId) => `${apiUrl}/screening/${applicationId}/answers`,
+	selectPosition: (positionId) => `${apiUrl}/positions/${positionId}`,
+	viewPositions: (applicant_type) =>`${apiUrl}/positions_by/${applicant_type}`,
 };
 
-
-	let dataCache = {};
+let dataCache = {};
 
 	/* ========== Axios Interceptor for Global Error Handling ========== */
 	/**
@@ -1112,13 +1086,13 @@ const API = {
 
 	function getSection(key) {
 		const map = {
-		educationTraining: 'education',
-		professionalMembership: 'memberships',
-		employmentHistory: 'employment',
-		documents: 'documents',
-		referee: 'references',
-		dependants: 'dependants',
-		personalDetails: 'personal',
+			educationTraining: 'education',
+			professionalMembership: 'memberships',
+			employmentHistory: 'employment',
+			documents: 'documents',
+			referee: 'references',
+			dependants: 'dependants',
+			personalDetails: 'personal',
 		};
 		return map[key] || '';
 	}
@@ -1169,7 +1143,6 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb, customAction
         tbodyEl.innerHTML = `<tr><td colspan="${colSpan}" class="text-center text-muted">No records found.</td></tr>`;
         return;
     }
-
     items.forEach(item => {
         const tr = document.createElement('tr');
         columns.forEach(col => {
@@ -1266,6 +1239,7 @@ async function fetchItems(apiUrl, key) {
 		return true;
 		} catch (e) {
 		showToast(`Error deleting item`, 'error');
+		console.error('deleteItem error:', e);
 		return false;
 		}
 	}
@@ -1274,7 +1248,7 @@ async function fetchItems(apiUrl, key) {
 
 	// Personal Details
 	const formPersonalDetails = document.getElementById('formPersonalDetails');
-	async function loadPersonalDetails() {
+	async function loadPersonalDetails(){
 		if (!currentUser || !currentUser.id) {
 			showToast('User not authenticated. Please log in.', 'warning');
 			return;
@@ -1374,26 +1348,27 @@ async function fetchItems(apiUrl, key) {
 		}
 		}
 	}
+
+
 	if (formPersonalDetails) {
 		formPersonalDetails.addEventListener('submit', async e => {
 			e.preventDefault();
 			const data = {
-			first_name: document.getElementById('firstName').value.trim(),
-			middle_name: document.getElementById('middleName').value.trim(),
-			last_name: document.getElementById('lastName').value.trim(),
+			firstName: document.getElementById('firstName').value.trim(),
+			middleName: document.getElementById('middleName').value.trim(),
+			lastName: document.getElementById('lastName').value.trim(),
 			email: document.getElementById('emailDetail').value.trim(),
-			phone_number: document.getElementById('contact').value.trim(),
+			contact: document.getElementById('contact').value.trim(),
 			nin: document.getElementById('ninDetail').value.trim(),
 			gender: document.getElementById('genderDetail').value,
 			dob: document.getElementById('dobDetail').value,
-			marital_status: document.getElementById('statusDetail').value,
+			status: document.getElementById('statusDetail').value,
 			};
-			
 			try {
 			await axios.put(API.personalDetails(currentUser.id), data);
-			showToast('Personal details updated.', 'success');
+			showToast('Personal details saved.', 'success');
 			} catch {
-			showToast('Failed to update personal details.', 'error');
+			showToast('Failed to save personal details.', 'error');
 			}
 		});
 	}
@@ -1955,12 +1930,10 @@ async function openDocumentModal(editItem = null) {
             // Build options with optgroups for each section
             Object.keys(documentTypes).sort().forEach(section => {
                 documentTypeOptions += `<optgroup label="${section}">`;
-                
                 documentTypes[section].forEach(docType => {
                     const selected = editItem && editItem.document_type_id == docType.id ? 'selected' : '';
                     documentTypeOptions += `<option value="${docType.id}" ${selected}>${docType.name}</option>`;
                 });
-                
                 documentTypeOptions += '</optgroup>';
             });
         }
@@ -1968,11 +1941,9 @@ async function openDocumentModal(editItem = null) {
         console.error('Error loading document types:', error);
         documentTypeOptions = '<option value="">Error loading document types. Please refresh.</option>';
     }
-
     // Modal form body with pre-populated dropdown
     crudModalBody.innerHTML = `
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
-
 		<div class="row">
         <div class="col-md-6 mb-3">
           <label for="document_type_id" class="form-label fw-bold">Document Type</label>
@@ -1985,7 +1956,6 @@ async function openDocumentModal(editItem = null) {
           <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
         </div>
       </div>
-
       <div class="mb-3">
         <label for="file_path" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
         <input type="file" class="form-control form-control" id="file_path" name="file_path" accept="application/pdf" ${editItem ? '' : 'required'}>
@@ -2011,18 +1981,20 @@ async function openDocumentModal(editItem = null) {
 			if (currentUser && currentUser.documents && Array.isArray(currentUser.documents)) {
 				items = currentUser.documents.map((mem, index) => ({
 					id: `user-mem-${index}`,
+					doc_name: mem.doc_name || '',
+					file_path: mem.file_path || '',
 					document_type: mem.document_type || '',
-					title: mem.title || '',
-					file_path: mem.file_path || ''
+					section: mem.section || ''
 
 				}));
 				dataCache['documents'] = items;
 			}
 		}
 		renderTableRows(items, documentsTableBody, [
-		{ key: 'document_type' },
-		{key: 'file_path', formatter: val => val ? 'Uploaded' : 'Not Uploaded' },
-		{ key: 'title' },
+			{ key: 'section' },
+			{key: 'document_type' },
+			{ key: 'doc_name' },
+		// {key: 'document_type', formatter: val => val ? 'Uploaded' : 'Not Uploaded' },
 		], openDocumentModal, async id => {
 		if (confirm('Delete this document record?')) {
 			const success = await deleteItem(API.documents, id, 'documents');
@@ -2135,44 +2107,44 @@ async function openDocumentModal(editItem = null) {
 		}
 		});
 	}
-
 	// Submitted Applications
 	const myApplicationsTableBody = document.querySelector('#myApplicationsTable tbody');
-
 	async function loadSubmittedApplications() {
-		if (!currentUser || !currentUser.id) {
+		if (!currentUser?.id) {
 			showToast('User not authenticated. Please log in.', 'warning');
 			return;
 		}
-		try {
-			let items = [];
-			// Fetch submitted applications for the current user using fetchItems
-			items = await fetchItems(API.getMyApplications(currentUser.id), 'submittedApplications');
 
-			// Fallback if no API data
-			if (!items || items.length === 0) {
-				if (dataCache.submittedApplications && Array.isArray(dataCache.submittedApplications)) {
-					items = dataCache.submittedApplications;
-				} else {
-					items = [];
-				}
+		try {
+			const response = await axios.get(API.getApplications(currentUser.id));
+			// ✅ Laravel Resource Collection shape
+			const items = Array.isArray(response.data?.data)
+				? response.data.data
+				: [];
+			if (items.length === 0) {
+				myApplicationsTableBody.innerHTML = `
+					<tr>
+						<td colspan="6" class="text-center text-muted">
+							No submitted applications found
+						</td>
+					</tr>
+				`;
+				return;
 			}
 
 			dataCache['submittedApplications'] = items;
-
-			// Render table
 			renderTableRows(
 				items,
 				myApplicationsTableBody,
 				[
-					{ key: 'id' },
-					{ key: 'post' },
-					{ key: 'department' },
-					{ key: 'application_date', formatter: val => val ? new Date(val).toLocaleDateString() : '' },
+					{ key: 'position_title' },
+					{ key: 'application_id'},
+					{ key: 'submitted_date'},
+					{ key: 'deadline' },
 					{ key: 'status' }
 				],
-				null, // No edit function for submitted applications
-				null  // No delete function for submitted applications
+				null,
+				null
 			);
 		} catch (error) {
 			console.error('Error loading submitted applications:', error);
@@ -2192,6 +2164,7 @@ async function openDocumentModal(editItem = null) {
 		await loadDocuments();
 		await loadReferee();
 		await loadDependants();
+		await loadSubmittedApplications();
 
 		let html = '<div class="row">';
 
@@ -2271,46 +2244,24 @@ async function openDocumentModal(editItem = null) {
 			</div>
 
 			<div class="text-center mt-4">
-				<button class="btn btn-success btn-lg" id="btnSubmitApplication" disabled>
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''} disabled>
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
 		`;
 
-		// Handle terms checkbox and validate all sections filled
+		// Handle terms checkbox
 		const termsCheckbox = document.getElementById('termsCheckbox');
 		const submitApplicationBtn = document.getElementById('btnSubmitApplication');
 
-		// Function to validate all required sections have data
-		function validateAllSectionsFilled() {
-			const requiredSections = [
-				dataCache.personalDetails && dataCache.personalDetails.length > 0,
-				dataCache.educationTraining && dataCache.educationTraining.length > 0,
-				dataCache.professionalMembership && dataCache.professionalMembership.length > 0,
-				dataCache.employmentHistory && dataCache.employmentHistory.length > 0,
-				dataCache.documents && dataCache.documents.length > 0,
-				dataCache.referee && dataCache.referee.length > 0,
-				dataCache.dependants && dataCache.dependants.length > 0,
-				hasSelectedJob
-			];
-			return requiredSections.every(section => section === true);
-		}
-
 		termsCheckbox.addEventListener('change', () => {
-			const allSectionsFilled = validateAllSectionsFilled();
-			submitApplicationBtn.disabled = !termsCheckbox.checked || !allSectionsFilled;
+			submitApplicationBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
 		});
 
 		submitApplicationBtn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			if (!termsCheckbox.checked) {
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
-				return;
-			}
-
-			// Validate all sections are filled
-			if (!validateAllSectionsFilled()) {
-				showToast('Please complete all required sections before submitting your application.', 'warning');
 				return;
 			}
 
@@ -2350,8 +2301,9 @@ async function openDocumentModal(editItem = null) {
 						return;
 					}
 				});
-					// Fetch and display submitted applications
-					await loadSubmittedApplications();
+					// Navigate to My Applications section
+					// showStep('myApplications');
+					// loadSubmittedApplications();
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
@@ -2371,7 +2323,7 @@ async function openDocumentModal(editItem = null) {
 		const response = await axios.get(API.selectPosition(jobId));
 		position = response.data.data;
 		showJobDetailsContent(position);
-		const applyBtn = document.getElementById('btnApplyFromModal');
+		const applyBtn = document.getElementById('btnPreviewDetails');
 		if (isBrowseMode) {
 			applyBtn.style.display = 'none';
 		} else {
@@ -2384,7 +2336,7 @@ async function openDocumentModal(editItem = null) {
 	 * Display position details content
 	 */
 	function showJobDetailsContent(position) {
-		document.getElementById('jobDetailsModalLabel').textContent = position.name || 'position Details';
+		document.getElementById('jobDetailsModalLabel').textContent = position.name || 'Position Details';
 		const body = document.getElementById('jobDetailsModalBody');
 		let dutiesList = '';
 		if (position.duties && Array.isArray(position.duties)) {
@@ -2455,7 +2407,7 @@ async function openDocumentModal(editItem = null) {
 			</div>
 			</div>
 		`;
-		const applyBtn = document.getElementById('btnApplyFromModal');
+		const applyBtn = document.getElementById('btnPreviewDetails');
 		if (isBrowseMode) {
 			applyBtn.style.display = 'none';
 		} else {
@@ -2494,16 +2446,16 @@ async function openDocumentModal(editItem = null) {
 				});
 				tdActions.appendChild(btnView);
 
-				if (!isBrowseMode) {
-				const btnApply = document.createElement('button');
-				btnApply.className = 'btn btn-sm btn-success';
-				btnApply.type = 'button';
-				btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
-				btnApply.addEventListener('click', () => {
-					showJobDetailsModal(position.id);
-				});
-				tdActions.appendChild(btnApply);
-				}
+				// if (!isBrowseMode) {
+				// const btnApply = document.createElement('button');
+				// btnApply.className = 'btn btn-sm btn-success';
+				// btnApply.type = 'button';
+				// btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
+				// btnApply.addEventListener('click', () => {
+				// 	showJobDetailsModal(position.id);
+				// });
+				// tdActions.appendChild(btnApply);
+				// }
 				tr.appendChild(tdActions);
 
 				positionsTableBody.appendChild(tr);
@@ -2733,7 +2685,7 @@ async function openDocumentModal(editItem = null) {
 		document.getElementById('jobDetailsModalLabel').textContent = currentScreeningPosition.position_title + ' - Screening Questions';
 
 		// Hide Apply button, add screening submit handler
-		const applyBtn = document.getElementById('btnApplyFromModal');
+		const applyBtn = document.getElementById('btnPreviewDetails');
 		applyBtn.style.display = 'none';
 
 		// Attach form submit handler
@@ -2818,13 +2770,10 @@ async function openDocumentModal(editItem = null) {
 
 			showToast('Screening answers submitted successfully!', 'success');
 
-			// Wait a moment then proceed
-			setTimeout(() => {
-				selectedJob = currentScreeningPosition;
-				hasSelectedJob = true;
-				jobDetailsModal.hide();
-				showStep('previewApplication');
-			}, 1500);
+			selectedJob = currentScreeningPosition;
+			hasSelectedJob = true;
+			jobDetailsModal.hide();
+			showStep('previewApplication');
 
 		} catch (error) {
 			console.error('Error submitting screening answers:', error);
@@ -2833,10 +2782,8 @@ async function openDocumentModal(editItem = null) {
 			// Check if this is a knockout failure
 			if (errorMsg.toLowerCase().includes('knockout') || errorMsg.toLowerCase().includes('rejected')) {
 				showToast('Your application has been automatically rejected based on the screening results.', 'error');
-				setTimeout(() => {
-					jobDetailsModal.hide();
-					showStep('viewPositions');
-				}, 2000);
+				jobDetailsModal.hide();
+				showStep('viewPositions');
 			} else {
 				showToast(errorMsg, 'error');
 			}
@@ -3009,40 +2956,18 @@ async function openDocumentModal(editItem = null) {
 	/* -------- Load Data for step -------- */
 	async function loadStepData(step) {
 		switch (step) {
-		case 'personalDetails': await loadPersonalDetails(); break;
-		case 'educationTraining': await loadEducation(); break;
-		case 'professionalMembership': await loadMembership(); break;
-		case 'employmentHistory': await loadEmployment(); break;
-		case 'documents': await loadDocuments(); break;
-		case 'referee': await loadReferee(); break;
-		case 'dependants': await loadDependants(); break;
-		case 'previewApplication': await loadPreview(); break;
-		case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
+			case 'personalDetails': await loadPersonalDetails(); break;
+			case 'educationTraining': await loadEducation(); break;
+			case 'professionalMembership': await loadMembership(); break;
+			case 'employmentHistory': await loadEmployment(); break;
+			case 'documents': await loadDocuments(); break;
+			case 'referee': await loadReferee(); break;
+			case 'dependants': await loadDependants(); break;
+			case 'previewApplication': await loadPreview(); break;
+			case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
+			case 'myApplications': await loadSubmittedApplications(); break;
+			default: break;
 		}
-	}
-
-	/* -------- Initialize App After Login -------- */
-	function initAppAfterLogin() {
-		const session = getSession();
-		if (!session) return;
-
-		// Show user in navbar dropdown
-		navbarUserName.textContent = session.name || session.email;
-		
-		// Set dropdown text with user's full name or empty if no currentUser
-		if (currentUser && currentUser.first_name && currentUser.last_name) {
-			userDropdown.textContent = currentUser.first_name + ' ' + currentUser.last_name;
-		} else {
-			userDropdown.textContent = session.name || session.email || 'User';
-		}
-
-		// Hide loggedInNav if no currentUser
-		if (loggedInNav) {
-			loggedInNav.style.display = (!currentUser || !currentUser.id) ? 'none' : 'flex';
-		}
-
-		// Show default step
-		showStep(currentStep);
 	}
 	/* -------- Validation Error Handling -------- */
 	function showValidationErrors(form, errors) {
@@ -3157,6 +3082,7 @@ async function openDocumentModal(editItem = null) {
 			}
 			return false;
 		} catch (error) {
+						console.log('Validating token with backend for user ID:', currentUser.id);
 			// 404 = User not found, 401 = Unauthorized
 			if (error.response?.status === 404 || error.response?.status === 401) {
 				clearSession();
@@ -3170,47 +3096,44 @@ async function openDocumentModal(editItem = null) {
 
 	/* -------- Init -------- */
 	async function init() {
+		// 1️⃣ health check runs FIRST
+		const serverOk = await checkServerStatus();
+		if (!serverOk) {
+			console.warn('⚠️ Server is offline');
+			showToast('Server is currently unavailable. Please try again later.', 'error');
 
-	// 1️⃣ health check runs FIRST
-	const serverOk = await checkServerStatus();
-	if (!serverOk) {
-		console.clear();
-		console.warn('⚠️ Server is offline');
-		showToast('Server is currently unavailable. Please try again later.', 'error');
+			// Optional UI handling:
+			showLoginForm(); // Or show maintenance page
+			return; // STOP init – no more backend calls
+		}
 
-		// Optional UI handling:
-		showLoginForm(); // Or show maintenance page
-		return; // STOP init – no more backend calls
-	}
-	console.log('✔ Server online');
-
-	// 2️⃣ now continue with your current logic
-	const user = getSession();
-	if (user) {
-		try {
-			const isValid = await validateTokenWithBackend();
-			if (isValid) {
-				showDashboard();
-				initAppAfterLogin();
-			} else {
-				loggedInNav.style.display = 'none';
+		// 2️⃣ now continue with your current logic
+		const userSession = getSession();
+		if (userSession) {
+			try {
+				const isValid = await validateTokenWithBackend();
+				if (isValid) {
+					showDashboard();
+				} else {
+					showLoginForm();
+				}
+			} catch (error) {
+				console.error('Token validation error:', error);
 				showLoginForm();
 			}
-		} catch (error) {
+		} else {
 			showLoginForm();
-		}
-	} else {
-		showLoginForm();
-		const urlParams = new URLSearchParams(window.location.search);
-		if (urlParams.get('register') === 'true') {
-			showAuth();
-			showRegisterForm();
-		} else if (urlParams.get('login') === 'true') {
-			showAuth();
-			showLoginForm();
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.get('register') === 'true') {
+				showAuth();
+				showRegisterForm();
+			} else if (urlParams.get('login') === 'true') {
+				showAuth();
+				showLoginForm();
+			}
 		}
 	}
-}
+	
 	async function checkServerStatus() {
 		try {
 			const response = await fetch(API.health);
@@ -3221,6 +3144,6 @@ async function openDocumentModal(editItem = null) {
 	}
 	document.addEventListener('DOMContentLoaded', init);
 
-	})();
+})();
 	
 	
