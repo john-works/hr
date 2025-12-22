@@ -496,7 +496,6 @@
 		authArea.style.display = 'block';
 		document.body.classList.add('auth-view');
 	}
-
 	/* ----- Event Listeners for Auth Toggle ----- */
 	if (showRegisterBtn) {
 		showRegisterBtn.addEventListener('click', (e) => {
@@ -740,6 +739,68 @@
 		} catch (error) {
 			console.error('Password reset error:', error);
 			showToast('Failed to reset password. Please try again.', 'error');
+		}
+	}
+
+	/**
+	 * Checks whether all application sections are completed for a given applicant.
+	 * @param {number|string} applicantId - The current user's ID.
+	 * @returns {Promise<{completed: boolean, incompleteSections: string[]}>} 
+	 */
+	async function allSectionsCompleted(applicantId) {
+		const tablesToCheck = {
+			personalDetails: API.personalDetails(applicantId),
+			educations: API.getEducationTraining(applicantId),
+			employments: API.getEmploymentHistory(applicantId),
+			references: API.getReferees(applicantId),
+			documents: API.getDocuments(applicantId),
+			dependants: API.getDependants(applicantId),
+			memberships: API.getProfessionalMemberships(applicantId)
+		};
+
+		const incompleteSections = [];
+
+		// Loop through each table/endpoint
+		for (const [section, endpoint] of Object.entries(tablesToCheck)) {
+			try {
+				const response = await axios.get(endpoint);
+				const data = response.data;
+
+				// Check if the section is empty
+				if (!data || (Array.isArray(data) && data.length === 0)) {
+					incompleteSections.push(section);
+				}
+			} catch (error) {
+				console.error(`Error checking section ${section}:`, error);
+				incompleteSections.push(section); // treat error as incomplete
+			}
+		}
+
+		return {
+			completed: incompleteSections.length === 0,
+			incompleteSections
+		};
+	}
+	
+	async function applicationExists() {
+		const user = getUser();
+		if (!user?.id) return false;
+
+		// Check cache first
+		const cachedApplications = dataCache['submittedApplications'];
+		if (Array.isArray(cachedApplications)) {
+			return cachedApplications.length > 0;
+		}
+
+		// Fallback: fetch from API if not in cache
+		try {
+			const response = await axios.get(API.getApplications(user.id));
+			const items = Array.isArray(response.data?.data) ? response.data.data : [];
+			dataCache['submittedApplications'] = items; // cache it
+			return items.length > 0;
+		} catch (error) {
+			console.error('Error checking application existence:', error);
+			return false;
 		}
 	}
 
@@ -2161,7 +2222,7 @@ async function openDocumentModal(editItem = null) {
 		await loadEducation();
 		await loadMembership();
 		await loadEmployment();
-		await loadDocuments();
+		// await loadDocuments();
 		await loadReferee();
 		await loadDependants();
 		await loadSubmittedApplications();
@@ -2272,6 +2333,19 @@ async function openDocumentModal(editItem = null) {
 
 			if (!selectedJob || !selectedJob.id) {
 				showToast('Please select a position to apply for.', 'warning');
+				return;
+			}
+			const { completed, incompleteSections } = await allSectionsCompleted(currentUser.id);
+			if (!completed) {
+				showToast(
+					`Please complete the following sections: ${incompleteSections.join(', ')}`,
+					'warning'
+				);
+				return;
+			}
+			// check if application already exists for this user and position
+			if(await applicationExists(currentUser.id, selectedJob.id)) {
+				showToast('You have already applied for this position.', 'error');
 				return;
 			}
 
