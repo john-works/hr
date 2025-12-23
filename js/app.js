@@ -677,7 +677,7 @@
 		}
 	}
 
-	async function handleForgotPasswordSubmit(e, emailId) {
+	async function handleForgotPasswordSubmit(e, emailId, formElement) {
 		e.preventDefault();
 		const emailInput = document.getElementById(emailId);
 		if (!emailInput.value) {
