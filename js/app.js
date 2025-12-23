@@ -669,7 +669,7 @@
 
 			// showAuth();
 			showVerifyEmailForm(email);
-			formElement.reset();
+			// formElement.reset();
 		} catch (error) {
 			// Error is already handled by Axios interceptor
 			// Just prevent form submission from continuing
@@ -677,7 +677,7 @@
 		}
 	}
 
-	async function handleForgotPasswordSubmit(e, emailId, formElement) {
+	async function handleForgotPasswordSubmit(e, emailId) {
 		e.preventDefault();
 		const emailInput = document.getElementById(emailId);
 		if (!emailInput.value) {
@@ -688,18 +688,30 @@
 		const email = emailInput.value.toLowerCase().trim();
 
 		try {
-			//remove user from localStorage
-			localStorage.removeItem('user');
 			// Send forgot password request
 			let response = await axios.post(API.forgotPassword, { email });
-			if (response.data.status !== 'success') {
-				localStorage.setItem('user', JSON.stringify(response.data.data));
+			// Backend may return the user data in response.data.data when email exists
+			if (response.data && response.data.data) {
+				// Save under userSession so reset flow can read user.id and user.email
+				localStorage.setItem('userSession', JSON.stringify({ user: response.data.data, token: null }));
 				showPasswordResetForm();
 				formElement.reset();
-			}else{
+			} else {
 				showToast('Email not found in our records.', 'error');
 			}
 		} catch (error) {
+			// Provide more detailed logging and surface backend message to the user
+			console.error('Forgot password error:', error);
+			if (error.response) {
+				const resp = error.response;
+				const backendMsg = resp.data?.message || resp.data || resp.statusText || error.message;
+				console.error('Forgot password response body:', resp.data);
+				showToast(backendMsg, 'error', 6000);
+			} else if (error.request) {
+				showToast('No response from server. Check your network connection.', 'error');
+			} else {
+				showToast(error.message || 'Failed to process forgot password. Please try again.', 'error');
+			}
 		}
 	}
 
