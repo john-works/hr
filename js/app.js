@@ -1348,9 +1348,9 @@ async function fetchItems(apiUrl, key) {
 		}
 		
 		// Fill form fields
-		document.getElementById('first_name').value = pd.first_name || '';
-		document.getElementById('middle_name').value = pd.middle_name || '';
-		document.getElementById('last_name').value = pd.last_name || '';
+		document.getElementById('firstName').value = pd.first_name || '';
+		document.getElementById('middleName').value = pd.middle_name || '';
+		document.getElementById('lastName').value = pd.last_name || '';
 		document.getElementById('emailDetail').value = pd.email || '';
 		document.getElementById('contact').value = pd.contact || '';
 		document.getElementById('ninDetail').value = pd.nin || '';
@@ -1416,15 +1416,15 @@ async function fetchItems(apiUrl, key) {
 		formPersonalDetails.addEventListener('submit', async e => {
 			e.preventDefault();
 			const data = {
-			firstName: document.getElementById('firstName').value.trim(),
-			middleName: document.getElementById('middleName').value.trim(),
-			lastName: document.getElementById('lastName').value.trim(),
+			first_name: document.getElementById('firstName').value.trim(),
+			middle_name: document.getElementById('middleName').value.trim(),
+			last_name: document.getElementById('lastName').value.trim(),
 			email: document.getElementById('emailDetail').value.trim(),
-			contact: document.getElementById('contact').value.trim(),
+			phone_number: document.getElementById('contact').value.trim(),
 			nin: document.getElementById('ninDetail').value.trim(),
 			gender: document.getElementById('genderDetail').value,
 			dob: document.getElementById('dobDetail').value,
-			status: document.getElementById('statusDetail').value,
+			marital_status: document.getElementById('statusDetail').value,
 			};
 			try {
 			await axios.put(API.personalDetails(currentUser.id), data);
