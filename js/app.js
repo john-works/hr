@@ -755,7 +755,7 @@
 			employments: API.getEmploymentHistory(applicantId),
 			references: API.getReferees(applicantId),
 			documents: API.getDocuments(applicantId),
-			dependants: API.getDependants(applicantId),
+			// dependants: API.getDependants(applicantId),
 			memberships: API.getProfessionalMemberships(applicantId)
 		};
 
@@ -1052,7 +1052,7 @@ const API = {
 	employmentHistory: `${apiUrl}/employments`,
 	documents: `${apiUrl}/documents`,
 	referee: `${apiUrl}/referees`,
-	dependants: `${apiUrl}/dependants`,
+	// dependants: `${apiUrl}/dependants`,
 	getActivepositions: `${apiUrl}/positions`,
 	postApplication: `${apiUrl}/applications`,
 	postApplicationSection: `${apiUrl}/application_section`,
@@ -1064,7 +1064,7 @@ const API = {
 	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
 	getApplications: (id) => `${apiUrl}/applications/${id}`,
 	getReferees: (id) => `${apiUrl}/referees/${id}`,
-	getDependants: (id) => `${apiUrl}/dependants/${id}`,
+	// getDependants: (id) => `${apiUrl}/dependants/${id}`,
 	getDocuments: (id) => `${apiUrl}/documents/${id}`,
 	getEmploymentHistory: (id) => `${apiUrl}/employments/${id}`,
 	getEducationTraining: (id) => `${apiUrl}/educations/${id}`,
@@ -1153,7 +1153,7 @@ let dataCache = {};
 			employmentHistory: 'employment',
 			documents: 'documents',
 			referee: 'references',
-			dependants: 'dependants',
+			// dependants: 'dependants',
 			personalDetails: 'personal',
 		};
 		return map[key] || '';
@@ -1348,9 +1348,9 @@ async function fetchItems(apiUrl, key) {
 		}
 		
 		// Fill form fields
-		document.getElementById('firstName').value = pd.firstName || '';
-		document.getElementById('middleName').value = pd.middleName || '';
-		document.getElementById('lastName').value = pd.lastName || '';
+		document.getElementById('first_name').value = pd.first_name || '';
+		document.getElementById('middle_name').value = pd.middle_name || '';
+		document.getElementById('last_name').value = pd.last_name || '';
 		document.getElementById('emailDetail').value = pd.email || '';
 		document.getElementById('contact').value = pd.contact || '';
 		document.getElementById('ninDetail').value = pd.nin || '';
@@ -2085,90 +2085,94 @@ async function openDocumentModal(editItem = null) {
 
 
 
-	// Dependants
-	const dependantsTableBody = document.querySelector('#dependantsTable tbody');
+	// // Dependants
+	// const dependantsTableBody = document.querySelector('#dependantsTable tbody');
 
-	document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
+	// document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
 
-	function openDependantModal(editItem = null) {
+	// function openDependantModal(editItem = null) {
 
-    crudModalLabel.innerHTML = `
-        <i class="fas fa-briefcase me-2"></i>
-        ${editItem ? 'Edit Dependant' : 'Add Dependant'}
-    `;
+    // crudModalLabel.innerHTML = `
+    //     <i class="fas fa-briefcase me-2"></i>
+    //     ${editItem ? 'Edit Dependant' : 'Add Dependant'}
+    // `;
 
     // Set ID (used for update)
-    crudItemIdInput.value = editItem ? editItem.id : '';
+    // crudItemIdInput.value = editItem ? editItem.id : '';
 
     // Modal form body
-    crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
+//     crudModalBody.innerHTML = `
+//         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
-			<div class="row">
+// 			<div class="row">
 
-			<div class="col-md-6 mb-3">
-			<label for="name" class="form-label fw-bold">Full Name</label>
-			<input type="text" class="form-control" id="name" name="name"  value="${editItem?.name || ''}" required>
-			</div>
-
-
-			<div class="col-md-6 mb-3">
-			<label for="relationship" class="form-label fw-bold">Relationship</label>
-			<select type="text" class="form-select" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
-				<option value="">Select Relationship</option>
-				<option value="Spouse">Spouse</option>
-				<option value="Child">Child</option>
-				<option value="Parent" >Parent</option>
-				<option value="Friend">Friend</option>
-
-			</select>
-			</div>
-		</div>
-		<div class="row">
-
-			<div class="col-md-6 mb-3">
-			<label for="birth_date" class="form-label fw-bold">Date of Birth</label>
-			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.birth_date || ''}">
-			</div>
-		</div>
-    `;
-
-    crudModal.show();
-}
-	async function loadDependants() {
-		if (!currentUser || !currentUser.id) {
-			showToast('User not authenticated. Please log in.', 'warning');
-			return;
-		}
-		let items = [];
-		// Use GET route for applicant
-		items = await fetchItems(API.getDependants(currentUser.id), 'dependants');
-
-		// fallback if no API data
-		if (!items || items.length === 0) {
-			if (currentUser && currentUser.dependants && Array.isArray(currentUser.dependants)) {
-				items = currentUser.dependants.map((mem, index) => ({
-					id: `user-mem-${index}`,
-					name: mem.name || '',
-					birth_date: mem.birth_date || '',
-					relationship: mem.relationship || ''
+// 			<div class="col-md-6 mb-3">
+// 			<label for="name" class="form-label fw-bold">Full Name</label>
+// 			<input type="text" class="form-control" id="name" name="name"  value="${editItem?.name || ''}" required>
+// 			</div>
 
 
-				}));
-				dataCache['dependants'] = items;
-			}
-		}
-		renderTableRows(items, dependantsTableBody, [
-		{ key: 'name' },
-		{ key: 'relationship' },
-		{ key: 'birth_date' }
-		], openDependantModal, async id => {
-		if (confirm('Delete this dependants record?')) {
-			const success = await deleteItem(API.dependants, id, 'dependants');
-			if (success) loadDependants();
-		}
-		});
-	}
+// 			<div class="col-md-6 mb-3">
+// 			<label for="relationship" class="form-label fw-bold">Relationship</label>
+// 			<select type="text" class="form-select" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
+// 				<option value="">Select Relationship</option>
+// 				<option value="Spouse">Spouse</option>
+// 				<option value="Child">Child</option>
+// 				<option value="Parent" >Parent</option>
+// 				<option value="Friend">Friend</option>
+
+// 			</select>
+// 			</div>
+// 		</div>
+// 		<div class="row">
+
+// 			<div class="col-md-6 mb-3">
+// 			<label for="birth_date" class="form-label fw-bold">Date of Birth</label>
+// 			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.birth_date || ''}">
+// 			</div>
+// 		</div>
+//     `;
+
+//     crudModal.show();
+// }
+// 	async function loadDependants() {
+// 		if (!currentUser || !currentUser.id) {
+// 			showToast('User not authenticated. Please log in.', 'warning');
+// 			return;
+// 		}
+// 		let items = [];
+// 		// Use GET route for applicant
+// 		items = await fetchItems(API.getDependants(currentUser.id), 'dependants');
+
+// 		// fallback if no API data
+// 		if (!items || items.length === 0) {
+// 			if (currentUser && currentUser.dependants && Array.isArray(currentUser.dependants)) {
+// 				items = currentUser.dependants.map((mem, index) => ({
+// 					id: `user-mem-${index}`,
+// 					name: mem.name || '',
+// 					birth_date: mem.birth_date || '',
+// 					relationship: mem.relationship || ''
+
+
+// 				}));
+// 				dataCache['dependants'] = items;
+// 			}
+// 		}
+// 		renderTableRows(items, dependantsTableBody, [
+// 		{ key: 'name' },
+// 		{ key: 'relationship' },
+// 		{ key: 'birth_date' }
+// 		], openDependantModal, async id => {
+// 		if (confirm('Delete this dependants record?')) {
+// 			const success = await deleteItem(API.dependants, id, 'dependants');
+// 			if (success) loadDependants();
+// 		}
+// 		});
+// 	}
+
+
+
+
 	// Submitted Applications
 	const myApplicationsTableBody = document.querySelector('#myApplicationsTable tbody');
 	async function loadSubmittedApplications() {
@@ -2225,7 +2229,7 @@ async function openDocumentModal(editItem = null) {
 		await loadEmployment();
 		// await loadDocuments();
 		await loadReferee();
-		await loadDependants();
+		// await loadDependants();
 		await loadSubmittedApplications();
 
 		let html = '<div class="row">';
@@ -2236,7 +2240,7 @@ async function openDocumentModal(editItem = null) {
 			employmentHistory: 'Employment History',
 			documents: 'Documents',
 			referee: 'References',
-			dependants: 'Dependants',
+			// dependants: 'Dependants',
 			personalDetails: 'Personal Details'
 		};
 
@@ -2300,8 +2304,8 @@ async function openDocumentModal(editItem = null) {
 			<div class="form-check mt-3 font-weight-bold">
 				<input class="form-check-input" type="checkbox" value="" id="termsCheckbox">
 				<label class="form-check-label" for="termsCheckbox">
-					<strong>I certify that the facts given in this form are true to the best of my knowledge and I understand that
-					giving false information can lead to dismissal..</strong>
+					<strong> I certify that the information provided is true and accurate to the best of my knowledge.
+					 I understand that false information may result in disqualification or termination if hired</strong>
 				</label>
 			</div>
 
@@ -2983,13 +2987,14 @@ async function openDocumentModal(editItem = null) {
 			case 'professionalMembership':
 			case 'employmentHistory':
 			case 'referee':
-			case 'dependants': {
+			// case 'dependants':
+			 	{
 				stepApiUrl = (() => {
 					switch(currentStep) {
 						case 'professionalMembership': return API.professionalMembership;
 						case 'employmentHistory': return API.employmentHistory;
 						case 'referee': return API.referee;
-						case 'dependants': return API.dependants;
+						// case 'dependants': return API.dependants;
 					}
 				})();
 				key = currentStep;
@@ -3037,7 +3042,7 @@ async function openDocumentModal(editItem = null) {
 			case 'employmentHistory': await loadEmployment(); break;
 			case 'documents': await loadDocuments(); break;
 			case 'referee': await loadReferee(); break;
-			case 'dependants': await loadDependants(); break;
+			// case 'dependants': await loadDependants(); break;
 			case 'previewApplication': await loadPreview(); break;
 			case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
 			case 'myApplications': await loadSubmittedApplications(); break;
