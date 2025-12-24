@@ -697,7 +697,7 @@
 				// Save under userSession so reset flow can read user.id and user.email
 				localStorage.setItem('userSession', JSON.stringify({ user: response.data.data, token: null }));
 				showPasswordResetForm();
-				formElement.reset();
+				// formElement.reset();
 			} else {
 				showToast('Email not found in our records.', 'error');
 			}
