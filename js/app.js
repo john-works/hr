@@ -1056,7 +1056,7 @@
 		});
 	}
 const API = {
-	health: `${apiUrl}/check-server-status`,
+	health: `${apiUrl}/health`,
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
 	forgotPassword: `${apiUrl}/forgot-password`,
