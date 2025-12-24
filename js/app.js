@@ -1,6 +1,8 @@
 (() => {
-	let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	let documentUrl = 'https://hrmis.ppda.go.ug';
+	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
+	// let documentUrl = 'https://hrmis.ppda.go.ug';
+	let api = 'https://api.ppda.go.ug';
+	let apiUrl = api+'/api';
     axios.interceptors.response.use(
         response => response,
         async error => {
@@ -20,7 +22,7 @@
 			// If running on a dev server (not on port 8041), point to the backend
 			if (!origin.includes(':8041')) {
 				// Applicant-side: running on dev server, point to Laravel backend
-				return documentUrl;
+				return api;
 			}
 			return origin;
 		},
@@ -1054,7 +1056,7 @@
 		});
 	}
 const API = {
-	health: `${apiUrl}/health`,
+	health: `${apiUrl}/check-server-status`,
 	login: `${apiUrl}/login`,
 	registerForm: `${apiUrl}/register`,
 	forgotPassword: `${apiUrl}/forgot-password`,
