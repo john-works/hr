@@ -1,8 +1,8 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let documentUrl = 'https://hrmis.ppda.go.ug';
-	let api = 'https://api.ppda.go.ug';
-	let apiUrl = api+'/api';
+	// let api = 'https://api.ppda.go.ug';
+	let api = 'https://hrmis.ppda.go.ug';
+	let apiUrl = api+'/api/v1';
     axios.interceptors.response.use(
         response => response,
         async error => {
