@@ -96,8 +96,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="dob" class="form-label">Date of Birth</label>
-                            <input type="date" class="form-control" id="dob" name="dob" required />
+                            <input type="date" class="form-control" id="dob" name="dob" required>
+                            <small class="text-danger d-none" id="dobError">
+                                You must be 18 years or older.
+                            </small>
                         </div>
+
                         <div class="col-md-6 mb-3">
                             <label for="marital_status" class="form-label">Marital Status</label>
                             <select class="form-select" id="marital_status" name="marital_status" required>
@@ -684,6 +688,37 @@
             }
         });
     </script>
+
+    <script>
+        document.getElementById('dob').addEventListener('change', function () {
+            const dobInput = this.value;
+            const error = document.getElementById('dobError');
+
+            if (!dobInput) return;
+
+            const dob = new Date(dobInput);
+            const today = new Date();
+
+            // Calculate age
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (
+                monthDiff < 0 ||
+                (monthDiff === 0 && today.getDate() < dob.getDate())
+            ) {
+                age--;
+            }
+
+            if (age < 18) {
+                error.classList.remove('d-none');
+                this.value = '';
+            } else {
+                error.classList.add('d-none');
+            }
+        });
+    </script>
+
 
 
     <script>
