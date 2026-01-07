@@ -1,7 +1,7 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	let api = 'http://hrmis.local';
-	// let api = 'https://hrmis.ppda.go.ug';
+	// let api = 'https://api.ppda.go.ug';
+	let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     axios.interceptors.response.use(
         response => response,
@@ -225,166 +225,66 @@
 		 * @param {string} filePath - Path to document file
 		 * @param {string} fileName - Name of document
 		 */
-	async openDocumentViewer(filePath, fileName) {
-	let modal = document.getElementById('documentViewerModal');
-	
-	// Create modal if it doesn't exist
-	if (!modal) {
-		const modalHTML = `
-			<div class="modal fade" id="documentViewerModal" tabindex="-1" aria-labelledby="documentViewerModalLabel" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered modal-xl">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title" id="documentViewerModalLabel">Document Viewer</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body" id="documentViewerBody" style="min-height: 500px; display: flex; align-items: center; justify-content: center;">
-							<div class="spinner-border text-primary" role="status">
-								<span class="visually-hidden">Loading...</span>
+		openDocumentViewer(filePath, fileName) {
+			let modal = document.getElementById('documentViewerModal');
+			
+			// Create modal if it doesn't exist
+			if (!modal) {
+				const modalHTML = `
+					<div class="modal fade" id="documentViewerModal" tabindex="-1" aria-labelledby="documentViewerModalLabel" aria-hidden="true">
+						<div class="modal-dialog modal-dialog-centered modal-xl">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="documentViewerModalLabel">Document Viewer</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body" id="documentViewerBody" style="min-height: 500px; display: flex; align-items: center; justify-content: center;">
+									<div class="spinner-border text-primary" role="status">
+										<span class="visually-hidden">Loading...</span>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<a id="documentDownloadBtn" href="#" class="btn btn-primary" download target="_blank">
+										<i class="fas fa-download"></i> Download
+									</a>
+									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+								</div>
 							</div>
 						</div>
-						<div class="modal-footer">
-							<a id="documentDownloadBtn" href="#" class="btn btn-primary" download target="_blank">
-								<i class="fas fa-download"></i> Download
-							</a>
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-						</div>
 					</div>
-				</div>
-			</div>
-		`;
-		
-		document.body.insertAdjacentHTML('beforeend', modalHTML);
-		modal = document.getElementById('documentViewerModal');
-	}
-	
-	// Update title
-	const titleEl = modal.querySelector('#documentViewerModalLabel');
-	titleEl.textContent = fileName || 'Document Viewer';
-	
-	const bodyEl = modal.querySelector('#documentViewerBody');
-	const downloadBtn = modal.querySelector('#documentDownloadBtn');
-	
-	const baseUrl = this.getApiBaseUrl();
-	const fullPath = filePath.startsWith('http') ? filePath : `${baseUrl}/storage/${filePath}`;
-	
-	// Show modal first with loading spinner
-	const bsModal = new bootstrap.Modal(modal);
-	bsModal.show();
-	
-	// Reset body to show spinner
-	bodyEl.innerHTML = `
-		<div class="spinner-border text-primary" role="status">
-			<span class="visually-hidden">Loading document...</span>
-		</div>
-	`;
-	
-	try {
-		// Fetch the PDF as blob to bypass iframe restrictions
-		const response = await fetch(fullPath, {
-			method: 'GET',
-			credentials: 'include'
-		});
-		
-		if (!response.ok) {
-			throw new Error(`Failed to load document: ${response.statusText}`);
-		}
-		
-		const blob = await response.blob();
-		const blobUrl = URL.createObjectURL(blob);
-		
-		// Set download button
-		downloadBtn.href = blobUrl;
-		downloadBtn.download = fileName || 'document.pdf';
-		
-		// Display PDF with blob URL (this bypasses X-Frame-Options)
-		bodyEl.innerHTML = `
-			<iframe 
-				src="${blobUrl}#toolbar=1&navpanes=0&scrollbar=1" 
-				style="width: 100%; height: 600px; border: none; border-radius: 4px;"
-				title="PDF Viewer">
-			</iframe>
-		`;
-		
-		// Clean up blob URL when modal is closed
-		modal.addEventListener('hidden.bs.modal', () => {
-			URL.revokeObjectURL(blobUrl);
-		}, { once: true });
-		
-	} catch (error) {
-		console.error('Error loading document:', error);
-		bodyEl.innerHTML = `
-			<div class="alert alert-danger" role="alert">
-				<i class="fas fa-exclamation-triangle"></i> 
-				Failed to load document. Please try downloading instead.
-			</div>
-		`;
-		
-		// Still allow download
-		downloadBtn.href = fullPath;
-		downloadBtn.download = fileName || 'document.pdf';
-	}
-},
-		// openDocumentViewer(filePath, fileName) {
-		// 	let modal = document.getElementById('documentViewerModal');
-			
-		// 	// Create modal if it doesn't exist
-		// 	if (!modal) {
-		// 		const modalHTML = `
-		// 			<div class="modal fade" id="documentViewerModal" tabindex="-1" aria-labelledby="documentViewerModalLabel" aria-hidden="true">
-		// 				<div class="modal-dialog modal-dialog-centered modal-xl">
-		// 					<div class="modal-content">
-		// 						<div class="modal-header">
-		// 							<h5 class="modal-title" id="documentViewerModalLabel">Document Viewer</h5>
-		// 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		// 						</div>
-		// 						<div class="modal-body" id="documentViewerBody" style="min-height: 500px; display: flex; align-items: center; justify-content: center;">
-		// 							<div class="spinner-border text-primary" role="status">
-		// 								<span class="visually-hidden">Loading...</span>
-		// 							</div>
-		// 						</div>
-		// 						<div class="modal-footer">
-		// 							<a id="documentDownloadBtn" href="#" class="btn btn-primary" download target="_blank">
-		// 								<i class="fas fa-download"></i> Download
-		// 							</a>
-		// 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-		// 						</div>
-		// 					</div>
-		// 				</div>
-		// 			</div>
-		// 		`;
+				`;
 				
-		// 		document.body.insertAdjacentHTML('beforeend', modalHTML);
-		// 		modal = document.getElementById('documentViewerModal');
-		// 	}
+				document.body.insertAdjacentHTML('beforeend', modalHTML);
+				modal = document.getElementById('documentViewerModal');
+			}
 			
-		// 	// Update title
-		// 	const titleEl = modal.querySelector('#documentViewerModalLabel');
-		// 	titleEl.textContent = fileName || 'Document Viewer';
+			// Update title
+			const titleEl = modal.querySelector('#documentViewerModalLabel');
+			titleEl.textContent = fileName || 'Document Viewer';
 			
-		// 	const bodyEl = modal.querySelector('#documentViewerBody');
-		// 	const downloadBtn = modal.querySelector('#documentDownloadBtn');
+			const bodyEl = modal.querySelector('#documentViewerBody');
+			const downloadBtn = modal.querySelector('#documentDownloadBtn');
 			
-		// 	const baseUrl = this.getApiBaseUrl();
-		// 	const fullPath = filePath.startsWith('http') ? filePath : `${baseUrl}/storage/${filePath}`;
+			const baseUrl = this.getApiBaseUrl();
+			const fullPath = filePath.startsWith('http') ? filePath : `${baseUrl}/storage/${filePath}`;
 			
-		// 	// Set download button
-		// 	downloadBtn.href = fullPath;
-		// 	downloadBtn.download = fileName || 'document.pdf';
+			// Set download button
+			downloadBtn.href = fullPath;
+			downloadBtn.download = fileName || 'document.pdf';
 			
-		// 	// Display PDF with embedded viewer
-		// 	bodyEl.innerHTML = `
-		// 		<iframe 
-		// 			src="${fullPath}#toolbar=1&navpanes=0&scrollbar=1" 
-		// 			style="width: 100%; height: 600px; border: none; border-radius: 4px;"
-		// 			title="PDF Viewer">
-		// 		</iframe>
-		// 	`;
+			// Display PDF with embedded viewer
+			bodyEl.innerHTML = `
+				<iframe 
+					src="${fullPath}#toolbar=1&navpanes=0&scrollbar=1" 
+					style="width: 100%; height: 600px; border: none; border-radius: 4px;"
+					title="PDF Viewer">
+				</iframe>
+			`;
 			
-		// 	// Show modal
-		// 	const bsModal = new bootstrap.Modal(modal);
-		// 	bsModal.show();
-		// },
+			// Show modal
+			const bsModal = new bootstrap.Modal(modal);
+			bsModal.show();
+		},
 	};
 
 	/* ----- Elements ----- */
@@ -1459,25 +1359,6 @@ async function fetchItems(apiUrl, key) {
 			// If id is a local-only (fallback) id, skip server call
 			if (typeof id === 'string' && id.startsWith('user-')) {
 				dataCache[key] = (dataCache[key] || []).filter(i => i.id !== id);
-				// Persist fallback changes to local session if present
-				try {
-					const sess = getSession();
-					if (sess && sess.user) {
-						const mapping = {
-							referee: 'referees',
-							employmentHistory: 'employments',
-							professionalMembership: 'memberships',
-							documents: 'documents',
-							educationTraining: 'education'
-						};
-						const prop = mapping[key];
-						if (prop) {
-							sess.user[prop] = dataCache[key];
-							setSession(sess);
-							currentUser = getUser();
-						}
-					}
-				} catch (e) { console.warn('Could not persist local deletion to session', e); }
 				return true;
 			}
 			await axios.delete(`${apiUrl}/${id}`);
@@ -3126,48 +3007,13 @@ async function openDocumentModal(editItem = null) {
 				
 				try {
 					if (numericId) {
-						// Handle local-only fallback ids (user-...)
-						if (typeof numericId === 'string' && numericId.startsWith('user-')) {
-							data.id = numericId;
-							const list = dataCache[key] || [];
-							const idx = list.findIndex(i => i.id === numericId);
-							if (idx > -1) {
-								list[idx] = Object.assign({}, list[idx], data);
-							} else {
-								list.push(data);
-							}
-							dataCache[key] = list;
-							// Persist to session if applicable
-							try {
-								const sess = getSession();
-								if (sess && sess.user) {
-									const mapping = {
-										referee: 'referees',
-										employmentHistory: 'employments',
-										professionalMembership: 'memberships',
-										documents: 'documents',
-										educationTraining: 'education'
-									};
-									const prop = mapping[key];
-									if (prop) {
-										sess.user[prop] = dataCache[key];
-										setSession(sess);
-										currentUser = getUser();
-									}
-								}
-							} catch (e) { console.warn('Could not persist local edit to session', e); }
-							showToast('Record updated (local).', 'success');
-						} else {
-							await updateItem(stepApiUrl, numericId, data, key);
-							showToast('Record updated.', 'success');
-						}
+						await updateItem(stepApiUrl, numericId, data, key);
+						showToast('Record updated.', 'success');
 					} else {
 						await createItem(stepApiUrl, data, key);
 						showToast('Record created.', 'success');
 					}
-				} catch (err) {
-					console.error('CRUD submit error:', err);
-				}
+				} catch {}
 				break;
 			}
 			
