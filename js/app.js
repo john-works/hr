@@ -1248,20 +1248,25 @@ function renderTableRows(items, tbodyEl, columns, editCb, deleteCb, customAction
             }
         }
         
-        const btnEdit = document.createElement('button');
-        btnEdit.className = 'btn btn-sm btn-primary me-2';
-        btnEdit.type = 'button';
-        btnEdit.innerHTML = '<i class="fa fa-edit"></i>';
-        btnEdit.addEventListener('click', () => editCb(item));
+		// Add Edit button only when edit callback provided
+		if (typeof editCb === 'function') {
+			const btnEdit = document.createElement('button');
+			btnEdit.className = 'btn btn-sm btn-primary me-2';
+			btnEdit.type = 'button';
+			btnEdit.innerHTML = '<i class="fa fa-edit"></i>';
+			btnEdit.addEventListener('click', () => editCb(item));
+			tdActions.appendChild(btnEdit);
+		}
 
-        const btnDelete = document.createElement('button');
-        btnDelete.className = 'btn btn-sm btn-danger';
-        btnDelete.type = 'button';
-        btnDelete.innerHTML = '<i class="fa fa-trash"></i>';
-        btnDelete.addEventListener('click', () => deleteCb(item.id));
-
-        tdActions.appendChild(btnEdit);
-        tdActions.appendChild(btnDelete);
+		// Add Delete button only when delete callback provided
+		if (typeof deleteCb === 'function') {
+			const btnDelete = document.createElement('button');
+			btnDelete.className = 'btn btn-sm btn-danger';
+			btnDelete.type = 'button';
+			btnDelete.innerHTML = '<i class="fa fa-trash"></i>';
+			btnDelete.addEventListener('click', () => deleteCb(item.id));
+			tdActions.appendChild(btnDelete);
+		}
         tr.appendChild(tdActions);
 
         tbodyEl.appendChild(tr);
