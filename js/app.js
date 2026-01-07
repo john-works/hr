@@ -536,6 +536,47 @@
 		});
 	}
 
+// Attractive confirm modal returning a Promise<boolean>
+function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Delete') {
+		return new Promise(resolve => {
+				const id = 'confirmModal-' + Date.now();
+				const modalHtml = `
+				<div class="modal fade" id="${id}" tabindex="-1" aria-hidden="true">
+					<div class="modal-dialog modal-dialog-centered">
+						<div class="modal-content border-0 shadow-sm">
+							<div class="modal-header bg-danger text-white">
+								<h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>${title}</h5>
+								<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<p class="mb-0">${message}</p>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+								<button type="button" class="btn btn-danger btn-confirm">${confirmText}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				`;
+
+				document.body.insertAdjacentHTML('beforeend', modalHtml);
+				const modalEl = document.getElementById(id);
+				const bsModal = new bootstrap.Modal(modalEl);
+
+				const cleanup = (result) => {
+						try { bsModal.hide(); } catch (e) {}
+						setTimeout(() => { modalEl.remove(); }, 300);
+						resolve(result);
+				};
+
+				modalEl.querySelector('.btn-confirm').addEventListener('click', () => cleanup(true));
+				modalEl.addEventListener('hidden.bs.modal', () => cleanup(false), { once: true });
+
+				bsModal.show();
+		});
+}
+
 	/* ----- Authentication UI Toggle ----- */
 	function showLoginForm() {
 		loginForm.style.display = 'block';
@@ -1415,9 +1456,33 @@ async function fetchItems(apiUrl, key) {
 
 	async function deleteItem(apiUrl, id, key) {
 		try {
-		await axios.delete(`${apiUrl}/${id}`);
-		dataCache[key] = dataCache[key].filter(i => i.id !== id);
-		return true;
+			// If id is a local-only (fallback) id, skip server call
+			if (typeof id === 'string' && id.startsWith('user-')) {
+				dataCache[key] = (dataCache[key] || []).filter(i => i.id !== id);
+				// Persist fallback changes to local session if present
+				try {
+					const sess = getSession();
+					if (sess && sess.user) {
+						const mapping = {
+							referee: 'referees',
+							employmentHistory: 'employments',
+							professionalMembership: 'memberships',
+							documents: 'documents',
+							educationTraining: 'education'
+						};
+						const prop = mapping[key];
+						if (prop) {
+							sess.user[prop] = dataCache[key];
+							setSession(sess);
+							currentUser = getUser();
+						}
+					}
+				} catch (e) { console.warn('Could not persist local deletion to session', e); }
+				return true;
+			}
+			await axios.delete(`${apiUrl}/${id}`);
+			dataCache[key] = (dataCache[key] || []).filter(i => i.id !== id);
+			return true;
 		} catch (e) {
 		showToast(`Error deleting item`, 'error');
 		console.error('deleteItem error:', e);
@@ -1724,7 +1789,8 @@ async function fetchItems(apiUrl, key) {
 				],
 				openEducationModal,
 				async id => {
-					if (confirm('Delete this education record?')) {
+					const confirmed = await confirmModal('Delete this education record?', 'Delete Education', 'Delete');
+					if (confirmed) {
 						const success = await deleteItem(API.educationTraining, id, 'educationTraining');
 						if (success) loadEducation();
 						showToast('Education record deleted.', 'success');
@@ -1851,10 +1917,11 @@ function openMembershipModal(editItem = null) {
 		{ key: 'type' },
 		{ key: 'institute' }
 		], openMembershipModal, async id => {
-		if (confirm('Delete this membership record?')) {
-			const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
-			if (success) loadMembership();
-		}
+			const confirmed = await confirmModal('Delete this membership record?', 'Delete Membership', 'Delete');
+			if (confirmed) {
+				const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
+				if (success) loadMembership();
+			}
 		});
 	}
 
@@ -1966,16 +2033,16 @@ function openEmploymentModal(editItem = null) {
 		{ key: 'duties' },
 		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
 		], openEmploymentModal, async id => {
-		if (confirm('Delete this employment record?')) {
-			const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
-			if (success) loadEmployment();
-		}
+			const confirmed = await confirmModal('Delete this Employment History record?', 'Delete Employment', 'Delete');
+			if (confirmed) {
+				const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
+				if (success) loadEmployment();
+			}
 		});
 	}
 
 
-	
-// Referee 
+	// Referee 
 const refereeTableBody = document.querySelector('#refereeTable tbody');
 
 document.getElementById('btnAddReferee').addEventListener('click', () => openRefereeModal());
@@ -1983,11 +2050,14 @@ document.getElementById('btnAddReferee').addEventListener('click', () => openRef
 function openRefereeModal(editItem = null) {
 	const refereesCount = refereeTableBody.querySelectorAll('tr').length;
 	const addRefereeBtn = document.getElementById('btnAddReferee');
-	if (refereesCount==3) {
-		addRefereeBtn.disabled = true;
+	// Only block adding when at limit; allow editing existing records even at max
+	if (!editItem && refereesCount >= 3) {
+		if (addRefereeBtn) addRefereeBtn.disabled = true;
 		showToast('You have reached the maximum number of referees.', 'warning');
 		return;
 	}
+	// Ensure Add button is enabled when editing an existing item
+	if (editItem && addRefereeBtn) addRefereeBtn.disabled = false;
     crudModalLabel.innerHTML = `
         <i class="fas fa-briefcase me-2"></i>
         ${editItem ? 'Edit Referee' : 'Add Referee'}
@@ -2042,7 +2112,21 @@ function openRefereeModal(editItem = null) {
 		</div>
     `;
 
-    crudModal.show();
+	crudModal.show();
+
+	// Focus first input for convenience
+	const firstInput = crudModalBody.querySelector('input[name="name"]');
+	if (firstInput) firstInput.focus();
+
+	// When modal closes, re-evaluate Add button enabled state
+	if (addRefereeBtn) {
+		const onHidden = () => {
+			const currentCount = refereeTableBody.querySelectorAll('tr').length;
+			addRefereeBtn.disabled = currentCount >= 3;
+			crudModalEl.removeEventListener('hidden.bs.modal', onHidden);
+		};
+		crudModalEl.addEventListener('hidden.bs.modal', onHidden);
+	}
 }
 	async function loadReferee() {
 		if (!currentUser || !currentUser.id) {
@@ -2076,15 +2160,15 @@ function openRefereeModal(editItem = null) {
 		{ key: 'address' },
 		{ key: 'position' }
 		], openRefereeModal, async id => {
-		if (confirm('Delete this employment record?')) {
-			const success = await deleteItem(API.referee, id, 'referee');
-			if (success) loadReferee();
-		}
+			const confirmed = await confirmModal('Delete this Referee record?', 'Delete Referee', 'Delete');
+			if (confirmed) {
+				const success = await deleteItem(API.referee, id, 'referee');
+				if (success) loadReferee();
+			}
 		});
 	}
 
 
-	
 // Documents 
 const documentsTableBody = document.querySelector('#documentsTable tbody');
 
@@ -2176,120 +2260,14 @@ async function openDocumentModal(editItem = null) {
 			{key: 'document_type' },
 			{ key: 'doc_name' },
 		// {key: 'document_type', formatter: val => val ? 'Uploaded' : 'Not Uploaded' },
-		], openDocumentModal, async id => {
-		if (confirm('Delete this document record?')) {
-			const success = await deleteItem(API.documents, id, 'documents');
-			if (success) loadDocuments();
-		}
-		}, item => {
-			// Custom actions column for documents
-			const viewBtn = document.createElement('button');
-			viewBtn.className = 'btn btn-sm btn-primary me-2';
-			viewBtn.innerHTML = '<i class="fas fa-eye"></i> View';
-			viewBtn.title = 'View Document';
-			viewBtn.addEventListener('click', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (!item.file_path) {
-					showToast('Document file path is not available', 'error');
-					console.error('Document item:', item);
-					return;
-				}
-				// Use DocumentManager viewer modal
-				DocumentManager.openDocumentViewer(item.file_path, item.title || 'Document');
-			});
-			return viewBtn;
-		});
+		], null, async id => {
+			const confirmed = await confirmModal('Delete this document record?', 'Delete Document', 'Delete');
+			if (confirmed) {
+				const success = await deleteItem(API.documents, id, 'documents');
+				if (success) loadDocuments();
+			}
+		}, null);
 	}
-
-
-
-	// // Dependants
-	// const dependantsTableBody = document.querySelector('#dependantsTable tbody');
-
-	// document.getElementById('btnAddDependant').addEventListener('click', () => openDependantModal());
-
-	// function openDependantModal(editItem = null) {
-
-    // crudModalLabel.innerHTML = `
-    //     <i class="fas fa-briefcase me-2"></i>
-    //     ${editItem ? 'Edit Dependant' : 'Add Dependant'}
-    // `;
-
-    // Set ID (used for update)
-    // crudItemIdInput.value = editItem ? editItem.id : '';
-
-    // Modal form body
-//     crudModalBody.innerHTML = `
-//         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
-
-// 			<div class="row">
-
-// 			<div class="col-md-6 mb-3">
-// 			<label for="name" class="form-label fw-bold">Full Name</label>
-// 			<input type="text" class="form-control" id="name" name="name"  value="${editItem?.name || ''}" required>
-// 			</div>
-
-
-// 			<div class="col-md-6 mb-3">
-// 			<label for="relationship" class="form-label fw-bold">Relationship</label>
-// 			<select type="text" class="form-select" id="relationship" name="relationship"  required value="${editItem?.relationship ||''}">
-// 				<option value="">Select Relationship</option>
-// 				<option value="Spouse">Spouse</option>
-// 				<option value="Child">Child</option>
-// 				<option value="Parent" >Parent</option>
-// 				<option value="Friend">Friend</option>
-
-// 			</select>
-// 			</div>
-// 		</div>
-// 		<div class="row">
-
-// 			<div class="col-md-6 mb-3">
-// 			<label for="birth_date" class="form-label fw-bold">Date of Birth</label>
-// 			<input type="date" class="form-control calender" id="birth_date" name="birth_date"  required value="${editItem?.birth_date || ''}">
-// 			</div>
-// 		</div>
-//     `;
-
-//     crudModal.show();
-// }
-// 	async function loadDependants() {
-// 		if (!currentUser || !currentUser.id) {
-// 			showToast('User not authenticated. Please log in.', 'warning');
-// 			return;
-// 		}
-// 		let items = [];
-// 		// Use GET route for applicant
-// 		items = await fetchItems(API.getDependants(currentUser.id), 'dependants');
-
-// 		// fallback if no API data
-// 		if (!items || items.length === 0) {
-// 			if (currentUser && currentUser.dependants && Array.isArray(currentUser.dependants)) {
-// 				items = currentUser.dependants.map((mem, index) => ({
-// 					id: `user-mem-${index}`,
-// 					name: mem.name || '',
-// 					birth_date: mem.birth_date || '',
-// 					relationship: mem.relationship || ''
-
-
-// 				}));
-// 				dataCache['dependants'] = items;
-// 			}
-// 		}
-// 		renderTableRows(items, dependantsTableBody, [
-// 		{ key: 'name' },
-// 		{ key: 'relationship' },
-// 		{ key: 'birth_date' }
-// 		], openDependantModal, async id => {
-// 		if (confirm('Delete this dependants record?')) {
-// 			const success = await deleteItem(API.dependants, id, 'dependants');
-// 			if (success) loadDependants();
-// 		}
-// 		});
-// 	}
-
-
 
 
 	// Submitted Applications
@@ -3027,13 +3005,29 @@ async function openDocumentModal(editItem = null) {
 				});
 				try {
 					if (numericId) {
-						await updateItem(stepApiUrl, numericId, data, key);
-						showToast('Record updated.', 'success');
+						// If this is a local-only fallback id (e.g., 'user-...'), update cache locally
+						if (typeof numericId === 'string' && numericId.startsWith('user-')) {
+							data.id = numericId; // preserve local id
+							const list = dataCache[key] || [];
+							const idx = list.findIndex(i => i.id === numericId);
+							if (idx > -1) {
+								list[idx] = Object.assign({}, list[idx], data);
+							} else {
+								list.push(data);
+							}
+							dataCache[key] = list;
+							showToast('Record updated (local).', 'success');
+						} else {
+							await updateItem(stepApiUrl, numericId, data, key);
+							showToast('Record updated.', 'success');
+						}
 					} else {
 						await createItem(stepApiUrl, data, key);
 						showToast('Record created.', 'success');
 					}
-				} catch {}
+				} catch (err) {
+					console.error('CRUD submit error:', err);
+				}
 				break;
 			}
 			
@@ -3132,13 +3126,48 @@ async function openDocumentModal(editItem = null) {
 				
 				try {
 					if (numericId) {
-						await updateItem(stepApiUrl, numericId, data, key);
-						showToast('Record updated.', 'success');
+						// Handle local-only fallback ids (user-...)
+						if (typeof numericId === 'string' && numericId.startsWith('user-')) {
+							data.id = numericId;
+							const list = dataCache[key] || [];
+							const idx = list.findIndex(i => i.id === numericId);
+							if (idx > -1) {
+								list[idx] = Object.assign({}, list[idx], data);
+							} else {
+								list.push(data);
+							}
+							dataCache[key] = list;
+							// Persist to session if applicable
+							try {
+								const sess = getSession();
+								if (sess && sess.user) {
+									const mapping = {
+										referee: 'referees',
+										employmentHistory: 'employments',
+										professionalMembership: 'memberships',
+										documents: 'documents',
+										educationTraining: 'education'
+									};
+									const prop = mapping[key];
+									if (prop) {
+										sess.user[prop] = dataCache[key];
+										setSession(sess);
+										currentUser = getUser();
+									}
+								}
+							} catch (e) { console.warn('Could not persist local edit to session', e); }
+							showToast('Record updated (local).', 'success');
+						} else {
+							await updateItem(stepApiUrl, numericId, data, key);
+							showToast('Record updated.', 'success');
+						}
 					} else {
 						await createItem(stepApiUrl, data, key);
 						showToast('Record created.', 'success');
 					}
-				} catch {}
+				} catch (err) {
+					console.error('CRUD submit error:', err);
+				}
 				break;
 			}
 			
