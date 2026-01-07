@@ -2252,7 +2252,7 @@ async function openDocumentModal(editItem = null) {
 			educationTraining: 'Education & Training',
 			professionalMembership: 'Professional Memberships',
 			employmentHistory: 'Employment History',
-			documents: 'Documents',
+			// documents: 'Documents',
 			referee: 'References',
 			// dependants: 'Dependants',
 			personalDetails: 'Personal Details'
