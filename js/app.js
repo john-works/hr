@@ -2442,7 +2442,7 @@ async function openDocumentModal(editItem = null) {
 		body.innerHTML = `
 			<div class="row">
 				<div class="col-md-10">
-					<p><strong>Position:${position.position_title || 'N/A'}</strong></p>
+					<p><strong>Position:&nbsp; ${position.position_title || 'N/A'}</strong></p>
 					<p><strong>Vacancy:	${position.available_vacancies || 'N/A'}</strong></p>
 					<p><strong>Reports to:	${position.reports_to || 'N/A'}</strong></p> 
 					<p><strong>Department: ${position.department || 'N/A'}</strong></p>
@@ -2451,7 +2451,7 @@ async function openDocumentModal(editItem = null) {
 				</div>
 				<hr/>
 			<div class="col-md-12">
-			<p><strong>position Purpose:</strong> ${position.job_purpose || 'N/A'}</p>
+			<p><strong>Position Purpose:</strong> <br>${position.job_purpose || 'N/A'}</p>
 			<p><strong>Duties and Responsibilities:</strong></p>
 			${dutiesList}
 			<p><strong>Person Specifications:</strong></p>
