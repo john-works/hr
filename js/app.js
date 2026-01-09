@@ -58,7 +58,7 @@
 		/**
 		 * Fetch document types for a specific section
 		 * @param {string} section - The recruitment section name
-		 * @returns {Promise<Array>} Array of document types for the section
+		 * @returns {Promise<Array>} Array of document types for the sectionF
 		 */
 		async fetchDocumentTypesBySection(section) {
 			try {
@@ -286,116 +286,220 @@
 			bsModal.show();
 		},
 	};
+/* =====================================================
+   ELEMENTS
+===================================================== */
+const authArea = document.getElementById('authArea');
+const applicationDashboard = document.getElementById('applicationDashboard');
+// const mainNavbar = document.getElementById('mainNavbar');
+const userDropdown = document.getElementById('userDropdown');
+const btnLogout = document.getElementById('btnLogout');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const verifyEmailForm = document.getElementById('verifyEmailForm');
+const showLoginBtn = document.getElementById('showLogin');
+const showRegisterBtn = document.getElementById('showRegister');
+const forgotPassword = document.getElementById('forgotPassword');
+const showForgotPasswordBtn = document.getElementById('showForgotPassword');
+const passwordResetForm = document.getElementById('passwordResetForm');
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
-	/* ----- Elements ----- */
-	const authArea = document.getElementById('authArea');
-	const applicationDashboard = document.getElementById('applicationDashboard');
-	// const mainNavbar = document.getElementById('mainNavbar');
-	const userDropdown = document.getElementById('userDropdown');
-	const btnLogout = document.getElementById('btnLogout');
-	const loginForm = document.getElementById('loginForm');
-	const registerForm = document.getElementById('registerForm');
-	const verifyEmailForm = document.getElementById('verifyEmailForm');
-	const showLoginBtn = document.getElementById('showLogin');
-	const showRegisterBtn = document.getElementById('showRegister');
-	const forgotPassword = document.getElementById('forgotPassword');
-	const showForgotPasswordBtn = document.getElementById('showForgotPassword');
-	const passwordResetForm = document.getElementById('passwordResetForm');
-	const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+/* =====================================================
+   APP STATE
+===================================================== */
+let currentStep = 'viewPositions';
 
-	// Current step in app
-	let currentStep = 'viewPositions';
-	// Check if in browse mode
-	const urlParams = new URLSearchParams(window.location.search);
-	const isBrowseMode = urlParams.get('mode') === 'browse';
-	// Track if user has selected a position to apply
-	let hasSelectedJob = false;
-	let selectedJob = null;
+const urlParams = new URLSearchParams(window.location.search);
+const isBrowseMode = urlParams.get('mode') === 'browse';
 
-	// Bootstrap modal for CRUD
-	const crudModalEl = document.getElementById('crudModal');
-	const crudModal = new bootstrap.Modal(crudModalEl);
-	const crudForm = document.getElementById('crudForm');
-	const crudModalLabel = document.getElementById('crudModalLabel');
-	const crudModalBody = document.getElementById('crudModalBody');
-	const crudItemIdInput = document.getElementById('crudItemId');
-	const crudSaveBtn = document.getElementById('crudSaveBtn');
+let hasSelectedJob = false;
+let selectedJob = null;
 
-	// Bootstrap modal for position Details
-	const jobDetailsModalEl = document.getElementById('jobDetailsModal');
-	const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
+/* =====================================================
+   BOOTSTRAP MODALS
+===================================================== */
+const crudModalEl = document.getElementById('crudModal');
+const crudModal = new bootstrap.Modal(crudModalEl);
+const crudForm = document.getElementById('crudForm');
+const crudModalLabel = document.getElementById('crudModalLabel');
+const crudModalBody = document.getElementById('crudModalBody');
+const crudItemIdInput = document.getElementById('crudItemId');
+const crudSaveBtn = document.getElementById('crudSaveBtn');
 
-	// Sidebar nav
-	const sidebarNav = document.getElementById('sidebarNav');
-	const mainPanel = document.getElementById('mainPanel');
+const jobDetailsModalEl = document.getElementById('jobDetailsModal');
+const jobDetailsModal = new bootstrap.Modal(jobDetailsModalEl);
 
-	/* ----- Session Management ---- */
-	function getSession(){
-		const existingUser = localStorage.getItem('userSession');
-		if (!existingUser) return null;
-		try {
-			return JSON.parse(existingUser);
-		} catch {
-			return null;
-		}
-	}
+/* =====================================================
+   SIDEBAR
+===================================================== */
+const sidebarNav = document.getElementById('sidebarNav');
+const mainPanel = document.getElementById('mainPanel');
 
-	function setSession(sessionObj) {
-		localStorage.setItem('userSession', JSON.stringify(sessionObj));
-	}
+/* =====================================================
+   SESSION MANAGEMENT
+===================================================== */
+let currentUser = null;
 
-	function clearSession() {
-		localStorage.removeItem('userSession');
-		localStorage.removeItem('token');
-	}
+function getSession() {
+  const existingUser = localStorage.getItem('userSession');
+  if (!existingUser) return null;
+  try {
+    return JSON.parse(existingUser);
+  } catch {
+    return null;
+  }
+}
 
-	function getUser() {
-		const userSession = JSON.parse(localStorage.getItem('userSession'));
-		if (!userSession) return null;
-		const userStr = userSession.user;
-		if (!userStr) return null;
-		try {
-			return userStr;
-		} catch {
-			return null;
-		}
-	}
+function setSession(sessionObj) {
+  localStorage.setItem('userSession', JSON.stringify(sessionObj));
+}
 
-	// Now set currentUser after getUser is defined
-	currentUser = getUser();
+function clearSession() {
+  localStorage.removeItem('userSession');
+  localStorage.removeItem('token');
+  localStorage.removeItem('lastActivity');
+}
 
-	function getToken() {
-		let userSession = getSession();
-		let token = userSession ? userSession.token : null;
-		return token;
-	}
+function getUser() {
+  const session = getSession();
+  return session ? session.user : null;
+}
 
-	/* ----- Auto-Logout for Inactivity ---- */
-	const INACTIVITY_TIMEOUT = 30 * 1000; // 30 seconds for testing (change to 15 * 60 * 1000 for 15 minutes in production)
-	let inactivityTimer;
+function getToken() {
+  const session = getSession();
+  return session ? session.token : null;
+}
 
-	function resetInactivityTimer() {
-		clearTimeout(inactivityTimer);
-		if (currentUser) {
-			inactivityTimer = setTimeout(() => {
-				autoLogout();
-			}, INACTIVITY_TIMEOUT);
-		}
-	}
+// Restore user
+currentUser = getUser();
 
-	function autoLogout() {
-		clearSession();
-		currentUser = null;
-		showToast('You have been automatically logged out due to inactivity.', 'warning');
-		showLoginForm();
-		const userDropdownContainer = document.getElementById('userDropdownContainer');
-		if (userDropdownContainer) userDropdownContainer.style.display = 'none';
-		stopInactivityTracking();
-	}
+/* =====================================================
+   UI HELPERS
+===================================================== */
+function showLoginForm() {
+  authArea.style.display = 'block';
+  applicationDashboard.style.display = 'none';
+}
 
-	function stopInactivityTracking() {
-		clearTimeout(inactivityTimer);
-	}
+function showDashboard() {
+  authArea.style.display = 'none';
+  applicationDashboard.style.display = 'block';
+}
+
+function showToast(message, type = 'info') {
+  alert(message); // replace with your toast component
+}
+
+/* =====================================================
+   AUTO LOGOUT – INACTIVITY
+===================================================== */
+const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+let inactivityTimer = null;
+
+const activityEvents = [
+  'mousemove',
+  'mousedown',
+  'keypress',
+  'scroll',
+  'touchstart',
+  'click'
+];
+
+function resetInactivityTimer() {
+  if (!currentUser) return;
+
+  clearTimeout(inactivityTimer);
+
+  // Sync across tabs
+  localStorage.setItem('lastActivity', Date.now());
+
+  inactivityTimer = setTimeout(() => {
+    autoLogout();
+  }, INACTIVITY_TIMEOUT);
+}
+
+function startInactivityTracking() {
+  activityEvents.forEach(event =>
+    document.addEventListener(event, resetInactivityTimer)
+  );
+  resetInactivityTimer();
+}
+
+function stopInactivityTracking() {
+  activityEvents.forEach(event =>
+    document.removeEventListener(event, resetInactivityTimer)
+  );
+  clearTimeout(inactivityTimer);
+}
+
+function autoLogout() {
+  stopInactivityTracking();
+  clearSession();
+  currentUser = null;
+
+  showToast(
+    'You have been automatically logged out due to inactivity.',
+    'warning'
+  );
+
+  showLoginForm();
+
+  const userDropdownContainer = document.getElementById('userDropdownContainer');
+  if (userDropdownContainer) {
+    userDropdownContainer.style.display = 'none';
+  }
+}
+
+/* =====================================================
+   MULTI-TAB SUPPORT
+===================================================== */
+window.addEventListener('storage', (e) => {
+  if (e.key === 'lastActivity') {
+    resetInactivityTimer();
+  }
+
+  if (e.key === 'userSession' && !e.newValue) {
+    autoLogout();
+  }
+});
+
+/* =====================================================
+   LOGIN / LOGOUT HANDLERS
+===================================================== */
+// Call this after successful login
+function onLoginSuccess(user, token) {
+  setSession({
+    user: user,
+    token: token,
+    loginTime: Date.now()
+  });
+
+  currentUser = user;
+  showDashboard();
+  startInactivityTracking();
+}
+
+// Manual logout
+if (btnLogout) {
+  btnLogout.addEventListener('click', () => {
+    autoLogout();
+  });
+}
+
+/* =====================================================
+   RESTORE SESSION ON PAGE LOAD
+===================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  currentUser = getUser();
+
+  if (currentUser) {
+    showDashboard();
+    startInactivityTracking();
+  } else {
+    showLoginForm();
+  }
+});
+
 
 	/* ----- Toast Notification Utility ----- */
 	function showToast(message, type = 'info', duration = 4000) {
@@ -2503,16 +2607,7 @@ async function openDocumentModal(editItem = null) {
 				});
 				tdActions.appendChild(btnView);
 
-				// if (!isBrowseMode) {
-				// const btnApply = document.createElement('button');
-				// btnApply.className = 'btn btn-sm btn-success';
-				// btnApply.type = 'button';
-				// btnApply.innerHTML = '<i class="fa fa-paper-plane"></i> Apply';
-				// btnApply.addEventListener('click', () => {
-				// 	showJobDetailsModal(position.id);
-				// });
-				// tdActions.appendChild(btnApply);
-				// }
+				
 				tr.appendChild(tdActions);
 
 				positionsTableBody.appendChild(tr);
