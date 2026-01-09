@@ -383,7 +383,7 @@ function showToast(message, type = 'info') {
 /* =====================================================
    AUTO LOGOUT – PRODUCTION SAFE
 ===================================================== */
-const INACTIVITY_THRESHOLD = 2 * 60 * 1000; // 5 minutes
+const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5 minutes
 const LAST_ACTIVITY_KEY = 'lastActivity';
 
 // Update last activity whenever user interacts
