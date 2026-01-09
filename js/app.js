@@ -291,7 +291,6 @@
 ===================================================== */
 const authArea = document.getElementById('authArea');
 const applicationDashboard = document.getElementById('applicationDashboard');
-// const mainNavbar = document.getElementById('mainNavbar');
 const userDropdown = document.getElementById('userDropdown');
 const btnLogout = document.getElementById('btnLogout');
 const loginForm = document.getElementById('loginForm');
@@ -341,10 +340,10 @@ const mainPanel = document.getElementById('mainPanel');
 let currentUser = null;
 
 function getSession() {
-  const existingUser = localStorage.getItem('userSession');
-  if (!existingUser) return null;
+  const data = localStorage.getItem('userSession');
+  if (!data) return null;
   try {
-    return JSON.parse(existingUser);
+    return JSON.parse(data);
   } catch {
     return null;
   }
@@ -370,7 +369,6 @@ function getToken() {
   return session ? session.token : null;
 }
 
-// Restore user
 currentUser = getUser();
 
 /* =====================================================
@@ -387,14 +385,14 @@ function showDashboard() {
 }
 
 function showToast(message, type = 'info') {
-  alert(message); // replace with your toast component
+  alert(message); // replace with toast if needed
 }
 
 /* =====================================================
-   AUTO LOGOUT – INACTIVITY
+   AUTO LOGOUT – PRODUCTION SAFE
 ===================================================== */
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
-let inactivityTimer = null;
+const LAST_ACTIVITY_KEY = 'lastActivity';
 
 const activityEvents = [
   'mousemove',
@@ -405,35 +403,43 @@ const activityEvents = [
   'click'
 ];
 
-function resetInactivityTimer() {
+function updateLastActivity() {
+  if (!currentUser) return;
+  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
+}
+
+activityEvents.forEach(event =>
+  document.addEventListener(event, updateLastActivity)
+);
+
+function checkInactivity() {
   if (!currentUser) return;
 
-  clearTimeout(inactivityTimer);
+  const lastActivity = Number(localStorage.getItem(LAST_ACTIVITY_KEY));
+  if (!lastActivity) return;
 
-  // Sync across tabs
-  localStorage.setItem('lastActivity', Date.now());
-
-  inactivityTimer = setTimeout(() => {
+  const now = Date.now();
+  if (now - lastActivity >= INACTIVITY_TIMEOUT) {
     autoLogout();
-  }, INACTIVITY_TIMEOUT);
+  }
 }
 
-function startInactivityTracking() {
-  activityEvents.forEach(event =>
-    document.addEventListener(event, resetInactivityTimer)
-  );
-  resetInactivityTimer();
-}
+// Check every 10 seconds (reliable even when hosted)
+setInterval(checkInactivity, 10 * 1000);
 
-function stopInactivityTracking() {
-  activityEvents.forEach(event =>
-    document.removeEventListener(event, resetInactivityTimer)
-  );
-  clearTimeout(inactivityTimer);
-}
+// Check when user returns to tab
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    checkInactivity();
+  }
+});
 
+window.addEventListener('focus', checkInactivity);
+
+/* =====================================================
+   LOGOUT
+===================================================== */
 function autoLogout() {
-  stopInactivityTracking();
   clearSession();
   currentUser = null;
 
@@ -454,8 +460,8 @@ function autoLogout() {
    MULTI-TAB SUPPORT
 ===================================================== */
 window.addEventListener('storage', (e) => {
-  if (e.key === 'lastActivity') {
-    resetInactivityTimer();
+  if (e.key === LAST_ACTIVITY_KEY) {
+    checkInactivity();
   }
 
   if (e.key === 'userSession' && !e.newValue) {
@@ -466,24 +472,20 @@ window.addEventListener('storage', (e) => {
 /* =====================================================
    LOGIN / LOGOUT HANDLERS
 ===================================================== */
-// Call this after successful login
 function onLoginSuccess(user, token) {
   setSession({
-    user: user,
-    token: token,
+    user,
+    token,
     loginTime: Date.now()
   });
 
   currentUser = user;
+  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
   showDashboard();
-  startInactivityTracking();
 }
 
-// Manual logout
 if (btnLogout) {
-  btnLogout.addEventListener('click', () => {
-    autoLogout();
-  });
+  btnLogout.addEventListener('click', autoLogout);
 }
 
 /* =====================================================
@@ -494,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (currentUser) {
     showDashboard();
-    startInactivityTracking();
+    checkInactivity();
   } else {
     showLoginForm();
   }
