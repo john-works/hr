@@ -2716,7 +2716,7 @@ async function openDocumentModal(editItem = null) {
 					<p><strong>Reports to:	${position.reports_to || 'N/A'}</strong></p> 
 					<p><strong>Department: ${position.department || 'N/A'}</strong></p>
 					<p><strong>Department Head:	${position.department_head || 'N/A'}</strong></p> 
-					<p><strong>Deadline:	${position.deadline_date || 'N/A'} ${position.deadline_time || 'N/A'}</strong></p>
+					<p><strong>Deadline:	${position.deadline_date || ''} ${position.deadline_time || ''}</strong></p>
 				</div>
 				<hr/>
 			<div class="col-md-12">
