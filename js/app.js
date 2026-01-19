@@ -2452,7 +2452,8 @@ async function openDocumentModal(editItem = null) {
 					{ key: 'position_title' },
 					{ key: 'application_id'},
 					{ key: 'submitted_date'},
-					{ key: 'deadline' },
+					{ key: 'deadline_date' },
+					{ key: 'deadline_time' },
 					{ key: 'status' }
 				],
 				null,
@@ -2715,7 +2716,7 @@ async function openDocumentModal(editItem = null) {
 					<p><strong>Reports to:	${position.reports_to || 'N/A'}</strong></p> 
 					<p><strong>Department: ${position.department || 'N/A'}</strong></p>
 					<p><strong>Department Head:	${position.department_head || 'N/A'}</strong></p> 
-					<p><strong>Deadline:	${position.deadline || 'N/A'}</strong></p>
+					<p><strong>Deadline:	${position.deadline_date || 'N/A'} ${position.deadline_time || 'N/A'}</strong></p>
 				</div>
 				<hr/>
 			<div class="col-md-12">
@@ -2759,7 +2760,7 @@ async function openDocumentModal(editItem = null) {
 				const tr = document.createElement('tr');
 				tr.insertAdjacentHTML('beforeend', `<td>${position.name || ''}</td>`);
 				tr.insertAdjacentHTML('beforeend', `<td>${position.location || ''}</td>`);
-				tr.insertAdjacentHTML('beforeend', `<td>${position.deadline || ''}</td>`);
+				tr.insertAdjacentHTML('beforeend', `<td>${position.deadline_date || ''} ${position.deadline_time || ''}</td>`);
 
 				const tdActions = document.createElement('td');
 				const btnView = document.createElement('button');
