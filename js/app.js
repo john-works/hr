@@ -1573,192 +1573,248 @@ async function fetchItems(apiUrl, key) {
 		});
 	}
 
-	// Education and Training
-	const educationTableBody = document.querySelector('#educationTable tbody');
-	document.getElementById('btnAddEducation').addEventListener('click', () => openEducationModal());
-	function openEducationModal(editItem = null) {
-		crudModalLabel.innerHTML = `
-			<i class="fas fa-graduation-cap me-2"></i>
-			${editItem ? 'Edit Education' : 'Add Education'}
-		`;
+// ==============================
+// Education and Training Module
+// ==============================
 
-		crudItemIdInput.value = editItem ? editItem.id : '';
+// Table body reference
+const educationTableBody = document.querySelector('#educationTable tbody');
 
-		crudModalBody.innerHTML = `
-			<input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
-			
-			<div class="form-check mb-3">
-				<input class="form-check-input" type="checkbox" value="" id="ongoing" name="ongoing" ${editItem?.ongoing ? 'checked' : ''}>
-				<label class="form-check-label fw-bold" for="ongoing">
-					Ongoing
-				</label>
-			</div>
-			
-			<div class="row">
-				<div class="col-md-6 mb-3">
-					<label class="form-label fw-bold">From Year</label>
-					<select class="form-select" id="start_year" name="start_year" required>
-						<option value="">Select Year</option>
-						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
-							.map(year => `<option value="${year}" ${editItem?.start_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-					</select>
-				</div>
+// Open Education Modal
+document.getElementById('btnAddEducation').addEventListener('click', () => openEducationModal());
 
-				<div class="col-md-6 mb-3">
-					<label class="form-label fw-bold">To Year</label>
-					<select class="form-select" id="end_year" name="end_year">
-						<option value="">Select Year</option>
-						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
-							.map(year => `<option value="${year}" ${editItem?.end_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-					</select>
-				</div>
-			</div>
+function openEducationModal(editItem = null) {
+    crudModalLabel.innerHTML = `
+        <i class="fas fa-graduation-cap me-2"></i>
+        ${editItem ? 'Edit Education' : 'Add Education'}
+    `;
 
-			<div class="row">
-			<div class="col-md-8 mb-3">
-					<label class="form-label fw-bold">Qualification</label>
-					<select class="form-select" id="qualification" name="qualification" required>
-						<option value="">Select Qualification</option>
-						<option value="PhD" ${editItem?.qualification === 'PhD' ? 'selected' : ''}>PhD</option>
-						<option value="Masters" ${editItem?.qualification === 'Masters' ? 'selected' : ''}>Masters</option>
-						<option value="Bachelors" ${editItem?.qualification === 'Bachelors' ? 'selected' : ''}>Bachelors</option>
-						<option value="Diploma" ${editItem?.qualification === 'Diploma' ? 'selected' : ''}>Diploma</option>
-						<option value="Certificate" ${editItem?.qualification === 'Certificate' ? 'selected' : ''}>Certificate</option>
-						<option value="Professional Certification" ${editItem?.qualification === 'Professional Certification' ? 'selected' : ''}>Professional Certification</option>
+    crudItemIdInput.value = editItem ? editItem.id : '';
 
-					</select>
-				</div>
+    crudModalBody.innerHTML = `
+        <form id="educationForm">
+            <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
-				<div class="col-md-4 mb-3" id="classOfDegreeContainer" style="display: none;">
-					<label class="form-label fw-bold">Class of Degree</label>
-					<select class="form-control" id="degree_class" name="degree_class">
-						<option value="">Select Class</option>
-						<option value="First Class" ${editItem?.degree_class === 'First Class' ? 'selected' : ''}>First Class</option>
-						<option value="Second Class Upper" ${editItem?.degree_class === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
-						<option value="Second Class Lower" ${editItem?.degree_class === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
-						<option value="Third Class" ${editItem?.degree_class === 'Third Class' ? 'selected' : ''}>Third Class</option>
-						<option value="Pass" ${editItem?.degree_class === 'Pass' ? 'selected' : ''}>Pass</option>
-					</select>
-				</div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="ongoing" name="ongoing" ${editItem?.ongoing ? 'checked' : ''}>
+                <label class="form-check-label fw-bold" for="ongoing">Ongoing</label>
+            </div>
 
-				<div class="col-md-12 mb-3">
-					<label class="form-label fw-bold">Program/Course</label>
-					<input type="text" class="form-control" id="course" name="course"
-						required value="${editItem?.course || ''}">
-				</div>
-				<div class="col-md-12 mb-3">
-					<label class="form-label fw-bold">Institution</label>
-					<input type="text" class="form-control" id="institution" name="institution"
-						required value="${editItem?.institution || ''}">
-				</div>
-			</div>
-			
-		`;
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">From Year</label>
+                    <select class="form-select" id="start_year" name="start_year" required>
+                        <option value="">Select Year</option>
+                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                            .map(year => `<option value="${year}" ${editItem?.start_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+                    </select>
+                </div>
 
-		crudModal.show();
+                <div class="col-md-6 mb-3" id="end_year_container">
+                    <label class="form-label fw-bold">To Year</label>
+                    <select class="form-select" id="end_year" name="end_year">
+                        <option value="">Select Year</option>
+                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                            .map(year => `<option value="${year}" ${editItem?.end_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
 
-		// Toggle Class of Degree visibility based on qualification
-		function toggleClassOfDegree() {
-			const qualification = document.getElementById('qualification').value;
-			const container = document.getElementById('classOfDegreeContainer');
-			if (qualification === 'Bachelors') {
-				container.style.display = 'block';
-			} else {
-				container.style.display = 'none';
-			}
-		}
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label class="form-label fw-bold">Qualification</label>
+                    <select class="form-select" id="qualification" name="qualification" required>
+                        <option value="">Select Qualification</option>
+                        <option value="PhD" ${editItem?.qualification === 'PhD' ? 'selected' : ''}>PhD</option>
+                        <option value="Masters" ${editItem?.qualification === 'Masters' ? 'selected' : ''}>Masters</option>
+                        <option value="Bachelors" ${editItem?.qualification === 'Bachelors' ? 'selected' : ''}>Bachelors</option>
+                        <option value="Diploma" ${editItem?.qualification === 'Diploma' ? 'selected' : ''}>Diploma</option>
+                        <option value="Certificate" ${editItem?.qualification === 'Certificate' ? 'selected' : ''}>Certificate</option>
+                        <option value="Transcript" ${editItem?.qualification === 'Transcript' ? 'selected' : ''}>Transcript</option>
+                        <option value="Post Graduate" ${editItem?.qualification === 'Post Graduate' ? 'selected' : ''}>Post Graduate</option>
+                        <option value="Professional Certification" ${editItem?.qualification === 'Professional Certification' ? 'selected' : ''}>Professional Certification</option>
+                    </select>
+                </div>
 
-		// Add event listener to qualification select
-		document.getElementById('qualification').addEventListener('change', toggleClassOfDegree);
+                <div class="col-md-4 mb-3" id="classOfDegreeContainer" style="display: none;">
+                    <label class="form-label fw-bold">Class of Degree</label>
+                    <select class="form-control" id="degree_class" name="degree_class">
+                        <option value="">Select Class</option>
+                        <option value="First Class" ${editItem?.degree_class === 'First Class' ? 'selected' : ''}>First Class</option>
+                        <option value="Second Class Upper" ${editItem?.degree_class === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
+                        <option value="Second Class Lower" ${editItem?.degree_class === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
+                        <option value="Third Class" ${editItem?.degree_class === 'Third Class' ? 'selected' : ''}>Third Class</option>
+                        <option value="Pass" ${editItem?.degree_class === 'Pass' ? 'selected' : ''}>Pass</option>
+                    </select>
+                </div>
 
-		// Initial toggle for edit mode
-		toggleClassOfDegree();
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Program/Course</label>
+                    <input type="text" class="form-control" id="course" name="course" required value="${editItem?.course || ''}">
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Institution</label>
+                    <input type="text" class="form-control" id="institution" name="institution" required value="${editItem?.institution || ''}">
+                </div>
+            </div>
 
-		// Toggle end_year when ongoing checkbox is checked
-		(function setupOngoingToggle() {
-			const ongoingCheckbox = document.getElementById('ongoing');
-			const endYearSelect = document.getElementById('end_year');
-			const endYearContainer = endYearSelect ? endYearSelect.parentElement : null;
+            
+        </form>
+    `;
 
-			function toggleEndYear() {
-				if (!ongoingCheckbox) return;
-				if (ongoingCheckbox.checked) {
-					if (endYearContainer) endYearContainer.style.display = 'none';
-					if (endYearSelect) { endYearSelect.disabled = true; endYearSelect.value = ''; }
-				} else {
-					if (endYearContainer) endYearContainer.style.display = '';
-					if (endYearSelect) endYearSelect.disabled = false;
-				}
-			}
+    crudModal.show();
 
-			if (ongoingCheckbox) {
-				ongoingCheckbox.addEventListener('change', toggleEndYear);
-				// set initial state based on checkbox (useful for edit mode)
-				toggleEndYear();
-			}
-		})();
-	}
+    // --- Class of Degree toggle ---
+    const qualificationSelect = document.getElementById('qualification');
+    const classContainer = document.getElementById('classOfDegreeContainer');
+    function toggleClassOfDegree() {
+        classContainer.style.display = qualificationSelect.value === 'Bachelors' ? 'block' : 'none';
+    }
+    qualificationSelect.addEventListener('change', toggleClassOfDegree);
+    toggleClassOfDegree();
 
-	async function loadEducation() {
-		if (!currentUser || !currentUser.id) {
-			showToast('User not authenticated. Please log in.', 'warning');
-			return;
-		}
-		try {
-			let items = [];
+    // --- Ongoing checkbox toggle ---
+    const ongoingCheckbox = document.getElementById('ongoing');
+    const endYearSelect = document.getElementById('end_year');
+    const endYearContainer = document.getElementById('end_year_container');
 
-			// Use GET route for applicant
-			const educationUrl = API.getEducationTraining(currentUser.id);
-			items = await fetchItems(educationUrl, 'educationTraining');
+    function toggleEndYear() {
+        if (ongoingCheckbox.checked) {
+            endYearContainer.style.display = 'none';
+            endYearSelect.disabled = true;
+            endYearSelect.value = '';
+        } else {
+            endYearContainer.style.display = '';
+            endYearSelect.disabled = false;
+        }
+    }
+    ongoingCheckbox.addEventListener('change', toggleEndYear);
+    toggleEndYear();
 
-			// fallback if no API data
-			if (!items || items.length === 0) {
-				if (currentUser && currentUser.education && Array.isArray(currentUser.education)) {
-					items = currentUser.education.map((edu, index) => ({
-						id: `user-edu-${index}`,
-						start_year: edu.start_year || '',
-						end_year: edu.end_year || '',
-						qualification: edu.qualification || edu.degree || '',
-						course: edu.course || edu.program || edu.field_of_study || '',
-						institution: edu.institution || '',
-						degree_class: edu.degree_class || '',
-						ongoing: edu.ongoing || false
-					}));
-					dataCache['educationTraining'] = items;
-				}
-			}
+    // --- End Year validation: end >= start ---
+    const startYearSelect = document.getElementById('start_year');
+    function updateEndYearOptions() {
+        const startYear = parseInt(startYearSelect.value);
 
-			// Render table
-			renderTableRows(
-				items,
-				educationTableBody,
-				[
-					{ key: 'start_year' },
-					{ key: 'end_year' },
-					{ key: 'qualification' },
-					{ key: 'course' },
-					{ key: 'institution' },
-					{ key: 'degree_class' },
-					{ key: 'ongoing', formatter: val => val ? 'Current' : 'Past' }
-				],
-				openEducationModal,
-				async id => {
-					const confirmed = await confirmModal('Delete this education record?', 'Delete Education', 'Delete');
-					if (confirmed) {
-						const success = await deleteItem(API.educationTraining, id, 'educationTraining');
-						if (success) loadEducation();
-						showToast('Education record deleted.', 'success');
-					}
-				}
-			);
-		} catch (error) {
-			console.error('Error loading education:', error);
-		}
-	}
+        Array.from(endYearSelect.options).forEach(option => {
+            if (!option.value) return;
+            const year = parseInt(option.value);
+            option.disabled = startYear && year < startYear;
+        });
+
+        if (endYearSelect.value && parseInt(endYearSelect.value) < startYear) {
+            endYearSelect.value = '';
+        }
+    }
+    startYearSelect.addEventListener('change', updateEndYearOptions);
+    endYearSelect.addEventListener('change', function () {
+        if (startYearSelect.value && this.value < startYearSelect.value) {
+            showToast('End year cannot be earlier than start year.', 'warning');
+            this.value = '';
+        }
+    });
+    updateEndYearOptions();
+
+    // --- Save Education on form submit ---
+    const form = document.getElementById('educationForm');
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const data = {
+            applicant_id: form.applicant_id.value,
+            start_year: startYearSelect.value,
+            end_year: endYearSelect.value || null,
+            ongoing: ongoingCheckbox.checked,
+            qualification: qualificationSelect.value,
+            degree_class: document.getElementById('degree_class').value,
+            course: document.getElementById('course').value,
+            institution: document.getElementById('institution').value
+        };
+
+        try {
+            const id = crudItemIdInput.value;
+            if (id) {
+                await updateItem(API.educationTraining, id, data);
+            } else {
+                await addItem(API.educationTraining, data);
+            }
+
+            crudModal.hide();
+            showToast('Education saved successfully', 'success');
+
+            // 🔑 Refresh table after saving
+            await loadEducation();
+
+        } catch (error) {
+            console.error('Error saving education:', error);
+            showToast('Failed to save education', 'error');
+        }
+    });
+}
+
+// ==============================
+// Load Education Table
+// ==============================
+async function loadEducation() {
+    if (!currentUser || !currentUser.id) {
+        showToast('User not authenticated. Please log in.', 'warning');
+        return;
+    }
+
+    try {
+        let items = [];
+        const educationUrl = API.getEducationTraining(currentUser.id);
+        items = await fetchItems(educationUrl, 'educationTraining');
+
+        // Fallback to local data if API empty
+        if (!items || items.length === 0) {
+            if (currentUser.education && Array.isArray(currentUser.education)) {
+                items = currentUser.education.map((edu, index) => ({
+                    id: `user-edu-${index}`,
+                    start_year: edu.start_year || '',
+                    end_year: edu.end_year || '',
+                    qualification: edu.qualification || edu.degree || '',
+                    course: edu.course || edu.program || edu.field_of_study || '',
+                    institution: edu.institution || '',
+                    degree_class: edu.degree_class || '',
+                    ongoing: edu.ongoing || false
+                }));
+            }
+        }
+
+        renderTableRows(
+            items,
+            educationTableBody,
+            [
+                { key: 'start_year' },
+                { key: 'end_year' },
+                { key: 'qualification' },
+                { key: 'course' },
+                { key: 'institution' },
+                { key: 'degree_class' },
+                { key: 'ongoing', formatter: val => val ? 'Current' : 'Past' }
+            ],
+            openEducationModal,
+            async id => {
+                const confirmed = await confirmModal('Delete this education record?', 'Delete Education', 'Delete');
+                if (confirmed) {
+                    const success = await deleteItem(API.educationTraining, id, 'educationTraining');
+                    if (success) loadEducation();
+                    showToast('Education record deleted.', 'success');
+                }
+            }
+        );
+    } catch (error) {
+        console.error('Error loading education:', error);
+    }
+}
 
 
+// ==============================
+// Professional Membership Module
+// ==============================
 
-	// Professional Membership
+// Table body reference
 const membershipTableBody = document.querySelector('#membershipTable tbody');
 
 document.getElementById('btnAddMembership').addEventListener('click', () => openMembershipModal());
@@ -1770,37 +1826,32 @@ function openMembershipModal(editItem = null) {
         ${editItem ? 'Edit Membership' : 'Add Membership'}
     `;
 
-    // Set ID (used for update)
     crudItemIdInput.value = editItem ? editItem.id : '';
 
-    // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
+        <form id="membershipForm">
+            <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Enrollment Year</label>
+                    <select class="form-select" id="enrollment_year" name="enrollment_year" required>
+                        <option value="">Select Year</option>
+                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                            .map(year => `<option value="${year}" ${editItem?.enrollment_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+                    </select>
+                </div>
 
-		<div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">Enrollment Year</label>
-                <select class="form-select" id="end_year" name="enrollment_year" required>
-						<option value="">Select Year</option>
-						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
-							.map(year => `<option value="${year}" ${editItem?.enrollment_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-				</select>
+                <div class="col-md-6 mb-3" id="expiry_year_container">
+                    <label class="form-label fw-bold">Year of Expiry</label>
+                    <select class="form-select" id="expiry_year" name="expiry_year">
+                        <option value="">Select Year</option>
+                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                            .map(year => `<option value="${year}" ${editItem?.expiry_year == year ? 'selected' : ''}>${year}</option>`).join('')}
+                    </select>
+                </div>
             </div>
 
-		
-			<div class="col-md-6 mb-3">
-				<label class="form-label fw-bold">Year of Expiry</label>
-				<select class="form-select" id="expiry_year" name="expiry_year">
-						<option value="">Select Year</option>
-						${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
-							.map(year => `<option value="${year}" ${editItem?.expiry_year == year ? 'selected' : ''}>${year}</option>`).join('')}
-					</select>
-			</div>
-		</div>
-        
-
-        
             <div class="col-md-12 mb-3">
                 <label class="form-label fw-bold">Institute</label>
                 <input type="text" class="form-control" 
@@ -1819,69 +1870,145 @@ function openMembershipModal(editItem = null) {
                     placeholder="Eg, Member, Student, Chairperson"
                     required
                     value="${editItem?.type || ''}">
-       		</div>
-		
+            </div>
 
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Membership Number</label>
+                <input type="text" class="form-control"
+                    id="membershipNumber" 
+                    name="membership_number"    
+                    placeholder="Eg, 12345"
+                    value="${editItem?.membership_number || ''}">
+            </div>
 
-		
-			<div class="col-md-12 mb-3">
-				<label class="form-label fw-bold">Membership Number</label>
-				<input type="text" class="form-control"
-					id="membershipNumber" 
-					name="membership_number"	
-					placeholder="Eg, 12345"
-					value="${editItem?.membership_number || ''}">
-			</div>
-	
+           
+        </form>
     `;
 
     crudModal.show();
+
+    // --- Year validation: expiry_year >= enrollment_year ---
+    const enrollmentSelect = document.getElementById('enrollment_year');
+    const expirySelect = document.getElementById('expiry_year');
+
+    function updateExpiryOptions() {
+        const enrollYear = parseInt(enrollmentSelect.value);
+
+        Array.from(expirySelect.options).forEach(option => {
+            if (!option.value) return;
+            const year = parseInt(option.value);
+            option.disabled = enrollYear && year < enrollYear;
+        });
+
+        if (expirySelect.value && parseInt(expirySelect.value) < enrollYear) {
+            expirySelect.value = '';
+        }
+    }
+
+    enrollmentSelect.addEventListener('change', updateExpiryOptions);
+    expirySelect.addEventListener('change', function () {
+        if (enrollmentSelect.value && this.value < enrollmentSelect.value) {
+            showToast('Expiry year cannot be earlier than enrollment year.', 'warning');
+            this.value = '';
+        }
+    });
+
+    updateExpiryOptions();
+
+    // --- Save Membership on form submit ---
+    const form = document.getElementById('membershipForm');
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const data = {
+            applicant_id: form.applicant_id.value,
+            enrollment_year: enrollmentSelect.value,
+            expiry_year: expirySelect.value || null,
+            institute: document.getElementById('membershipInstitute').value,
+            type: document.getElementById('membershipType').value,
+            membership_number: document.getElementById('membershipNumber').value
+        };
+
+        try {
+            const id = crudItemIdInput.value;
+            if (id) {
+                await updateItem(API.professionalMembership, id, data);
+            } else {
+                await addItem(API.professionalMembership, data);
+            }
+
+            crudModal.hide();
+            showToast('Membership saved successfully', 'success');
+
+            // 🔑 Refresh table after saving
+            await loadMembership();
+
+        } catch (error) {
+            console.error('Error saving membership:', error);
+            showToast('Failed to save membership', 'error');
+        }
+    });
+}
+
+// ==============================
+// Load Membership Table
+// ==============================
+async function loadMembership() {
+    if (!currentUser || !currentUser.id) {
+        showToast('User not authenticated. Please log in.', 'warning');
+        return;
+    }
+
+    try {
+        let items = [];
+        const membershipUrl = API.getProfessionalMemberships(currentUser.id);
+        items = await fetchItems(membershipUrl, 'professionalMembership');
+
+        // fallback if no API data
+        if (!items || items.length === 0) {
+            if (currentUser.memberships && Array.isArray(currentUser.memberships)) {
+                items = currentUser.memberships.map((mem, index) => ({
+                    id: `user-mem-${index}`,
+                    enrollment_year: mem.enrollment_year || '',
+                    expiry_year: mem.expiry_year || '',
+                    membership_number: mem.membership_number || '',
+                    type: mem.type || '',
+                    institute: mem.institute || ''
+                }));
+                dataCache['professionalMembership'] = items;
+            }
+        }
+
+        renderTableRows(
+            items,
+            membershipTableBody,
+            [
+                { key: 'enrollment_year' },
+                { key: 'expiry_year' },
+                { key: 'membership_number' },
+                { key: 'type' },
+                { key: 'institute' }
+            ],
+            openMembershipModal,
+            async id => {
+                const confirmed = await confirmModal('Delete this membership record?', 'Delete Membership', 'Delete');
+                if (confirmed) {
+                    const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
+                    if (success) loadMembership();
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('Error loading memberships:', error);
+    }
 }
 
 
-	async function loadMembership() {
-		if (!currentUser || !currentUser.id) {
-			showToast('User not authenticated. Please log in.', 'warning');
-			return;
-		}
-		let items = [];
-		// Use GET route for applicant
-		const membershipUrl = API.getProfessionalMemberships(currentUser.id);
-		items = await fetchItems(membershipUrl, 'professionalMembership');
-		// fallback if no API data
-		if (!items || items.length === 0) {
-			if (currentUser && currentUser.memberships && Array.isArray(currentUser.memberships)) {
-				items = currentUser.memberships.map((mem, index) => ({
-					id: `user-mem-${index}`,
-					enrollment_year: mem.enrollment_year || '',
-					expiry_year: mem.expiry_year || '',
-					membership_number: mem.membership_number || '',
-					type: mem.type || '',
-					institute: mem.institute || ''
-					
-					
-				}));
-				dataCache['professionalMembership'] = items;
-			}
-		}
-		renderTableRows(items, membershipTableBody, [
-		{ key: 'enrollment_year' },
-		{ key: 'expiry_year' },
-		{ key: 'membership_number' },
-		{ key: 'type' },
-		{ key: 'institute' }
-		], openMembershipModal, async id => {
-			const confirmed = await confirmModal('Delete this membership record?', 'Delete Membership', 'Delete');
-			if (confirmed) {
-				const success = await deleteItem(API.professionalMembership, id, 'professionalMembership');
-				if (success) loadMembership();
-			}
-		});
-	}
+	// ==============================
+// Employment History Module
+// ==============================
 
-
-	
-// Employment History
 const employmentTableBody = document.querySelector('#employmentTable tbody');
 
 document.getElementById('btnAddEmployment').addEventListener('click', () => openEmploymentModal());
@@ -1893,108 +2020,176 @@ function openEmploymentModal(editItem = null) {
         ${editItem ? 'Edit Employment' : 'Add Employment'}
     `;
 
-    // Set ID (used for update)
     crudItemIdInput.value = editItem ? editItem.id : '';
 
-    // Modal form body
     crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
+        <form id="employmentForm">
+            <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
+                <label class="form-check-label fw-bold" for="is_current">Currently Employed Here</label>
+            </div>
 
-		<div class="form-check mb-3">
-				<input class="form-check-input" type="checkbox" value="" id="is_current" name="is_current" ${editItem?.is_current ? 'checked' : ''}>
-				<label class="form-check-label fw-bold" for="is_current">
-					Currently Employed Here
-				</label>
-		</div>
-		
-		
-		<div class="row">
-				<div class="col-md-6 mb-3">
-					<label class="form-label fw-bold">From Year</label>
-					<input type="date" class="form-select calander" name="start_date" value="${editItem?.start_date || ''}"/>
-				</div>
-				<div class="col-md-6 mb-3" id="end_date_container" ${editItem?.is_current ? 'style="display: none;"' : ''}>
-					<label class="form-label fw-bold">To Year</label>
-					<input type="date" class="form-select calander"  name="end_date" value="${editItem?.end_date || ''}" ${editItem?.is_current ? 'disabled' : ''}/>
-				</div>
-		</div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">From Date</label>
+                    <input type="date" class="form-control" name="start_date" id="start_date" value="${editItem?.start_date || ''}" required>
+                </div>
 
-		<div class="row">
-			<div class="col-md-12 mb-3">
-				<label for="employer" class="form-label fw-bold">Employer</label>
-				<input type="text" class="form-control" id="from_date" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem?.employer || ''}">
-			
-			</div>
-		
-			<div class="col-md-12 mb-3">
-				<label for="position" class="form-label fw-bold">Position Held</label>
-				<input type="text" class="form-control" id="position" name="position" placeholder="e.g. Software Developer" required value="${editItem?.position || ''}">			
-			</div>
-		</div>
+                <div class="col-md-6 mb-3" id="end_date_container" ${editItem?.is_current ? 'style="display: none;"' : ''}>
+                    <label class="form-label fw-bold">To Date</label>
+                    <input type="date" class="form-control" name="end_date" id="end_date" value="${editItem?.end_date || ''}" ${editItem?.is_current ? 'disabled' : ''}>
+                </div>
+            </div>
 
-		<div class="col-md-12 mb-3">
-				<label for="position" class="form-label fw-bold">Duties</label>
-				<textarea class="form-control" id="duties" name="duties"  rows="7" placeholder="e.g.  Developed web applications " required>${editItem?.duties || ''}</textarea>			
-		</div>
+            <div class="mb-3">
+                <label for="employer" class="form-label fw-bold">Employer</label>
+                <input type="text" class="form-control" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem?.employer || ''}">
+            </div>
 
-		
+            <div class="mb-3">
+                <label for="position" class="form-label fw-bold">Position Held</label>
+                <input type="text" class="form-control" name="position" placeholder="e.g. Software Developer" required value="${editItem?.position || ''}">
+            </div>
 
-		
+            <div class="mb-3">
+                <label for="duties" class="form-label fw-bold">Duties</label>
+                <textarea class="form-control" name="duties" rows="5" placeholder="e.g. Developed web applications" required>${editItem?.duties || ''}</textarea>
+            </div>
 
+            
+        </form>
     `;
 
     crudModal.show();
 
-    // Add event listener to toggle end_date input disabled state
-    const checkbox = document.getElementById('is_current');
-    const endDateInput = document.querySelector('input[name="end_date"]');
-    if (checkbox && endDateInput) {
-        checkbox.addEventListener('change', () => {
-            endDateInput.disabled = checkbox.checked;
-        });
+    const isCurrentCheckbox = document.getElementById('is_current');
+    const endDateInput = document.getElementById('end_date');
+    const endDateContainer = document.getElementById('end_date_container');
+    const startDateInput = document.getElementById('start_date');
+
+    // --- Toggle end_date input based on "Currently Employed" ---
+    function toggleEndDate() {
+        if (isCurrentCheckbox.checked) {
+            endDateInput.disabled = true;
+            endDateContainer.style.display = 'none';
+            endDateInput.value = '';
+        } else {
+            endDateInput.disabled = false;
+            endDateContainer.style.display = '';
+        }
+    }
+    isCurrentCheckbox.addEventListener('change', toggleEndDate);
+    toggleEndDate(); // initial
+
+    // --- Validate end_date >= start_date ---
+    function validateEndDate() {
+        if (endDateInput.value && startDateInput.value && endDateInput.value < startDateInput.value) {
+            showToast('End date cannot be earlier than start date.', 'warning');
+            endDateInput.value = '';
+        }
+    }
+
+    startDateInput.addEventListener('change', () => {
+        if (endDateInput.value && endDateInput.value < startDateInput.value) {
+            endDateInput.value = '';
+        }
+    });
+
+    endDateInput.addEventListener('change', validateEndDate);
+
+    // --- Handle form submit ---
+    const form = document.getElementById('employmentForm');
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const data = {
+            applicant_id: form.applicant_id.value,
+            start_date: startDateInput.value,
+            end_date: endDateInput.value || null,
+            employer: form.employer.value,
+            position: form.position.value,
+            duties: form.duties.value,
+            is_current: isCurrentCheckbox.checked
+        };
+
+        try {
+            const id = crudItemIdInput.value;
+            if (id) {
+                await updateItem(API.employmentHistory, id, data);
+            } else {
+                await addItem(API.employmentHistory, data);
+            }
+
+            crudModal.hide();
+            showToast('Employment history saved successfully', 'success');
+
+            // Refresh table
+            await loadEmployment();
+
+        } catch (error) {
+            console.error('Error saving employment history:', error);
+            showToast('Failed to save employment history', 'error');
+        }
+    });
+}
+
+// ==============================
+// Load Employment Table
+// ==============================
+async function loadEmployment() {
+    if (!currentUser || !currentUser.id) {
+        showToast('User not authenticated. Please log in.', 'warning');
+        return;
+    }
+
+    try {
+        let items = await fetchItems(API.getEmploymentHistory(currentUser.id), 'employmentHistory');
+
+        // fallback if no API data
+        if (!items || items.length === 0) {
+            if (currentUser.employments && Array.isArray(currentUser.employments)) {
+                items = currentUser.employments.map((emp, index) => ({
+                    id: `user-emp-${index}`,
+                    start_date: emp.start_date || '',
+                    end_date: emp.end_date || '',
+                    employer: emp.employer || '',
+                    position: emp.position || '',
+                    duties: emp.duties || '',
+                    is_current: emp.is_current || false
+                }));
+                dataCache['employmentHistory'] = items;
+            }
+        }
+
+        renderTableRows(
+            items,
+            employmentTableBody,
+            [
+                { key: 'start_date' },
+                { key: 'end_date' },
+                { key: 'employer' },
+                { key: 'position' },
+                { key: 'duties' },
+                { key: 'is_current', formatter: val => val ? 'Current' : 'Past' }
+            ],
+            openEmploymentModal,
+            async id => {
+                const confirmed = await confirmModal('Delete this Employment History record?', 'Delete Employment', 'Delete');
+                if (confirmed) {
+                    const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
+                    if (success) loadEmployment();
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('Error loading employment history:', error);
     }
 }
-	async function loadEmployment() {
-		if (!currentUser || !currentUser.id) {
-			showToast('User not authenticated. Please log in.', 'warning');
-			return;
-		}
-		let items = [];
-		// Use GET route for applicant
-		items = await fetchItems(API.getEmploymentHistory(currentUser.id), 'employmentHistory');
-		// fallback if no API data
-		if (!items || items.length === 0) {
-			if (currentUser && currentUser.employments && Array.isArray(currentUser.employments)) {
-				items = currentUser.employments.map((mem, index) => ({
-					id: `user-mem-${index}`,
-					start_date: mem.start_date || '',
-					end_date: mem.end_date || '',
-					employer: mem.employer || '',
-					position: mem.position || '',
-					duties: mem.duties || '',
-					is_current: mem.is_current || false
-					
-				}));
-				dataCache['employmentHistory'] = items;
-			}
-		}
-		renderTableRows(items, employmentTableBody, [
-		{ key: 'start_date' },
-		{ key: 'end_date' },
-		{ key: 'employer' },
-		{ key: 'position' },
-		{ key: 'duties' },
-		{ key: 'is_current', formatter: val => val ? 'Current' : 'Past' }	
-		], openEmploymentModal, async id => {
-			const confirmed = await confirmModal('Delete this Employment History record?', 'Delete Employment', 'Delete');
-			if (confirmed) {
-				const success = await deleteItem(API.employmentHistory, id, 'employmentHistory');
-				if (success) loadEmployment();
-			}
-		});
-	}
 
+	
 
 	// Referee 
 const refereeTableBody = document.querySelector('#refereeTable tbody');
@@ -3090,6 +3285,8 @@ async function openDocumentModal(editItem = null) {
 		crudModal.hide();
 		await loadStepData(currentStep);
 	});
+
+	
 
 	/* -------- Load Data for step -------- */
 	async function loadStepData(step) {
