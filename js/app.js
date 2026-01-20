@@ -1643,7 +1643,8 @@ function openEducationModal(editItem = null) {
                         <option value="First Class" ${editItem?.degree_class === 'First Class' ? 'selected' : ''}>First Class</option>
                         <option value="Second Class Upper" ${editItem?.degree_class === 'Second Class Upper' ? 'selected' : ''}>Second Class Upper</option>
                         <option value="Second Class Lower" ${editItem?.degree_class === 'Second Class Lower' ? 'selected' : ''}>Second Class Lower</option>
-                        <option value="Third Class" ${editItem?.degree_class === 'Third Class' ? 'selected' : ''}>Third Class</option>
+                        <option value="Distinction" ${editItem?.degree_class === 'Distinction' ? 'selected' : ''}>Distinction</option>
+                        <option value="Merit" ${editItem?.degree_class === 'Merit' ? 'selected' : ''}>Merit</option>
                         <option value="Pass" ${editItem?.degree_class === 'Pass' ? 'selected' : ''}>Pass</option>
                     </select>
                 </div>
