@@ -1605,7 +1605,7 @@ function openEducationModal(editItem = null) {
                     <label class="form-label fw-bold">From Year</label>
                     <select class="form-select" id="start_year" name="start_year" required>
                         <option value="">Select Year</option>
-                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                        ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
                             .map(year => `<option value="${year}" ${editItem?.start_year == year ? 'selected' : ''}>${year}</option>`).join('')}
                     </select>
                 </div>
@@ -1614,7 +1614,7 @@ function openEducationModal(editItem = null) {
                     <label class="form-label fw-bold">To Year</label>
                     <select class="form-select" id="end_year" name="end_year">
                         <option value="">Select Year</option>
-                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                        ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
                             .map(year => `<option value="${year}" ${editItem?.end_year == year ? 'selected' : ''}>${year}</option>`).join('')}
                     </select>
                 </div>
@@ -1837,7 +1837,7 @@ function openMembershipModal(editItem = null) {
                     <label class="form-label fw-bold">Enrollment Year</label>
                     <select class="form-select" id="enrollment_year" name="enrollment_year" required>
                         <option value="">Select Year</option>
-                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                        ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
                             .map(year => `<option value="${year}" ${editItem?.enrollment_year == year ? 'selected' : ''}>${year}</option>`).join('')}
                     </select>
                 </div>
@@ -1846,7 +1846,7 @@ function openMembershipModal(editItem = null) {
                     <label class="form-label fw-bold">Year of Expiry</label>
                     <select class="form-select" id="expiry_year" name="expiry_year">
                         <option value="">Select Year</option>
-                        ${Array.from({length: new Date().getFullYear() - 1990 + 1}, (_, i) => 1990 + i)
+                        ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
                             .map(year => `<option value="${year}" ${editItem?.expiry_year == year ? 'selected' : ''}>${year}</option>`).join('')}
                     </select>
                 </div>
