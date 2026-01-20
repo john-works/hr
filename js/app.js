@@ -2558,7 +2558,7 @@ async function openDocumentModal(editItem = null) {
 			</div>
 
 			<div class="text-center mt-4">
-				<button class="btn btn-success btn-lg" id="btnSubmitApplication" ${!hasSelectedJob ? 'disabled' : ''} disabled>
+				<button class="btn btn-success btn-lg" id="btnSubmitApplication">
 					<i class="fas fa-paper-plane me-2"></i>Submit Application
 				</button>
 			</div>
@@ -2575,6 +2575,7 @@ async function openDocumentModal(editItem = null) {
 		submitApplicationBtn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			if (!termsCheckbox.checked) {
+				termsCheckbox.style.borderColor = 'red';
 				showToast('Please agree to the terms and conditions before submitting.', 'warning');
 				return;
 			}
