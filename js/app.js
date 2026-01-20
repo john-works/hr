@@ -1,20 +1,9 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'https://api.ppda.go.ug';
+	// let api = 'http://hrmis.local';
 	let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
-    axios.interceptors.response.use(
-        response => response,
-        async error => {
-            if (!error.response) {
-                const alive = await checkServerStatus();
-                if (!alive) {
-                    console.error("Server is offline. Try again later.");
-                }
-            }
-            return Promise.reject(error);
-        }
-    );
+    // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
 	const DocumentManager = {
 		getApiBaseUrl() {
@@ -366,19 +355,11 @@ currentUser = getUser();
 /* =====================================================
    UI HELPERS
 ===================================================== */
-function showLoginForm() {
-  authArea.style.display = 'block';
-  applicationDashboard.style.display = 'none';
-}
+// showLoginForm is defined below with full auth form handling
 
-function showDashboard() {
-  authArea.style.display = 'none';
-  applicationDashboard.style.display = 'block';
-}
+// showDashboard is defined below with full dashboard handling
 
-function showToast(message, type = 'info') {
-  alert(message);
-}
+// showToast is defined below with Bootstrap toast support
 
 /* =====================================================
    AUTO LOGOUT – PRODUCTION SAFE
@@ -391,13 +372,18 @@ const activityEvents = [
   'mousemove','mousedown','keypress','scroll','touchstart','click'
 ];
 
+let activityTimeout = null;
 function recordActivity() {
   if (!currentUser) return;
-  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
+  if (activityTimeout) return; // Debounce
+  activityTimeout = setTimeout(() => {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
+    activityTimeout = null;
+  }, 1000);
 }
 
 activityEvents.forEach(e =>
-  document.addEventListener(e, recordActivity)
+  document.addEventListener(e, recordActivity, { passive: true })
 );
 
 // Check inactivity every 10 seconds
@@ -599,7 +585,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		const homeNavItem = document.getElementById('homeNavItem');
 		if (userDropdownContainer) userDropdownContainer.style.display = 'block';
 		if (homeNavItem) homeNavItem.style.display = 'none';
-		loadPersonalDetails();
+		loadPositions(currentUser.applicant_type);
 	}
 
 	function showAuth() {
@@ -748,9 +734,8 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		} catch (error) {
 		showToast('Registration failed. Please try again.', 'error');
 		}
-		});
+	});
 	}
-
 	/* ---- Login form submit -> send OTP and show verify email form ---- */
 	async function handleLoginSubmit(e, emailId, passwordId, formElement) {
 		e.preventDefault();
@@ -884,7 +869,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 			references: API.getReferees(applicantId),
 			documents: API.getDocuments(applicantId),
 			// dependants: API.getDependants(applicantId),
-			memberships: API.getProfessionalMemberships(applicantId)
+			// memberships: API.getProfessionalMemberships(applicantId)
 		};
 
 		const incompleteSections = [];
@@ -911,26 +896,51 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		};
 	}
 	
-	async function applicationExists() {
-		const user = getUser();
-		if (!user?.id) return false;
+	async function applicantApplicationExists(applicantId,positionId) {
+	if (!applicantId) return false;
+	if (!positionId) return false;
+	// Check cache first
+	const cachedApplications = dataCache['submittedApplications'];
+	if (Array.isArray(cachedApplications)) {
+		// Check if any application matches both applicantId and positionId
+		return cachedApplications.some(app => {
+			// Try to match applicant and position fields (API may use different keys)
+			const appApplicantId = app.applicant_id || app.applicantId || app.user_id || app.userId;
+			const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
+			return String(appApplicantId) === String(applicantId) && String(appPositionId) === String(positionId);
+		});
+	}
 
-		// Check cache first
-		const cachedApplications = dataCache['submittedApplications'];
-		if (Array.isArray(cachedApplications)) {
-			return cachedApplications.length > 0;
-		}
+	// Fallback: fetch from API if not in cache
+	try {
+		const response = await axios.get(API.getApplications(applicantId));
+		console.log('API response for applications:', response.data);
+		const items = Array.isArray(response.data?.data) ? response.data.data : [];
+		console.log('Fetched applications:', items);
+		dataCache['submittedApplications'] = items; // cache it
+		// Check if any application matches both applicantId and positionId
+		return items.some(app => {
+			const appApplicantId = app.applicant_id || app.applicantId || app.user_id || app.userId;
+			const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
+			return String(appApplicantId) === String(applicantId) && String(appPositionId) === String(positionId);
+		});
+	} catch (error) {
+		console.error('Error checking application existence:', error);
+		return false;
+	}
+}
 
-		// Fallback: fetch from API if not in cache
-		try {
-			const response = await axios.get(API.getApplications(user.id));
-			const items = Array.isArray(response.data?.data) ? response.data.data : [];
-			dataCache['submittedApplications'] = items; // cache it
-			return items.length > 0;
-		} catch (error) {
-			console.error('Error checking application existence:', error);
-			return false;
+	// Prevent multiple applications for the same position
+	async function handleApplicationSubmit(applicantId, positionId, formElement) {
+		// Check if application already exists
+		const exists = await applicantApplicationExists(applicantId, positionId);
+		if (exists) {
+			showToast('You have already submitted your application for this position.', 'warning');
+			return;
 		}
+		// ...proceed with application submission logic here...
+		// e.g., await axios.post(API.postApplication, { applicantId, positionId, ... });
+		// showToast('Application submitted successfully!', 'success');
 	}
 
 	if (loginForm) {
@@ -1107,7 +1117,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		showToast('OTP resent to your email.', 'success');
 
 		// Restart countdown
-		countdown = 60;
+		countdown = 300;
 		startCountdown();
 
 		// Clear previous OTP inputs
@@ -1129,7 +1139,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		if (countdown <= 0) {
 			clearInterval(countdownInterval);
 			resendLink.classList.remove('disabled');
-			countdown = 60;
+			countdown = 300;
 			countdownEl.textContent = `(${countdown}s)`;
 		}
 		}, 1000);
@@ -1150,7 +1160,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 	const originalShowVerifyEmailForm = showVerifyEmailForm;
 	showVerifyEmailForm = function(email) {
 		originalShowVerifyEmailForm(email);
-		countdown = 60;
+		countdown = 300;
 		countdownEl.textContent = `(${countdown}s)`;
 		startCountdown();
 		otpInputs[0].focus();
@@ -1274,18 +1284,18 @@ let dataCache = {};
 		}
 	);
 
-	function getSection(key) {
-		const map = {
-			educationTraining: 'education',
-			professionalMembership: 'memberships',
-			employmentHistory: 'employment',
-			documents: 'documents',
-			referee: 'references',
-			// dependants: 'dependants',
-			personalDetails: 'personal',
-		};
-		return map[key] || '';
-	}
+	// function getSection(key) {
+	// 	const map = {
+	// 		educationTraining: 'education',
+	// 		professionalMembership: 'memberships',
+	// 		employmentHistory: 'employment',
+	// 		documents: 'documents',
+	// 		referee: 'references',
+	// 		// dependants: 'dependants',
+	// 		personalDetails: 'personal',
+	// 	};
+	// 	return map[key] || '';
+	// }
 
 	/* ----- Sidebar Navigation ----- */
 function showStep(step) {
@@ -1602,7 +1612,7 @@ function openEducationModal(editItem = null) {
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">From Year</label>
+					<label class="form-label fw-bold">From Year <span class="text-danger">*</span></label>
                     <select class="form-select" id="start_year" name="start_year" required>
                         <option value="">Select Year</option>
                         ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
@@ -1622,7 +1632,7 @@ function openEducationModal(editItem = null) {
 
             <div class="row">
                 <div class="col-md-8 mb-3">
-                    <label class="form-label fw-bold">Qualification</label>
+					<label class="form-label fw-bold">Qualification <span class="text-danger">*</span></label>
                     <select class="form-select" id="qualification" name="qualification" required>
                         <option value="">Select Qualification</option>
                         <option value="PhD" ${editItem?.qualification === 'PhD' ? 'selected' : ''}>PhD</option>
@@ -1650,11 +1660,11 @@ function openEducationModal(editItem = null) {
                 </div>
 
                 <div class="col-md-12 mb-3">
-                    <label class="form-label fw-bold">Program/Course</label>
+					<label class="form-label fw-bold">Program/Course <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="course" name="course" required value="${editItem?.course || ''}">
                 </div>
                 <div class="col-md-12 mb-3">
-                    <label class="form-label fw-bold">Institution</label>
+					<label class="form-label fw-bold">Institution <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="institution" name="institution" required value="${editItem?.institution || ''}">
                 </div>
             </div>
@@ -1718,6 +1728,7 @@ function openEducationModal(editItem = null) {
 
     // --- Save Education on form submit ---
     const form = document.getElementById('educationForm');
+    if (!form) return;
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
 
@@ -1835,7 +1846,7 @@ function openMembershipModal(editItem = null) {
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Enrollment Year</label>
+                    <label class="form-label fw-bold">Enrollment Year<span class="text-danger">*</span></label>
                     <select class="form-select" id="enrollment_year" name="enrollment_year" required>
                         <option value="">Select Year</option>
                         ${Array.from({length: new Date().getFullYear() - 1980 + 1}, (_, i) => 1980 + i)
@@ -1854,7 +1865,7 @@ function openMembershipModal(editItem = null) {
             </div>
 
             <div class="col-md-12 mb-3">
-                <label class="form-label fw-bold">Institute</label>
+                <label class="form-label fw-bold">Institute<span class="text-danger">*</span></label>
                 <input type="text" class="form-control" 
                     id="membershipInstitute" 
                     name="institute" 
@@ -1864,7 +1875,7 @@ function openMembershipModal(editItem = null) {
             </div>
 
             <div class="col-md-12 mb-3">
-                <label class="form-label fw-bold">Membership Type</label>
+                <label class="form-label fw-bold">Membership Type<span class="text-danger">*</span></label>
                 <input type="text" class="form-control"
                     id="membershipType" 
                     name="type" 
@@ -1898,6 +1909,7 @@ function openMembershipModal(editItem = null) {
         Array.from(expirySelect.options).forEach(option => {
             if (!option.value) return;
             const year = parseInt(option.value);
+
             option.disabled = enrollYear && year < enrollYear;
         });
 
@@ -1922,7 +1934,7 @@ function openMembershipModal(editItem = null) {
         event.preventDefault();
 
         const data = {
-            applicant_id: form.applicant_id.value,
+            applicant_id: enrollmentSelect.value,
             enrollment_year: enrollmentSelect.value,
             expiry_year: expirySelect.value || null,
             institute: document.getElementById('membershipInstitute').value,
@@ -2034,7 +2046,7 @@ function openEmploymentModal(editItem = null) {
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">From Date</label>
+					<label class="form-label fw-bold">From Date <span class="text-danger">*</span></label>
                     <input type="date" class="form-control" name="start_date" id="start_date" value="${editItem?.start_date || ''}" required>
                 </div>
 
@@ -2045,17 +2057,17 @@ function openEmploymentModal(editItem = null) {
             </div>
 
             <div class="mb-3">
-                <label for="employer" class="form-label fw-bold">Employer</label>
+				<label for="employer" class="form-label fw-bold">Employer <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="employer" placeholder="e.g. Tech Solutions Inc." required value="${editItem?.employer || ''}">
             </div>
 
             <div class="mb-3">
-                <label for="position" class="form-label fw-bold">Position Held</label>
+				<label for="position" class="form-label fw-bold">Position Held <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="position" placeholder="e.g. Software Developer" required value="${editItem?.position || ''}">
             </div>
 
             <div class="mb-3">
-                <label for="duties" class="form-label fw-bold">Duties</label>
+				<label for="duties" class="form-label fw-bold">Duties <span class="text-danger">*</span></label>
                 <textarea class="form-control" name="duties" rows="5" placeholder="e.g. Developed web applications" required>${editItem?.duties || ''}</textarea>
             </div>
 
@@ -2223,13 +2235,13 @@ function openRefereeModal(editItem = null) {
 		<div class="row">
 		
 			<div class="col-md-6 mb-3">
-			<label for="name" class="form-label fw-bold">Full Name</label>
+			   <label for="name" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
 			<input type="text" class="form-control" id="name" name="name"  required value="${editItem?.name || ''}">
 			</div>
 
 
 			<div class="col-md-6 mb-3">
-			<label for="address" class="form-label fw-bold">Address</label>
+			   <label for="address" class="form-label fw-bold">Address <span class="text-danger">*</span></label>
 			<input type="text" class="form-control" id="address" name="address"  required value="${editItem?.address || ''}"/>
 				
 			</div>
@@ -2238,11 +2250,11 @@ function openRefereeModal(editItem = null) {
 		<div class="row">
 		
 			<div class="col-md-6 mb-3">
-				<label for="position" class="form-label fw-bold">Position</label>
+				   <label for="position" class="form-label fw-bold">Position <span class="text-danger">*</span></label>
 				<input type="text" class="form-control" id="position" name="position"  required value="${editItem?.position || ''}">
 			</div>
 			<div class="col-md-6 mb-3">
-				<label for="email" class="form-label fw-bold">Email</label>
+				   <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
 				<input type="email" class="form-control" id="email" name="email"  required value="${editItem?.email || ''}"/>
 				
 			</div>
@@ -2251,12 +2263,12 @@ function openRefereeModal(editItem = null) {
 		<div class="row">
 		
 			<div class="col-md-6 mb-3">
-			<label for="tel" class="form-label fw-bold">Contact</label>
+			   <label for="tel" class="form-label fw-bold">Contact <span class="text-danger">*</span></label>
 			<input type="text" class="form-control" id="tel" name="tel"  required value="${editItem?.tel || ''}">
 			</div>
 
 			<div class="col-md-6 mb-3">
-			<label for="relationship" class="form-label fw-bold">Relationship</label>
+			   <label for="relationship" class="form-label fw-bold">Relationship <span class="text-danger">*</span></label>
 			<input type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem?.relationship || ''}"/>
 
 		</div>
@@ -2319,7 +2331,7 @@ function openRefereeModal(editItem = null) {
 	}
 
 
-// Documents 
+	// Documents 
 const documentsTableBody = document.querySelector('#documentsTable tbody');
 
 document.getElementById('btnAddDocument').addEventListener('click', () => openDocumentModal());
@@ -2361,18 +2373,18 @@ async function openDocumentModal(editItem = null) {
         <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
 		<div class="row">
         <div class="col-md-6 mb-3">
-          <label for="document_type_id" class="form-label fw-bold">Document Type</label>
+          <label for="document_type_id" class="form-label fw-bold">Document Type <span class="text-danger">*</span></label>
           <select type="text" class="form-control form-control" id="document_type_id" name="document_type_id" required>
             ${documentTypeOptions}
           </select>
           </div>
         <div class="col-md-6 mb-3">
-          <label for="title" class="form-label fw-bold">Document Title</label>
+		  <label for="title" class="form-label fw-bold">Document Title <span class="text-danger">*</span></label>
           <input type="text" class="form-control form-control" id="title" name="title" placeholder="e.g. Transcript" required value="${editItem ? editItem.title : ''}">
         </div>
       </div>
       <div class="mb-3">
-        <label for="file_path" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File</label>
+		<label for="file_path" class="form-label fw-bold"><i class="fas fa-upload me-1"></i>Choose File <span class="text-danger">*</span></label>
         <input type="file" class="form-control form-control" id="file_path" name="file_path" accept="application/pdf" ${editItem ? '' : 'required'}>
         <small class="form-text text-muted">
           <i class="fas fa-info-circle"></i> PDF files only, maximum 2MB
@@ -2480,7 +2492,30 @@ async function openDocumentModal(editItem = null) {
 		// await loadDependants();
 		await loadSubmittedApplications();
 
-		let html = '<div class="row">';
+
+		   // Screening Questions Preview (if available)
+		   let screeningHtml = '';
+		   if (cachedScreeningAnswers && screeningQuestions && screeningQuestions.length > 0) {
+			   screeningHtml += `<div class="mb-4">
+				   <h5 class="text-primary"><i class="fa fa-question-circle me-2"></i>Screening Questions & Answers</h5>
+				   <table class="table table-bordered">
+					   <thead><tr><th>Question</th><th>Your Answer</th></tr></thead>
+					   <tbody>`;
+			   for (const q of screeningQuestions) {
+				   const answerObj = (cachedScreeningAnswers.answers || []).find(a => a.question_id == q.id || a.question_id == q.question_id);
+				   let answerText = answerObj ? answerObj.answer_text : '<span class="text-danger">No answer</span>';
+				   // Format array answers
+				   if (Array.isArray(answerText)) answerText = answerText.map(v => v === 1 ? 'Yes' : v === 0 ? 'No' : v).join(', ');
+				   // Show Yes/No for boolean-like answers
+				   if (answerText === 1) answerText = 'Yes';
+				   else if (answerText === 0) answerText = 'No';
+				   else if (typeof answerText === 'string' && (answerText === '1' || answerText === '0')) answerText = answerText === '1' ? 'Yes' : 'No';
+				   screeningHtml += `<tr><td>${q.question_text || q.text || ''}</td><td>${answerText}</td></tr>`;
+			   }
+			   screeningHtml += '</tbody></table></div>';
+		   }
+
+		   let html = screeningHtml + '<div class="row">';
 
 		const sectionTitles = {
 			educationTraining: 'Education & Training',
@@ -2567,16 +2602,11 @@ async function openDocumentModal(editItem = null) {
 		// Handle terms checkbox
 		const termsCheckbox = document.getElementById('termsCheckbox');
 		const submitApplicationBtn = document.getElementById('btnSubmitApplication');
-
-		termsCheckbox.addEventListener('change', () => {
-			submitApplicationBtn.disabled = !termsCheckbox.checked || !hasSelectedJob;
-		});
-
 		submitApplicationBtn.addEventListener('click', async (e) => {
 			e.preventDefault();
 			if (!termsCheckbox.checked) {
 				termsCheckbox.style.borderColor = 'red';
-				showToast('Please agree to the terms and conditions before submitting.', 'warning');
+				showToast('Please review and certify your application information.', 'warning');
 				return;
 			}
 
@@ -2598,7 +2628,7 @@ async function openDocumentModal(editItem = null) {
 				return;
 			}
 			// check if application already exists for this user and position
-			if(await applicationExists(currentUser.id, selectedJob.id)) {
+			if(await applicantApplicationExists(currentUser.id, selectedJob.id)) {
 				showToast('You have already applied for this position.', 'error');
 				return;
 			}
@@ -2615,25 +2645,10 @@ async function openDocumentModal(editItem = null) {
 				// if (response.data && response.data.success) {
 				if (response.data && response.data.success) {
 					showToast('Application submitted successfully!', 'success');
-
 					// Reset application state
 					hasSelectedJob = false;
-					// selectedJob = null;
-					dataCache = {};
-					const APPLICATION_ID = response.data.data.id;
-					const POSITION_ID = response.data.data.position_id;
-					await loadScreeningQuestions(POSITION_ID, APPLICATION_ID).then(questions => {
-					if (displayScreeningQuestions(questions,selectedJob,APPLICATION_ID)) {
-						// Screening questions were displayed
-						jobDetailsModal.show()
-						return;
-					}
-				});
-					// Navigate to My Applications section
-					// showStep('myApplications');
-					// loadSubmittedApplications();
 				} else {
-					showToast('Failed to submit application. Please try again.', 'error');
+				 showToast('Failed to submit application. Please try again.', 'error');
 				}
 			} catch (error) {
 				console.error('Error submitting application:', error);
@@ -2664,8 +2679,10 @@ async function openDocumentModal(editItem = null) {
 	 * Display position details content
 	 */
 	function showJobDetailsContent(position) {
-		document.getElementById('jobDetailsModalLabel').textContent = position.name || 'Position Details';
+		const modal = document.getElementById('jobDetailsModal');
+		const modalLabel = document.getElementById('jobDetailsModalLabel');
 		const body = document.getElementById('jobDetailsModalBody');
+		if (modalLabel) modalLabel.textContent = position.name || 'Position Details';
 		let dutiesList = '';
 		if (position.duties && Array.isArray(position.duties)) {
 			dutiesList = '<ul>' + position.duties.map(duty => `<li>${duty}</li>`).join('') + '</ul>';
@@ -2710,41 +2727,55 @@ async function openDocumentModal(editItem = null) {
 		} else {
 			experienceList = '<p>N/A</p>';
 		}
-		body.innerHTML = `
-			<div class="row">
-				<div class="col-md-10">
-					<p><strong>Position:&nbsp; ${position.position_title || 'N/A'}</strong></p>
-					<p><strong>Vacancy:	${position.available_vacancies || 'N/A'}</strong></p>
-					<p><strong>Reports to:	${position.reports_to || 'N/A'}</strong></p> 
-					<p><strong>Department: ${position.department || 'N/A'}</strong></p>
-					<p><strong>Department Head:	${position.department_head || 'N/A'}</strong></p> 
-					<p><strong>Deadline:	${position.deadline_date || ''} ${position.deadline_time || ''}</strong></p>
+		if (body) {
+			body.innerHTML = `
+				<div class="row">
+					<div class="col-md-10">
+						<p><strong>Position:&nbsp; ${position.position_title || 'N/A'}</strong></p>
+						<p><strong>Vacancy: ${position.available_vacancies || 'N/A'}</strong></p>
+						<p><strong>Reports to: ${position.reports_to || 'N/A'}</strong></p> 
+						<p><strong>Department: ${position.department || 'N/A'}</strong></p>
+						<p><strong>Department Head: ${position.department_head || 'N/A'}</strong></p> 
+						<p><strong>Deadline: ${position.deadline_date || ''} ${position.deadline_time || ''}</strong></p>
+					</div>
+					<hr/>
+				<div class="col-md-12">
+				<p><strong>Position Purpose:</strong> <br>${position.job_purpose || 'N/A'}</p>
+				<p><strong>Duties and Responsibilities:</strong></p>
+				${dutiesList}
+				<p><strong>Person Specifications:</strong></p>
+				<p><strong>Education:</strong></p>
+				${qualificationsList}
+				<p><strong>Experience:</strong></p>
+				${experienceList}
+				<p><strong>Skills:</strong></p>
+				${skillsList}
 				</div>
-				<hr/>
-			<div class="col-md-12">
-			<p><strong>Position Purpose:</strong> <br>${position.job_purpose || 'N/A'}</p>
-			<p><strong>Duties and Responsibilities:</strong></p>
-			${dutiesList}
-			<p><strong>Person Specifications:</strong></p>
-			<p><strong>Education:</strong></p>
-			${qualificationsList}
-			<p><strong>Experience:</strong></p>
-			${experienceList}
-			<p><strong>Skills:</strong></p>
-			${skillsList}
-			</div>
-			</div>
-		`;
+				</div>
+			`;
+		}
+		// Always show the modal when displaying details
+		if (typeof bootstrap !== 'undefined' && modal) {
+			const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
+			bsModal.show();
+		}
 		const applyBtn = document.getElementById('btnPreviewDetails');
 		if (isBrowseMode) {
 			applyBtn.style.display = 'none';
 		} else {
 			applyBtn.style.display = 'inline-block';
-			applyBtn.onclick = () => {
+			applyBtn.onclick = (e) => {
+				e.preventDefault();
 				selectedJob = position;
 				hasSelectedJob = true;
-				showStep('previewApplication');
+				// showStep('previewApplication');
 				jobDetailsModal.hide();
+				dataCache = {};
+				const APPLICANT_ID = currentUser.id;
+				const POSITION_ID = selectedJob.id;
+				loadScreeningQuestions(POSITION_ID, APPLICANT_ID).then(questions => {
+					displayScreeningQuestions(questions,selectedJob,APPLICANT_ID);
+				});
 			};
 		}
 	}
@@ -2967,21 +2998,30 @@ async function openDocumentModal(editItem = null) {
 	/**
 	 * Display screening questions in modal
 	 */
-	function displayScreeningQuestions(questions, selectedJob, applicationId) {
+	function displayScreeningQuestions(questions, selectedJob, applicantId) {
 		currentScreeningPosition = selectedJob;
-    	currentApplicationId = applicationId;
-		const body = document.getElementById('jobDetailsModalBody');
-		
+		currentApplicantId = applicantId;
+		// Hide all main sections
+		document.querySelectorAll('section[data-step-content]').forEach(sec => sec.classList.add('d-none'));
+		// Use the existing screeningQuestions section
+		const screeningSection = document.querySelector('section[data-step-content="screeningQuestions"]');
+		if (!screeningSection) {
+			console.error('Screening questions section not found in HTML.');
+			return false;
+		}
+		screeningSection.classList.remove('d-none');
+
 		if (!questions || questions.length === 0) {
-			// No questions, proceed with position details
+			screeningSection.innerHTML = '<div class="alert alert-warning">No screening questions for this position.</div>';
 			return false;
 		}
 
 		let formHTML = `
+			<h3 class="mb-4">Screening Questions for <span class="text-primary">${selectedJob?.position_title || selectedJob?.name || ''}</span></h3>
 			<div id="screeningQuestionsForm">
 				<div class="alert alert-info" role="alert">
 					<i class="fa fa-info-circle me-2"></i>
-					Please answer the following screening questions to proceed with your application.
+					Please note that all questions must be answered for you to proceed with this application.
 				</div>
 				<form id="screeningAnswersForm">
 		`;
@@ -2990,29 +3030,35 @@ async function openDocumentModal(editItem = null) {
 			formHTML += renderQuestionForm(question, index);
 		});
 
-		formHTML += `
-					<div class="mt-4">
-						<button type="submit" class="btn btn-primary">
-							<i class="fa fa-check me-2"></i> Submit Answers
-						</button>
-					</div>
-				</form>
-			</div>
-		`;
+		   formHTML += `
+					   <div class="mt-4 d-flex justify-content-between">
+						   <button type="button" class="btn btn-secondary" id="btnBackToPositions">
+							   <i class="fa fa-arrow-left me-2"></i>Back to Positions
+						   </button>
+						   <button type="submit" class="btn btn-primary">
+							   <i class="fa fa-arrow-right me-2"></i> Next
+						   </button>
+					   </div>
+				   </form>
+			   </div>
+		   `;
 
-		body.innerHTML = formHTML;
-		document.getElementById('jobDetailsModalLabel').textContent = currentScreeningPosition.position_title + ' - Screening Questions';
-
-		// Hide Apply button, add screening submit handler
-		const applyBtn = document.getElementById('btnPreviewDetails');
-		applyBtn.style.display = 'none';
-
+		screeningSection.innerHTML = formHTML;
 		// Attach form submit handler
 		const form = document.getElementById('screeningAnswersForm');
 		if (form) {
 			form.addEventListener('submit', handleScreeningSubmit);
 		}
-
+		// Attach back button handler
+		const btnBack = document.getElementById('btnBackToPositions');
+		if (btnBack) {
+			btnBack.onclick = function() {
+				screeningSection.classList.add('d-none');
+				// Show positions section (assume data-step-content="viewPositions")
+				const positionsSection = document.querySelector('section[data-step-content="viewPositions"]');
+				if (positionsSection) positionsSection.classList.remove('d-none');
+			};
+		}
 		return true;
 	}
 
@@ -3046,13 +3092,14 @@ async function openDocumentModal(editItem = null) {
 	}
 
 	/**
-	 * Handle screening answers submission
+	 * Handle screening answers submission (cache answers, proceed to next section)
 	 */
-	async function handleScreeningSubmit(e) {
+	let cachedScreeningAnswers = null;
+	function handleScreeningSubmit(e) {
 		e.preventDefault();
 
 		if (!currentUser || !currentUser.id) {
-			showToast('You must be logged in to submit answers.', 'warning');
+			showToast('You must be logged in to proceed.', 'warning');
 			return;
 		}
 
@@ -3069,44 +3116,22 @@ async function openDocumentModal(editItem = null) {
 			return;
 		}
 
+		// Cache answers for later submission
 		const answers = collectScreeningAnswers();
-		
-		try {
-			// Extract only numeric ID (in case it contains extra data)
-			const positionId = typeof currentScreeningPosition.id === 'string' && currentScreeningPosition.id.includes(':') 
-				? currentScreeningPosition.id.split(':')[0] 
-				: currentScreeningPosition.id;
-			currentScreeningApplication = positionId;
-			// Submit screening answers
-			const answersPayload = Object.entries(answers).map(([questionId, answer]) => ({
+		cachedScreeningAnswers = {
+			positionId: currentScreeningPosition.id,
+			answers: Object.entries(answers).map(([questionId, answer]) => ({
 				question_id: questionId,
 				answer_text: Array.isArray(answer) ? answer.join(', ') : answer,
-			}));
+			}))
+		};
 
-			await axios.post(API.submitScreeningAnswers(currentApplicationId), {
-				answers: answersPayload,
-			});
-
-			showToast('Screening answers submitted successfully!', 'success');
-
-			selectedJob = currentScreeningPosition;
-			hasSelectedJob = true;
-			jobDetailsModal.hide();
-			showStep('previewApplication');
-
-		} catch (error) {
-			console.error('Error submitting screening answers:', error);
-			const errorMsg = error.response?.data?.message || 'Failed to submit screening answers.';
-			
-			// Check if this is a knockout failure
-			if (errorMsg.toLowerCase().includes('knockout') || errorMsg.toLowerCase().includes('rejected')) {
-				showToast('Your application has been automatically rejected based on the screening results.', 'error');
-				jobDetailsModal.hide();
-				showStep('viewPositions');
-			} else {
-				showToast(errorMsg, 'error');
-			}
-		}
+		selectedJob = currentScreeningPosition;
+		hasSelectedJob = true;
+		// Hide screening section, show personal details section
+		const screeningSection = document.querySelector('section[data-step-content="screeningQuestions"]');
+		if (screeningSection) screeningSection.classList.add('d-none');
+		showStep('personalDetails');
 	}
 
 	/* -------- Modal Submit Handler -------- */
@@ -3161,7 +3186,7 @@ async function openDocumentModal(editItem = null) {
 							dataCache[key] = list;
 							showToast('Record updated (local).', 'success');
 						} else {
-							await updateItem(stepApiUrl, numericId, data, key);
+							await updateItem(stepApiUrl, numericId, data);
 							showToast('Record updated.', 'success');
 						}
 					} else {
@@ -3294,6 +3319,7 @@ async function openDocumentModal(editItem = null) {
 	/* -------- Load Data for step -------- */
 	async function loadStepData(step) {
 		switch (step) {
+			case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
 			case 'personalDetails': await loadPersonalDetails(); break;
 			case 'educationTraining': await loadEducation(); break;
 			case 'professionalMembership': await loadMembership(); break;
@@ -3302,7 +3328,6 @@ async function openDocumentModal(editItem = null) {
 			case 'referee': await loadReferee(); break;
 			// case 'dependants': await loadDependants(); break;
 			case 'previewApplication': await loadPreview(); break;
-			case 'viewPositions': await loadPositions(currentUser.applicant_type); break;
 			case 'myApplications': await loadSubmittedApplications(); break;
 			default: break;
 		}
@@ -3480,8 +3505,170 @@ async function openDocumentModal(editItem = null) {
 			return false;
 		}
 	}
+
+	/* -------- Phone Number Input Formatting -------- */
+	const phoneInput = document.getElementById('phone_number');
+	if (phoneInput) {
+		phoneInput.addEventListener('keydown', function (e) {
+			// Allow control keys
+			if (
+				e.key === 'Backspace' ||
+				e.key === 'Delete' ||
+				e.key === 'ArrowLeft' ||
+				e.key === 'ArrowRight' ||
+				e.key === 'Tab'
+			) return;
+
+			// Allow only numbers
+			if (!/[0-9]/.test(e.key)) {
+				e.preventDefault();
+			}
+		});
+
+		phoneInput.addEventListener('input', function () {
+			// Always keep +256
+			if (!this.value.startsWith('+256')) {
+				this.value = '+256';
+			}
+
+			// Remove any non-numeric characters except +
+			this.value = '+256' + this.value.slice(4).replace(/\D/g, '');
+
+			// Limit to +256 + 9 digits
+			if (this.value.length > 13) {
+				this.value = this.value.slice(0, 13);
+			}
+		});
+	}
+
+	/* -------- DOB Age Validation (Registration) -------- */
+	const dobInput = document.getElementById('dob');
+	if (dobInput) {
+		dobInput.addEventListener('change', function () {
+			const dobValue = this.value;
+			const error = document.getElementById('dobError');
+
+			if (!dobValue) return;
+
+			const dob = new Date(dobValue);
+			const today = new Date();
+
+			// Calculate age
+			let age = today.getFullYear() - dob.getFullYear();
+			const monthDiff = today.getMonth() - dob.getMonth();
+
+			if (
+				monthDiff < 0 ||
+				(monthDiff === 0 && today.getDate() < dob.getDate())
+			) {
+				age--;
+			}
+
+			if (age < 18) {
+				error.classList.remove('d-none');
+				this.value = '';
+			} else {
+				error.classList.add('d-none');
+			}
+		});
+	}
+
+	/* -------- NIN Input Formatting -------- */
+	const ninDetailInput = document.getElementById('ninDetail');
+	if (ninDetailInput) {
+		ninDetailInput.addEventListener('input', function () {
+			this.value = this.value
+				.toUpperCase()          // force uppercase
+				.replace(/[^A-Z0-9]/g, '') // remove symbols
+				.slice(0, 14);           // max length
+		});
+	}
+
+	/* -------- Section Navigation with Validation -------- */
+	function goToSection(sectionName) {
+		showStep(sectionName);
+	}
+
+	// 1. Personal Details Next
+	const btnNextPersonalDetails = document.getElementById('btnNextPersonalDetails');
+	if (btnNextPersonalDetails) {
+		btnNextPersonalDetails.addEventListener('click', function() {
+			const form = document.getElementById('formPersonalDetails');
+			if (!form.checkValidity()) {
+				form.classList.add('was-validated');
+				showToast('Please fill all required personal details fields.', 'warning');
+				return;
+			}
+			goToSection('educationTraining');
+		});
+	}
+
+	// 2. Education Next
+	const btnNextEducation = document.getElementById('btnNextEducation');
+	if (btnNextEducation) {
+		btnNextEducation.addEventListener('click', function() {
+			const tbody = document.querySelector('#educationTable tbody');
+			if (!tbody || tbody.children.length === 0) {
+				showToast('Please add at least one education record.', 'warning');
+				return;
+			}
+			goToSection('professionalMembership');
+		});
+	}
+
+	// 3. Membership Next
+	const btnNextMembership = document.getElementById('btnNextMembership');
+	if (btnNextMembership) {
+		btnNextMembership.addEventListener('click', function() {
+			const tbody = document.querySelector('#membershipTable tbody');
+			if (!tbody || tbody.children.length === 0) {
+				showToast('Please add at least one professional membership.', 'warning');
+				return;
+			}
+			goToSection('employmentHistory');
+		});
+	}
+
+	// 4. Employment Next
+	const btnNextEmployment = document.getElementById('btnNextEmployment');
+	if (btnNextEmployment) {
+		btnNextEmployment.addEventListener('click', function() {
+			const tbody = document.querySelector('#employmentTable tbody');
+			if (!tbody || tbody.children.length === 0) {
+				showToast('Please add at least one employment record.', 'warning');
+				return;
+			}
+			goToSection('documents');
+		});
+	}
+
+	// 5. Documents Next
+	const btnNextDocuments = document.getElementById('btnNextDocuments');
+	if (btnNextDocuments) {
+		btnNextDocuments.addEventListener('click', function() {
+			const tbody = document.querySelector('#documentsTable tbody');
+			if (!tbody || tbody.children.length === 0) {
+				showToast('Please upload at least one document.', 'warning');
+				return;
+			}
+			goToSection('referee');
+		});
+	}
+
+	// 6. Referee Next
+	const btnNextReferee = document.getElementById('btnNextReferee');
+	if (btnNextReferee) {
+		btnNextReferee.addEventListener('click', function() {
+			const tbody = document.querySelector('#refereeTable tbody');
+			if (!tbody || tbody.children.length < 3) {
+				showToast('Please add at least 3 referees.', 'warning');
+				return;
+			}
+			goToSection('previewApplication');
+		});
+	}
+
 	document.addEventListener('DOMContentLoaded', init);
 
 })();
-	
-	
+
