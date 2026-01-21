@@ -1,7 +1,7 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	let api = 'http://hrmis.local';
+	// let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
@@ -2491,8 +2491,6 @@ async function openDocumentModal(editItem = null) {
 		await loadReferee();
 		// await loadDependants();
 		await loadSubmittedApplications();
-
-
 		   // Screening Questions Preview (if available)
 		   let screeningHtml = '';
 		   if (cachedScreeningAnswers && screeningQuestions && screeningQuestions.length > 0) {
@@ -2515,7 +2513,7 @@ async function openDocumentModal(editItem = null) {
 			   screeningHtml += '</tbody></table></div>';
 		   }
 
-		   let html = screeningHtml + '<div class="row">';
+		let html = screeningHtml + '<div class="row">';
 
 		const sectionTitles = {
 			educationTraining: 'Education & Training',
@@ -2531,7 +2529,6 @@ async function openDocumentModal(editItem = null) {
 
 		for (const key in dataCache) {
 			if (!dataCache[key] || dataCache[key].length === 0) continue;
-
 			const sectionTitle = sectionTitles[key] || key.replace(/([A-Z])/g, ' $1').trim();
 			const items = dataCache[key];
 			let keys = Object.keys(items[0]).filter(k => !excludedFields.includes(k));
@@ -2642,13 +2639,26 @@ async function openDocumentModal(editItem = null) {
 				};
 				const response = await axios.post(API.postApplication, applicationData);
 
-				// if (response.data && response.data.success) {
-				if (response.data && response.data.success) {
+				if (response.data && response.data.success && response.data.data && response.data.data.id) {
+					// Submit screening answers if present
+					if (cachedScreeningAnswers && Array.isArray(cachedScreeningAnswers.answers) && cachedScreeningAnswers.answers.length > 0) {
+						try {
+							await axios.post(
+								API.submitScreeningAnswers(response.data.data.id),
+								{ answers: cachedScreeningAnswers.answers }
+							);
+						} catch (err) {
+							showToast('Application submitted, but failed to submit screening answers.', 'warning');
+							console.error('Error submitting screening answers:', err);
+						}
+					}
 					showToast('Application submitted successfully!', 'success');
-					// Reset application state
+					// Reset application state and clear cache
 					hasSelectedJob = false;
+					dataCache['submittedApplications'] = undefined;
+					cachedScreeningAnswers = null;
 				} else {
-				 showToast('Failed to submit application. Please try again.', 'error');
+					showToast('Failed to submit application. Please try again.', 'error');
 				}
 			} catch (error) {
 				console.error('Error submitting application:', error);
