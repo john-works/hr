@@ -1,7 +1,7 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	let api = 'http://hrmis.local';
+	// let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
@@ -899,37 +899,21 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 	}
 	
 	async function applicantApplicationExists(applicantId,positionId) {
-	if (!applicantId) return false;
-	if (!positionId) return false;
-	// Check cache first
-	const cachedApplications = dataCache['submittedApplications'];
-	if (Array.isArray(cachedApplications)) {
-		// Check if any application matches both applicantId and positionId
-		return cachedApplications.some(app => {
-			// Try to match applicant and position fields (API may use different keys)
-			const appApplicantId = app.applicant_id || app.applicantId || app.user_id || app.userId;
-			const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
-			return String(appApplicantId) === String(applicantId) && String(appPositionId) === String(positionId);
-		});
-	}
-
-	// Fallback: fetch from API if not in cache
-	try {
-		const response = await axios.get(API.getApplications(applicantId));
-		console.log('API response for applications:', response.data);
-		const items = Array.isArray(response.data?.data) ? response.data.data : [];
-		console.log('Fetched applications:', items);
-		dataCache['submittedApplications'] = items; // cache it
-		// Check if any application matches both applicantId and positionId
-		return items.some(app => {
-			const appApplicantId = app.applicant_id || app.applicantId || app.user_id || app.userId;
-			const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
-			return String(appApplicantId) === String(applicantId) && String(appPositionId) === String(positionId);
-		});
-	} catch (error) {
-		console.error('Error checking application existence:', error);
-		return false;
-	}
+		if (!applicantId || !positionId) return false;
+		try {
+			// Always fetch fresh applications for this applicant
+			const response = await axios.get(API.getApplications(applicantId));
+			const items = Array.isArray(response.data?.data) ? response.data.data : [];
+			// Check if any application matches the positionId
+			return items.some(app => {
+				// Adjust these keys to match your backend response
+				const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
+				return String(appPositionId) === String(positionId);
+			});
+		} catch (error) {
+			console.error('Error checking application existence:', error);
+			return false;
+		}
 }
 
 	// Prevent multiple applications for the same position
@@ -2527,19 +2511,42 @@ function handleMyApplicationsActions(e) {
 			loadPreview();
 		}
 	}
-	if (withdrawBtn) {
-		const appId = withdrawBtn.getAttribute('data-application-id');
-		if (confirm('Are you sure you want to withdraw this application?')) {
-			axios.post(`${API.postApplication}/${appId}/withdraw`).then(() => {
-				showToast('Application withdrawn.', 'info');
-				loadSubmittedApplications();
-			}).catch(() => {
-				showToast('Failed to withdraw application.', 'error');
-			});
-		}
-		e.preventDefault();
-		return;
-	}
+	   if (withdrawBtn) {
+		   const appId = withdrawBtn.getAttribute('data-application-id');
+		   // Reuse CRUD modal for withdrawal reason
+		   crudModalLabel.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>Withdraw Application';
+		   crudModalBody.innerHTML = `
+			   <form id="withdrawForm">
+				   <div class="mb-3">
+					   <label for="withdrawReason" class="form-label">Please provide a reason for withdrawal:</label>
+					   <textarea class="form-control" id="withdrawReason" name="reason" rows="3" required></textarea>
+				   </div>
+				   <input type="hidden" id="withdrawApplicationId" name="application_id" value="${appId}" />
+			   </form>
+		   `;
+		   crudSaveBtn.textContent = 'Withdraw';
+		   crudSaveBtn.classList.remove('btn-primary');
+		   crudSaveBtn.classList.add('btn-danger');
+		   crudModal.show();
+		   // Remove any previous event listeners
+		   crudSaveBtn.onclick = function(ev) {
+			   ev.preventDefault();
+			   const reason = document.getElementById('withdrawReason').value.trim();
+			   if (!reason) {
+				   showToast('Please provide a reason for withdrawal.', 'warning');
+				   return;
+			   }
+			   axios.post(`${API.postApplication}/${appId}/withdraw`, { reason }).then(() => {
+				   showToast('Application withdrawn.', 'info');
+				   crudModal.hide();
+				   loadSubmittedApplications();
+			   }).catch(() => {
+				   showToast('Failed to withdraw application.', 'error');
+			   });
+		   };
+		   e.preventDefault();
+		   return;
+	   }
 }
 
 
