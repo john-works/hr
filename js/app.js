@@ -1,7 +1,7 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	let api = 'http://hrmis.local';
-	// let api = 'https://hrmis.ppda.go.ug';
+	// let api = 'http://hrmis.local';
+	let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
