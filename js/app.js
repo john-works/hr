@@ -432,10 +432,12 @@ window.addEventListener('storage', (e) => {
    LOGIN / LOGOUT HANDLERS
 ===================================================== */
 function onLoginSuccess(user, token) {
-  setSession({ user, token, loginTime: Date.now() });
-  currentUser = user;
-  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
-  showDashboard();
+	// Clear all localStorage before saving new session data
+	localStorage.clear();
+	setSession({ user, token, loginTime: Date.now() });
+	currentUser = user;
+	localStorage.setItem(LAST_ACTIVITY_KEY, Date.now());
+	showDashboard();
 }
 
 if (btnLogout) {
