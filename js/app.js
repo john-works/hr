@@ -1,7 +1,7 @@
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	let api = 'http://hrmis.local';
+	// let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
@@ -2442,7 +2442,6 @@ async function openDocumentModal(editItem = null) {
 
 		try {
 			const response = await axios.get(API.getApplications(currentUser.id));
-			// ✅ Laravel Resource Collection shape
 			const items = Array.isArray(response.data?.data)
 				? response.data.data
 				: [];
@@ -2467,16 +2466,79 @@ async function openDocumentModal(editItem = null) {
 					{ key: 'submitted_date'},
 					{ key: 'deadline_date' },
 					{ key: 'deadline_time' },
-					{ key: 'status' }
+					{ key: 'status' },
+					{ 
+						key: 'actions',
+						formatter: (val, item) => {
+	return `
+		<div class="dropdown">
+			<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+				<i class="fas fa-ellipsis-v"></i> Actions
+			</button>
+			<ul class="dropdown-menu">
+				<li>
+					<button class="dropdown-item btn-review-application" data-application-id="${item.id}">
+						<i class="fas fa-info-circle me-1"></i> Review
+					</button>
+				</li>
+				<li>
+					<button class="dropdown-item text-danger btn-withdraw-application" data-application-id="${item.id}">
+						<i class="fas fa-times-circle me-1"></i> Withdraw
+					</button>
+				</li>
+			</ul>
+		</div>
+	`;
+}
+					}
 				],
-				null,
-				null
 			);
-		} catch (error) {
-			console.error('Error loading submitted applications:', error);
-			showToast('Failed to load submitted applications.', 'error');
+					// Event delegation for Review and Withdraw buttons
+					myApplicationsTableBody.removeEventListener('click', handleMyApplicationsActions);
+					myApplicationsTableBody.addEventListener('click', handleMyApplicationsActions);
+				} catch (error) {
+					console.error('Error loading submitted applications:', error);
+					showToast('Failed to load submitted applications.', 'error');
+				}
+			}
+
+// Handle Review and Withdraw actions
+function handleMyApplicationsActions(e) {
+	const reviewBtn = e.target.closest('.btn-review-application');
+	const withdrawBtn = e.target.closest('.btn-withdraw-application');
+	if (reviewBtn) {
+		showStep('previewApplication');
+		const appId = reviewBtn.getAttribute('data-application-id');
+		const applications = dataCache['submittedApplications'] || [];
+		const application = applications.find(app => app.id == appId);
+		if (application) {
+			// Load application data into cache for preview
+			dataCache['personalDetails'] = [application.applicant_details || {}];
+			dataCache['educationTraining'] = application.education_history || [];
+			dataCache['professionalMembership'] = application.professional_memberships || [];
+			dataCache['employmentHistory'] = application.employment_history || [];
+			dataCache['documents'] = application.documents || [];
+			dataCache['referee'] = application.referees || [];
+			// Load screening answers if available
+			cachedScreeningAnswers = application.screening_answers || null;
+			// Load preview
+			loadPreview();
 		}
 	}
+	if (withdrawBtn) {
+		const appId = withdrawBtn.getAttribute('data-application-id');
+		if (confirm('Are you sure you want to withdraw this application?')) {
+			axios.post(`${API.postApplication}/${appId}/withdraw`).then(() => {
+				showToast('Application withdrawn.', 'info');
+				loadSubmittedApplications();
+			}).catch(() => {
+				showToast('Failed to withdraw application.', 'error');
+			});
+		}
+		e.preventDefault();
+		return;
+	}
+}
 
 
 	// Preview Application
@@ -2657,6 +2719,12 @@ async function openDocumentModal(editItem = null) {
 					hasSelectedJob = false;
 					dataCache['submittedApplications'] = undefined;
 					cachedScreeningAnswers = null;
+					// Show myApplications section and reload table
+					document.querySelectorAll('[data-step-content]').forEach(sec => sec.classList.add('d-none'));
+					document.querySelector('section[data-step-content="myApplications"]').classList.remove('d-none');
+					if (typeof loadMyApplicationsTable === 'function') {
+						loadMyApplicationsTable();
+					}
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
@@ -3593,12 +3661,6 @@ async function openDocumentModal(editItem = null) {
 				.slice(0, 14);           // max length
 		});
 	}
-
-	/* -------- Section Navigation with Validation -------- */
-	function goToSection(sectionName) {
-		showStep(sectionName);
-	}
-
 	// 1. Personal Details Next
 	const btnNextPersonalDetails = document.getElementById('btnNextPersonalDetails');
 	if (btnNextPersonalDetails) {
@@ -3609,7 +3671,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please fill all required personal details fields.', 'warning');
 				return;
 			}
-			goToSection('educationTraining');
+			showStep('educationTraining');
 		});
 	}
 
@@ -3622,7 +3684,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please add at least one education record.', 'warning');
 				return;
 			}
-			goToSection('professionalMembership');
+			showStep('professionalMembership');
 		});
 	}
 
@@ -3635,7 +3697,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please add at least one professional membership.', 'warning');
 				return;
 			}
-			goToSection('employmentHistory');
+			showStep('employmentHistory');
 		});
 	}
 
@@ -3648,7 +3710,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please add at least one employment record.', 'warning');
 				return;
 			}
-			goToSection('documents');
+			showStep('documents');
 		});
 	}
 
@@ -3661,7 +3723,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please upload at least one document.', 'warning');
 				return;
 			}
-			goToSection('referee');
+			showStep('referee');
 		});
 	}
 
@@ -3674,7 +3736,7 @@ async function openDocumentModal(editItem = null) {
 				showToast('Please add at least 3 referees.', 'warning');
 				return;
 			}
-			goToSection('previewApplication');
+			showStep('previewApplication');
 		});
 	}
 
