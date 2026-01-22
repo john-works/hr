@@ -8,7 +8,7 @@
   --secondary-color: #0a4a7a;
   --accent-color: #ff6b35;
   --light-color: #f8fafc;
-  --dark-color: #343a40;
+  --dark-color: #3c3f42;
   --success-color: #0a4a7a;
   --warning-color: #ffc107;
   --danger-color: #dc3545;
@@ -502,6 +502,20 @@ main {
   box-shadow: 0 6px 20px rgba(0, 4, 53, 0.4);
 }
 
+#formPersonalDetails .btn-secondary {
+  margin-top: 1rem;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: var(--transition);
+  box-shadow: 0 4px 15px rgba(148, 153, 206, 0.3);
+}
+
+#formPersonalDetails .btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(148, 153, 206, 0.4);
+}
+
 .main-section-header {
   display: flex;
   justify-content: space-between;
@@ -578,7 +592,24 @@ main {
 .btn-primary:focus {
   box-shadow: 0 0 0 0.2rem rgba(26, 75, 140, 0.25);
 }
-
+.btn-secondary {
+  background: var(--dark-color);
+  color: white;
+  border: 2px solid var(--dark-color);
+  border-radius: 8px;
+  padding: 0.5rem 1.0rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.btn-secondary:hover {
+  background-color: var(--dark-color);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(148, 153, 206, 0.4);
+}
+.btn-secondary:focus {
+  box-shadow: 0 0 0 0.2rem rgba(148, 153, 206, 0.15);
+}
 /* Table Styling */
 .data-table {
   border-collapse: collapse;

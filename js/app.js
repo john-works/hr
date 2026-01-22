@@ -1,3 +1,43 @@
+// Add event listeners for back navigation buttons
+const btnBackToPersonalDetails = document.getElementById('btnBackToPersonalDetails');
+if (btnBackToPersonalDetails) {
+	btnBackToPersonalDetails.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('personalDetails');
+	});
+}
+
+const btnBackToEducationDetails = document.getElementById('btnBackToEducationDetails');
+if (btnBackToEducationDetails) {
+	btnBackToEducationDetails.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('educationTraining');
+	});
+}
+
+const btnBackToMembershipDetails = document.getElementById('btnBackToMembershipDetails');
+if (btnBackToMembershipDetails) {
+	btnBackToMembershipDetails.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('professionalMembership');
+	});
+}
+
+const btnBackToEmploymentDetails = document.getElementById('btnBackToEmploymentDetails');
+if (btnBackToEmploymentDetails) {
+	btnBackToEmploymentDetails.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('employmentHistory');
+	});
+}
+
+const btnBackToDocumentDetails = document.getElementById('btnBackToDocumentDetails');
+if (btnBackToDocumentDetails) {
+	btnBackToDocumentDetails.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('documents');
+	});
+}
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
 	let api = 'http://hrmis.local';
@@ -901,33 +941,14 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 	async function applicantApplicationExists(applicantId,positionId) {
 		if (!applicantId || !positionId) return false;
 		try {
-			// Always fetch fresh applications for this applicant
-			const response = await axios.get(API.getApplications(applicantId));
-			const items = Array.isArray(response.data?.data) ? response.data.data : [];
-			// Check if any application matches the positionId
-			return items.some(app => {
-				// Adjust these keys to match your backend response
-				const appPositionId = app.position_id || app.positionId || app.job_id || app.jobId;
-				return String(appPositionId) === String(positionId);
-			});
+			const response = await axios.get(API.getExistingApplications(applicantId, positionId));
+			const exists = response.data.exists;
+			return exists;
 		} catch (error) {
 			console.error('Error checking application existence:', error);
 			return false;
 		}
 }
-
-	// Prevent multiple applications for the same position
-	async function handleApplicationSubmit(applicantId, positionId, formElement) {
-		// Check if application already exists
-		const exists = await applicantApplicationExists(applicantId, positionId);
-		if (exists) {
-			showToast('You have already submitted your application for this position.', 'warning');
-			return;
-		}
-		// ...proceed with application submission logic here...
-		// e.g., await axios.post(API.postApplication, { applicantId, positionId, ... });
-		// showToast('Application submitted successfully!', 'success');
-	}
 
 	if (loginForm) {
 		loginForm.addEventListener('submit', async e => {
@@ -1187,6 +1208,7 @@ const API = {
 	getApplicant: (id) => `${apiUrl}/applicants/${id}`,
 	personalDetails: (id) => `${apiUrl}/applicants/${id}`,
 	getApplications: (id) => `${apiUrl}/applications/${id}`,
+	getExistingApplications: (id, positionId) => `${apiUrl}/applications/${id}/${positionId}`,
 	getReferees: (id) => `${apiUrl}/referees/${id}`,
 	// getDependants: (id) => `${apiUrl}/dependants/${id}`,
 	getDocuments: (id) => `${apiUrl}/documents/${id}`,
@@ -2214,51 +2236,43 @@ function openRefereeModal(editItem = null) {
     // Set ID (used for update)
     crudItemIdInput.value = editItem ? editItem.id : '';
 
-    // Modal form body
-    crudModalBody.innerHTML = `
-        <input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
-
-		<div class="row">
-		
-			<div class="col-md-6 mb-3">
-			   <label for="name" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
-			<input type="text" class="form-control" id="name" name="name"  required value="${editItem?.name || ''}">
+	// Modal form body with form element and hidden id
+	crudModalBody.innerHTML = `
+		<form id="refereeForm">
+			<input type="hidden" name="applicant_id" value="${currentUser?.id || ''}">
+			<input type="hidden" name="referee_id" value="${editItem ? editItem.id || '' : ''}">
+			<div class="row">
+				<div class="col-md-6 mb-3">
+				   <label for="name" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
+				   <input type="text" class="form-control" id="name" name="name" required value="${editItem?.name || ''}">
+				</div>
+				<div class="col-md-6 mb-3">
+				   <label for="address" class="form-label fw-bold">Address <span class="text-danger">*</span></label>
+				   <input type="text" class="form-control" id="address" name="address" required value="${editItem?.address || ''}"/>
+				</div>
 			</div>
-
-
-			<div class="col-md-6 mb-3">
-			   <label for="address" class="form-label fw-bold">Address <span class="text-danger">*</span></label>
-			<input type="text" class="form-control" id="address" name="address"  required value="${editItem?.address || ''}"/>
-				
-			</div>
-		</div>
-
-		<div class="row">
-		
-			<div class="col-md-6 mb-3">
+			<div class="row">
+				<div class="col-md-6 mb-3">
 				   <label for="position" class="form-label fw-bold">Position <span class="text-danger">*</span></label>
-				<input type="text" class="form-control" id="position" name="position"  required value="${editItem?.position || ''}">
-			</div>
-			<div class="col-md-6 mb-3">
+				   <input type="text" class="form-control" id="position" name="position" required value="${editItem?.position || ''}">
+				</div>
+				<div class="col-md-6 mb-3">
 				   <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
-				<input type="email" class="form-control" id="email" name="email"  required value="${editItem?.email || ''}"/>
-				
+				   <input type="email" class="form-control" id="email" name="email" required value="${editItem?.email || ''}"/>
+				</div>
 			</div>
-		</div>
-
-		<div class="row">
-		
-			<div class="col-md-6 mb-3">
-			   <label for="tel" class="form-label fw-bold">Contact <span class="text-danger">*</span></label>
-			<input type="tel" class="form-control" id="tel" name="tel"  required value="${editItem?.tel || ''}">
+			<div class="row">
+				<div class="col-md-6 mb-3">
+				   <label for="tel" class="form-label fw-bold">Contact <span class="text-danger">*</span></label>
+				   <input type="tel" class="form-control" id="tel" name="tel" required value="${editItem?.tel || ''}">
+				</div>
+				<div class="col-md-6 mb-3">
+				   <label for="relationship" class="form-label fw-bold">Relationship <span class="text-danger">*</span></label>
+				   <input type="text" class="form-control" id="relationship" name="relationship" required value="${editItem?.relationship || ''}"/>
+				</div>
 			</div>
-
-			<div class="col-md-6 mb-3">
-			   <label for="relationship" class="form-label fw-bold">Relationship <span class="text-danger">*</span></label>
-			<input type="text" class="form-control" id="relationship" name="relationship"  required value="${editItem?.relationship || ''}"/>
-
-		</div>
-    `;
+		</form>
+	`;
 
 	crudModal.show();
 
@@ -2275,8 +2289,41 @@ function openRefereeModal(editItem = null) {
 		};
 		crudModalEl.addEventListener('hidden.bs.modal', onHidden);
 	}
+
+	// Handle form submit (create/update)
+	const form = document.getElementById('refereeForm');
+	if (!form) return;
+	form.addEventListener('submit', async function(event) {
+		event.preventDefault();
+
+		const data = {
+			applicant_id: form.applicant_id.value,
+			name: form.name.value,
+			address: form.address.value,
+			position: form.position.value,
+			email: form.email.value,
+			tel: form.tel.value,
+			relationship: form.relationship.value
+		};
+
+		const id = form.referee_id.value;
+		try {
+			if (id) {
+				await updateItem(API.referee, id, data, 'referee');
+			} else {
+				await createItem(API.referee, data, 'referee');
+			}
+
+			crudModal.hide();
+			showToast('Referee saved successfully', 'success');
+			await loadReferees();
+		} catch (error) {
+			console.error('Error saving referee:', error);
+			showToast('Failed to save referee', 'error');
+		}
+	});
 }
-	async function loadReferee() {
+	async function loadReferees() {
 		if (!currentUser || !currentUser.id) {
 			showToast('User not authenticated. Please log in.', 'warning');
 			return;
@@ -2311,7 +2358,7 @@ function openRefereeModal(editItem = null) {
 			const confirmed = await confirmModal('Delete this Referee record?', 'Delete Referee', 'Delete');
 			if (confirmed) {
 				const success = await deleteItem(API.referee, id, 'referee');
-				if (success) loadReferee();
+				if (success) loadReferees();
 			}
 		});
 	}
@@ -2558,7 +2605,7 @@ function handleMyApplicationsActions(e) {
 		await loadMembership();
 		await loadEmployment();
 		// await loadDocuments();
-		await loadReferee();
+		await loadReferees();
 		// await loadDependants();
 		await loadSubmittedApplications();
 		   // Screening Questions Preview (if available)
@@ -2847,20 +2894,35 @@ function handleMyApplicationsActions(e) {
 			applyBtn.style.display = 'none';
 		} else {
 			applyBtn.style.display = 'inline-block';
-			applyBtn.onclick = (e) => {
-				e.preventDefault();
-				selectedJob = position;
-				hasSelectedJob = true;
-				// showStep('previewApplication');
-				jobDetailsModal.hide();
-				dataCache = {};
-				const APPLICANT_ID = currentUser.id;
-				const POSITION_ID = selectedJob.id;
-				loadScreeningQuestions(POSITION_ID, APPLICANT_ID).then(questions => {
-					displayScreeningQuestions(questions,selectedJob,APPLICANT_ID);
-				});
-			};
-		}
+			   applyBtn.onclick = async (e) => {
+				   e.preventDefault();
+				   	selectedJob = position;
+				   	hasSelectedJob = true;
+					
+					if (!currentUser || !currentUser.id) {
+						showToast('User not found.', 'error');
+						return;
+					}
+				    if (!selectedJob || !selectedJob.id) {
+					   showToast('Position not found.', 'error');
+					   return;
+				   }
+					const alreadyApplied = await applicantApplicationExists(currentUser.id, selectedJob.id);
+					if (alreadyApplied) {
+						showToast('You have already applied for this position.', 'warning');
+						return;
+					}
+					//close modal
+
+				   	jobDetailsModal.hide();
+					dataCache={};
+					const APPLIANT_ID = currentUser.id;
+					const POSITION_ID = selectedJob.id;
+				   	loadScreeningQuestions(POSITION_ID,APPLIANT_ID).then(questions => {
+						displayScreeningQuestions(questions,selectedJob,APPLIANT_ID);
+				   	});
+			   	};
+		   	}
 	}
 
 	async function loadPositions(applicant_type) {
@@ -3115,7 +3177,7 @@ function handleMyApplicationsActions(e) {
 
 		   formHTML += `
 					   <div class="mt-4 d-flex justify-content-between">
-						   <button type="button" class="btn btn-secondary" id="btnBackToPositions">
+						   <button type="button" class="btn btn-secondary btnBackToPositions">
 							   <i class="fa fa-arrow-left me-2"></i>Back to Positions
 						   </button>
 						   <button type="submit" class="btn btn-primary">
@@ -3132,16 +3194,16 @@ function handleMyApplicationsActions(e) {
 		if (form) {
 			form.addEventListener('submit', handleScreeningSubmit);
 		}
-		// Attach back button handler
-		const btnBack = document.getElementById('btnBackToPositions');
-		if (btnBack) {
-			btnBack.onclick = function() {
-				screeningSection.classList.add('d-none');
-				// Show positions section (assume data-step-content="viewPositions")
-				const positionsSection = document.querySelector('section[data-step-content="viewPositions"]');
-				if (positionsSection) positionsSection.classList.remove('d-none');
-			};
-		}
+		// Attach back button handler using event delegation
+		screeningSection.removeEventListener('click', screeningSection._backToPositionsHandler || (() => {}));
+		screeningSection._backToPositionsHandler = function(e) {
+			const btn = e.target.closest('.btnBackToPositions');
+			if (btn) {
+				e.preventDefault();
+				showStep('viewPositions');
+			}
+		};
+		screeningSection.addEventListener('click', screeningSection._backToPositionsHandler);
 		return true;
 	}
 
@@ -3408,7 +3470,7 @@ function handleMyApplicationsActions(e) {
 			case 'professionalMembership': await loadMembership(); break;
 			case 'employmentHistory': await loadEmployment(); break;
 			case 'documents': await loadDocuments(); break;
-			case 'referee': await loadReferee(); break;
+			   case 'referee': await loadReferees(); break;
 			// case 'dependants': await loadDependants(); break;
 			case 'previewApplication': await loadPreview(); break;
 			case 'myApplications': await loadSubmittedApplications(); break;
