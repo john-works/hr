@@ -2250,7 +2250,7 @@ function openRefereeModal(editItem = null) {
 		
 			<div class="col-md-6 mb-3">
 			   <label for="tel" class="form-label fw-bold">Contact <span class="text-danger">*</span></label>
-			<input type="text" class="form-control" id="tel" name="tel"  required value="${editItem?.tel || ''}">
+			<input type="tel" class="form-control" id="tel" name="tel"  required value="${editItem?.tel || ''}">
 			</div>
 
 			<div class="col-md-6 mb-3">
@@ -2451,31 +2451,30 @@ async function openDocumentModal(editItem = null) {
 					{ key: 'application_id'},
 					{ key: 'submitted_date'},
 					{ key: 'deadline_date' },
-					{ key: 'deadline_time' },
 					{ key: 'status' },
 					{ 
 						key: 'actions',
 						formatter: (val, item) => {
-	return `
-		<div class="dropdown">
-			<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-				<i class="fas fa-ellipsis-v"></i> Actions
-			</button>
-			<ul class="dropdown-menu">
-				<li>
-					<button class="dropdown-item btn-review-application" data-application-id="${item.id}">
-						<i class="fas fa-info-circle me-1"></i> Review
-					</button>
-				</li>
-				<li>
-					<button class="dropdown-item text-danger btn-withdraw-application" data-application-id="${item.id}">
-						<i class="fas fa-times-circle me-1"></i> Withdraw
-					</button>
-				</li>
-			</ul>
-		</div>
-	`;
-}
+							return `
+								<div class="dropdown">
+									<button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+										<i class="fas fa-ellipsis-v"></i> Actions
+									</button>
+									<ul class="dropdown-menu">
+										<li>
+											<button class="dropdown-item btn-review-application" data-application-id="${item.id}">
+												<i class="fas fa-info-circle me-1"></i> Review
+											</button>
+										</li>
+										<li>
+											<button class="dropdown-item text-danger btn-withdraw-application" data-application-id="${item.id}">
+												<i class="fas fa-times-circle me-1"></i> Withdraw
+											</button>
+										</li>
+									</ul>
+								</div>
+							`;
+						}
 					}
 				],
 			);
@@ -2731,9 +2730,6 @@ function handleMyApplicationsActions(e) {
 					// Show myApplications section and reload table
 					document.querySelectorAll('[data-step-content]').forEach(sec => sec.classList.add('d-none'));
 					document.querySelector('section[data-step-content="myApplications"]').classList.remove('d-none');
-					if (typeof loadMyApplicationsTable === 'function') {
-						loadMyApplicationsTable();
-					}
 				} else {
 					showToast('Failed to submit application. Please try again.', 'error');
 				}
@@ -3689,8 +3685,8 @@ function handleMyApplicationsActions(e) {
 	if (btnNextEducation) {
 		btnNextEducation.addEventListener('click', function() {
 			const tbody = document.querySelector('#educationTable tbody');
-			if (!tbody || tbody.children.length === 0) {
-				showToast('Please add at least one education record.', 'warning');
+			if (!tbody || tbody.children.length < 2) {
+				showToast('Please add education records.', 'warning');
 				return;
 			}
 			showStep('professionalMembership');
@@ -3702,8 +3698,8 @@ function handleMyApplicationsActions(e) {
 	if (btnNextMembership) {
 		btnNextMembership.addEventListener('click', function() {
 			const tbody = document.querySelector('#membershipTable tbody');
-			if (!tbody || tbody.children.length === 0) {
-				showToast('Please add at least one professional membership.', 'warning');
+			if (!tbody || tbody.children.length < 1) {
+				showToast('Please add professional memberships.', 'warning');
 				return;
 			}
 			showStep('employmentHistory');
@@ -3715,8 +3711,8 @@ function handleMyApplicationsActions(e) {
 	if (btnNextEmployment) {
 		btnNextEmployment.addEventListener('click', function() {
 			const tbody = document.querySelector('#employmentTable tbody');
-			if (!tbody || tbody.children.length === 0) {
-				showToast('Please add at least one employment record.', 'warning');
+			if (!tbody || tbody.children.length < 2) {
+				showToast('Please add at least 2 employment records.', 'warning');
 				return;
 			}
 			showStep('documents');
@@ -3728,8 +3724,8 @@ function handleMyApplicationsActions(e) {
 	if (btnNextDocuments) {
 		btnNextDocuments.addEventListener('click', function() {
 			const tbody = document.querySelector('#documentsTable tbody');
-			if (!tbody || tbody.children.length === 0) {
-				showToast('Please upload at least one document.', 'warning');
+			if (!tbody || tbody.children.length < 2) {
+				showToast('Please upload at least 2 documents.', 'warning');
 				return;
 			}
 			showStep('referee');
@@ -3742,7 +3738,7 @@ function handleMyApplicationsActions(e) {
 		btnNextReferee.addEventListener('click', function() {
 			const tbody = document.querySelector('#refereeTable tbody');
 			if (!tbody || tbody.children.length < 3) {
-				showToast('Please add at least 3 referees.', 'warning');
+				showToast('Referees must be at least 3.', 'error');
 				return;
 			}
 			showStep('previewApplication');
