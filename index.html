@@ -89,7 +89,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="phone_number" class="form-label">Contact <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="phone_number" name="phone_number" value="+256" placeholder="+256XXXXXXXXX" pattern="^\+256[0-9]{9}$"
+                            <input type="tel" class="form-control" id="phone_number" name="phone_number" value="+256" placeholder="+256XXXXXXXXX" pattern="^(+256|0)\d{11}$"
                                 title="Phone number must start with +256 followed by 9 digits" maxlength="13"required/>
                         </div>
                      </div>
@@ -338,7 +338,7 @@
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="contact" class="form-label">Contact <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="contact" name="contact" required />
+                                <input type="tel" class="form-control" id="contact" name="contact" placeholder="+256XXXXXXXXX" pattern="^(+256|0)\d{11}$" required />
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label for="emailDetail" class="form-label">Email <span class="text-danger">*</span></label>
