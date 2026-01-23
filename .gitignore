@@ -1,4 +1,4 @@
 # Ignore system files and environment settings
 .DS_Store
-.env
+env.js
 /.vscode

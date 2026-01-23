@@ -49,8 +49,7 @@ if (btnBackToDocumentDetails) {
 	});
 }
 (() => {
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	const api = window.APP_CONFIG.API_BASE;
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
