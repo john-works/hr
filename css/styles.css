@@ -825,7 +825,7 @@ main {
 }
 
 .resend-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .resend-link.disabled {

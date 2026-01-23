@@ -40,8 +40,8 @@ if (btnBackToDocumentDetails) {
 }
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	let api = 'http://hrmis.local';
+	// let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
@@ -1110,7 +1110,6 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 	// Resend code functionality
 	resendLink.addEventListener('click', async () => {
 		if (resendLink.classList.contains('disabled')) return;
-
 		const pendingUserStr = localStorage.getItem('pendingUser');
 		if (!pendingUserStr) {
 		showToast('No pending verification found.', 'error');
@@ -1120,7 +1119,8 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 
 		try {
 		// Resend OTP via API
-		await axios.post(API.login, { email: pendingUser.email });
+		// await axios.post(API.login, { email: pendingUser.email });
+		await axios.post(API.requestOTP, { email: pendingUser.email });
 		showToast('OTP resent to your email.', 'success');
 
 		// Restart countdown
@@ -1137,7 +1137,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 	// Countdown timer for resend
 	function startCountdown() {
 		clearInterval(countdownInterval);
-		resendLink.classList.add('disabled');
+		// resendLink.classList.add('disabled');
 		
 		countdownInterval = setInterval(() => {
 		countdown--;
@@ -1145,7 +1145,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		
 		if (countdown <= 0) {
 			clearInterval(countdownInterval);
-			resendLink.classList.remove('disabled');
+			// resendLink.classList.remove('disabled');
 			countdown = 300;
 			countdownEl.textContent = `(${countdown}s)`;
 		}
@@ -1189,6 +1189,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 const API = {
 	health: `${apiUrl}/health`,
 	login: `${apiUrl}/login`,
+	requestOTP: `${apiUrl}/resend-otp`,
 	registerForm: `${apiUrl}/register`,
 	forgotPassword: `${apiUrl}/forgot-password`,
 	resetPassword: `${apiUrl}/reset-password`,
