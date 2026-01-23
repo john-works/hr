@@ -40,8 +40,8 @@ if (btnBackToDocumentDetails) {
 }
 (() => {
 	// let apiUrl = 'https://hrmis.ppda.go.ug/api/v1';
-	// let api = 'http://hrmis.local';
-	let api = 'https://hrmis.ppda.go.ug';
+	let api = 'http://hrmis.local';
+	// let api = 'https://hrmis.ppda.go.ug';
 	let apiUrl = api+'/api/v1';
     // Axios interceptor is defined below with comprehensive error handling
 	/* =============== Document Management Module =============== */
@@ -1664,6 +1664,7 @@ function openEducationModal(editItem = null) {
                         <option value="Distinction" ${editItem?.degree_class === 'Distinction' ? 'selected' : ''}>Distinction</option>
                         <option value="Merit" ${editItem?.degree_class === 'Merit' ? 'selected' : ''}>Merit</option>
                         <option value="Pass" ${editItem?.degree_class === 'Pass' ? 'selected' : ''}>Pass</option>
+                        <option value="General/Ungraded" ${editItem?.degree_class === 'General/Ungraded' ? 'selected' : ''}>General/Ungraded</option>
                     </select>
                 </div>
 
