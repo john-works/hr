@@ -1,4 +1,14 @@
-// Add event listeners for back navigation buttons
+
+const btnBackToPositions = document.getElementById('btnBackToPositions');
+if (btnBackToPositions) {
+	btnBackToPositions.addEventListener('click', function(e) {
+		e.preventDefault();
+		showStep('viewPositions');
+	});
+}
+
+
+
 const btnBackToPersonalDetails = document.getElementById('btnBackToPersonalDetails');
 if (btnBackToPersonalDetails) {
 	btnBackToPersonalDetails.addEventListener('click', function(e) {
@@ -697,7 +707,7 @@ function confirmModal(message, title = 'Please Confirm', confirmText = 'Yes, Del
 		if (verifyForm) verifyForm.style.display = 'block';
 		if (emailText) emailText.textContent = email;
 		if (otpInputs[0]) otpInputs[0].focus();
-		if (countdownEl) countdownEl.textContent = '(60s)';
+		if (countdownEl) countdownEl.textContent = '(300s)';
 		startCountdown();
 	}
 
@@ -3812,4 +3822,3 @@ function handleMyApplicationsActions(e) {
 	document.addEventListener('DOMContentLoaded', init);
 
 })();
-
