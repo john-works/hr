@@ -1,7 +1,3 @@
-// Add event listeners for back navigation buttons
-<<<<<<< HEAD
-=======
-
 
 const btnBackToPositions = document.getElementById('btnBackToPositions');
 if (btnBackToPositions) {
@@ -13,7 +9,6 @@ if (btnBackToPositions) {
 
 
 
->>>>>>> 8f0e429 (new changes)
 const btnBackToPersonalDetails = document.getElementById('btnBackToPersonalDetails');
 if (btnBackToPersonalDetails) {
 	btnBackToPersonalDetails.addEventListener('click', function(e) {
